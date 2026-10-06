@@ -5,8 +5,11 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
+import com.performily.flowboard.features.workspace.presentation.ui.screens.EditPersonalDataScreen
 import com.performily.flowboard.features.workspace.presentation.ui.screens.EmployeeDetailScreen
 import com.performily.flowboard.features.workspace.presentation.ui.screens.EmployeesScreen
+import com.performily.flowboard.features.workspace.presentation.ui.screens.MyProfileScreen
+import com.performily.flowboard.features.workspace.presentation.ui.screens.MyRecordScreen
 import com.performily.flowboard.features.workspace.presentation.ui.screens.OrganizationChartScreen
 import com.performily.flowboard.features.workspace.presentation.ui.screens.OrganizationScreen
 import com.performily.flowboard.features.workspace.presentation.ui.screens.RegisterEmployeeScreen
@@ -22,13 +25,22 @@ data object EmployeesRoute
 data object RegisterEmployeeRoute
 
 @Serializable
-data class EmployeeDetailRoute(val employeeId: Long)
+data class EmployeeDetailRoute(val employeeId: Long, val openReassign: Boolean = false)
+
+@Serializable
+data class EditPersonalDataRoute(val employeeId: Long)
 
 @Serializable
 data object OrganizationRoute
 
 @Serializable
-data object OrganizationChartRoute
+data class OrganizationChartRoute(val areaId: Long? = null, val highlightedEmployeeId: Long? = null)
+
+@Serializable
+data object MyProfileRoute
+
+@Serializable
+data object MyRecordRoute
 
 fun NavGraphBuilder.workspaceNavGraph(navController: NavController) {
 
@@ -39,7 +51,8 @@ fun NavGraphBuilder.workspaceNavGraph(navController: NavController) {
                 onEmployeeClick = { employeeId -> navController.navigate(EmployeeDetailRoute(employeeId)) },
                 onRegisterClick = { navController.navigate(RegisterEmployeeRoute) },
                 onOrganizationClick = { navController.navigate(OrganizationRoute) },
-                onOrganizationChartClick = { navController.navigate(OrganizationChartRoute) }
+                onOrganizationChartClick = { navController.navigate(OrganizationChartRoute()) },
+                onMyProfileClick = { navController.navigate(MyProfileRoute) }
             )
         }
 
@@ -58,7 +71,20 @@ fun NavGraphBuilder.workspaceNavGraph(navController: NavController) {
             val route = backStackEntry.toRoute<EmployeeDetailRoute>()
             EmployeeDetailScreen(
                 employeeId = route.employeeId,
-                onBack = { navController.popBackStack() }
+                openReassignOnStart = route.openReassign,
+                onBack = { navController.popBackStack() },
+                onEditPersonalData = { employeeId -> navController.navigate(EditPersonalDataRoute(employeeId)) },
+                onOpenEmployee = { employeeId, openReassign ->
+                    navController.navigate(EmployeeDetailRoute(employeeId, openReassign))
+                }
+            )
+        }
+
+        composable<EditPersonalDataRoute> { backStackEntry ->
+            val route = backStackEntry.toRoute<EditPersonalDataRoute>()
+            EditPersonalDataScreen(
+                employeeId = route.employeeId,
+                onClose = { navController.popBackStack() }
             )
         }
 
@@ -66,8 +92,27 @@ fun NavGraphBuilder.workspaceNavGraph(navController: NavController) {
             OrganizationScreen(onBack = { navController.popBackStack() })
         }
 
-        composable<OrganizationChartRoute> {
-            OrganizationChartScreen(onBack = { navController.popBackStack() })
+        composable<OrganizationChartRoute> { backStackEntry ->
+            val route = backStackEntry.toRoute<OrganizationChartRoute>()
+            OrganizationChartScreen(
+                onBack = { navController.popBackStack() },
+                areaId = route.areaId,
+                highlightedEmployeeId = route.highlightedEmployeeId
+            )
+        }
+
+        composable<MyProfileRoute> {
+            MyProfileScreen(
+                onBack = { navController.popBackStack() },
+                onMyRecordClick = { navController.navigate(MyRecordRoute) },
+                onOrganizationChartClick = { areaId, employeeId ->
+                    navController.navigate(OrganizationChartRoute(areaId = areaId, highlightedEmployeeId = employeeId))
+                }
+            )
+        }
+
+        composable<MyRecordRoute> {
+            MyRecordScreen(onBack = { navController.popBackStack() })
         }
     }
 }

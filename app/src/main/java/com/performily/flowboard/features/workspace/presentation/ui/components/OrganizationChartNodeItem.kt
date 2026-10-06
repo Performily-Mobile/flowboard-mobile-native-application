@@ -18,6 +18,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.theme.Divider
+import com.performily.flowboard.core.domain.EmployeeId
 import com.performily.flowboard.core.designsystem.theme.Outline
 import com.performily.flowboard.core.designsystem.theme.PendingContainer
 import com.performily.flowboard.core.designsystem.theme.PendingOutline
@@ -26,13 +27,17 @@ import com.performily.flowboard.features.workspace.domain.valueobject.Organizati
 @Composable
 fun OrganizationChartNodeItem(
     node: OrganizationChartNode,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    highlightedEmployeeId: EmployeeId? = null
 ) {
+    val isHighlighted = node.employeeId == highlightedEmployeeId
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         NodeCard(
             initials = node.initials,
-            title = node.fullName,
-            subtitle = node.positionTitle
+            title = if (isHighlighted) "${node.fullName} (tú)" else node.fullName,
+            subtitle = node.positionTitle,
+            containerColor = if (isHighlighted) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
+            borderColor = if (isHighlighted) MaterialTheme.colorScheme.primary else Divider
         )
         if (node.subordinates.isNotEmpty()) {
             Column(
@@ -49,7 +54,7 @@ fun OrganizationChartNodeItem(
                     .padding(start = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                node.subordinates.forEach { child -> OrganizationChartNodeItem(child) }
+                node.subordinates.forEach { child -> OrganizationChartNodeItem(child, highlightedEmployeeId = highlightedEmployeeId) }
             }
         }
     }

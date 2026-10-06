@@ -6,8 +6,10 @@ import com.performily.flowboard.core.domain.Money
 import com.performily.flowboard.core.network.ApiException
 import com.performily.flowboard.features.workspace.application.usecase.CreateAreaUseCase
 import com.performily.flowboard.features.workspace.application.usecase.CreatePositionUseCase
+import com.performily.flowboard.features.workspace.application.usecase.DeactivateAreaUseCase
 import com.performily.flowboard.features.workspace.application.usecase.GetAreasUseCase
 import com.performily.flowboard.features.workspace.application.usecase.GetPositionsUseCase
+import com.performily.flowboard.features.workspace.domain.entity.Area
 import com.performily.flowboard.features.workspace.presentation.state.AreaForm
 import com.performily.flowboard.features.workspace.presentation.state.OrganizationUiState
 import com.performily.flowboard.features.workspace.presentation.state.PositionForm
@@ -26,7 +28,8 @@ class OrganizationViewModel @Inject constructor(
     private val getAreas: GetAreasUseCase,
     private val getPositions: GetPositionsUseCase,
     private val createArea: CreateAreaUseCase,
-    private val createPosition: CreatePositionUseCase
+    private val createPosition: CreatePositionUseCase,
+    private val deactivateArea: DeactivateAreaUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(OrganizationUiState())
@@ -132,6 +135,30 @@ class OrganizationViewModel @Inject constructor(
                     _state.update {
                         it.copy(isSaving = false, positionForm = it.positionForm.copy(titleError = exception.readableMessage()))
                     }
+                }
+        }
+    }
+
+    fun requestDeactivateArea(area: Area) = _state.update {
+        it.copy(areaToDeactivate = area, deactivationConfirmed = false, deactivationError = null)
+    }
+
+    fun onDeactivationConfirmedChange(confirmed: Boolean) = _state.update { it.copy(deactivationConfirmed = confirmed) }
+
+    fun dismissDeactivateArea() = _state.update { it.copy(areaToDeactivate = null, deactivationError = null) }
+
+    fun confirmDeactivateArea() {
+        val area = _state.value.areaToDeactivate ?: return
+        if (!_state.value.deactivationConfirmed) return
+        _state.update { it.copy(isSaving = true, deactivationError = null) }
+        viewModelScope.launch {
+            deactivateArea(area)
+                .onSuccess {
+                    _state.update { it.copy(isSaving = false, areaToDeactivate = null) }
+                    load()
+                }
+                .onFailure { exception ->
+                    _state.update { it.copy(isSaving = false, deactivationError = exception.readableMessage()) }
                 }
         }
     }

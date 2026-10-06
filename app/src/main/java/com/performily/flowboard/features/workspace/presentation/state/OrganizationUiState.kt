@@ -28,7 +28,10 @@ data class OrganizationUiState(
     val isPositionSheetVisible: Boolean = false,
     val areaForm: AreaForm = AreaForm(),
     val positionForm: PositionForm = PositionForm(),
-    val isSaving: Boolean = false
+    val isSaving: Boolean = false,
+    val areaToDeactivate: Area? = null,
+    val deactivationConfirmed: Boolean = false,
+    val deactivationError: String? = null
 ) {
     val activeAreas: List<Area> get() = areas.filter { it.active }
 }

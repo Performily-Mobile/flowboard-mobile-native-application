@@ -12,6 +12,7 @@ fun EmployeeDropdown(
     selectedEmployeeId: EmployeeId?,
     onSelect: (Employee?) -> Unit,
     modifier: Modifier = Modifier,
+    isError: Boolean = false,
     supportingText: String? = null
 ) {
     val options: List<Employee?> = listOf<Employee?>(null) + employees
@@ -22,6 +23,7 @@ fun EmployeeDropdown(
         optionLabel = { employee -> employee?.name?.fullName ?: "Sin jefe directo" },
         onSelect = onSelect,
         modifier = modifier,
+        isError = isError,
         supportingText = supportingText
     )
 }

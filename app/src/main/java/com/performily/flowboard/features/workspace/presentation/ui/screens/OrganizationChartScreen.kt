@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,9 +41,15 @@ import com.performily.flowboard.features.workspace.presentation.viewmodel.Organi
 @Composable
 fun OrganizationChartScreen(
     onBack: () -> Unit,
+    areaId: Long? = null,
+    highlightedEmployeeId: Long? = null,
     viewModel: OrganizationChartViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.initialize(areaId, highlightedEmployeeId)
+    }
     val modes = listOf(
         OrganizationChartMode.WHOLE_ORGANIZATION to "Toda la organización",
         OrganizationChartMode.BY_AREA to "Por área"
@@ -112,7 +119,9 @@ fun OrganizationChartScreen(
                 }
 
                 else -> {
-                    chart.nodes.forEach { node -> OrganizationChartNodeItem(node) }
+                    chart.nodes.forEach { node ->
+                        OrganizationChartNodeItem(node, highlightedEmployeeId = state.highlightedEmployeeId)
+                    }
                     if (chart.pendingReassignment.isNotEmpty()) {
                         SectionTitle("Pendientes de reasignación")
                         chart.pendingReassignment.forEach { node -> PendingNodeCard(node) }

@@ -27,6 +27,7 @@ import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.features.workspace.presentation.ui.components.AreasTab
 import com.performily.flowboard.features.workspace.presentation.ui.components.CreateAreaSheet
 import com.performily.flowboard.features.workspace.presentation.ui.components.CreatePositionSheet
+import com.performily.flowboard.features.workspace.presentation.ui.components.DeactivateAreaDialog
 import com.performily.flowboard.features.workspace.presentation.ui.components.PositionsTab
 import com.performily.flowboard.features.workspace.presentation.viewmodel.OrganizationViewModel
 
@@ -82,7 +83,7 @@ fun OrganizationScreen(
                     CircularProgressIndicator()
                 }
             } else if (state.selectedTab == 0) {
-                AreasTab(areas = state.areas)
+                AreasTab(areas = state.areas, onDeactivateClick = viewModel::requestDeactivateArea)
             } else {
                 PositionsTab(positions = state.positions)
             }
@@ -110,6 +111,18 @@ fun OrganizationScreen(
             onSalaryChange = viewModel::onPositionSalaryChange,
             onSave = viewModel::savePosition,
             onDismiss = viewModel::dismissSheets
+        )
+    }
+
+    state.areaToDeactivate?.let { area ->
+        DeactivateAreaDialog(
+            area = area,
+            confirmed = state.deactivationConfirmed,
+            isSaving = state.isSaving,
+            errorMessage = state.deactivationError,
+            onConfirmedChange = viewModel::onDeactivationConfirmedChange,
+            onConfirm = viewModel::confirmDeactivateArea,
+            onDismiss = viewModel::dismissDeactivateArea
         )
     }
 }

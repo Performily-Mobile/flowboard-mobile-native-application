@@ -2,6 +2,7 @@ package com.performily.flowboard.features.workspace.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.performily.flowboard.core.domain.EmployeeId
 import com.performily.flowboard.features.workspace.application.usecase.GetAreasUseCase
 import com.performily.flowboard.features.workspace.application.usecase.GetOrganizationChartUseCase
 import com.performily.flowboard.features.workspace.presentation.state.OrganizationChartMode
@@ -23,9 +24,28 @@ class OrganizationChartViewModel @Inject constructor(
     private val _state = MutableStateFlow(OrganizationChartUiState())
     val state: StateFlow<OrganizationChartUiState> = _state.asStateFlow()
 
+    private var initialized = false
+
     init {
         viewModelScope.launch {
             getAreas(onlyActive = true).onSuccess { areas -> _state.update { it.copy(areas = areas) } }
+        }
+    }
+
+    /**
+     * Se llama una vez al abrir la pantalla.
+     * Si llega un área, abre directo la vista "Por área" (vista del colaborador, MA-17)
+     * y resalta al colaborador indicado con "(tú)".
+     */
+    fun initialize(areaId: Long?, highlightedEmployeeId: Long?) {
+        if (initialized) return
+        initialized = true
+        _state.update {
+            it.copy(
+                mode = if (areaId != null) OrganizationChartMode.BY_AREA else OrganizationChartMode.WHOLE_ORGANIZATION,
+                selectedAreaId = areaId,
+                highlightedEmployeeId = highlightedEmployeeId?.let(::EmployeeId)
+            )
         }
         loadChart()
     }

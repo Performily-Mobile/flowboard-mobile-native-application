@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,10 +31,23 @@ fun DocumentsTab(
     documents: List<EmployeeDocument>,
     selectedCategory: DocumentCategory?,
     onCategoryChange: (DocumentCategory?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onUploadClick: (() -> Unit)? = null
 ) {
     val uriHandler = LocalUriHandler.current
     Column(modifier = modifier) {
+        onUploadClick?.let { onClick ->
+            OutlinedButton(
+                onClick = onClick,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            ) {
+                Icon(FlowboardIcons.Upload, contentDescription = null)
+                Text("Subir documento", modifier = Modifier.padding(start = 8.dp))
+            }
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()

@@ -1,5 +1,6 @@
 package com.performily.flowboard.features.workspace.presentation.state
 
+import com.performily.flowboard.core.domain.EmployeeId
 import com.performily.flowboard.features.workspace.domain.entity.Area
 import com.performily.flowboard.features.workspace.domain.valueobject.OrganizationChart
 
@@ -14,5 +15,6 @@ data class OrganizationChartUiState(
     val areas: List<Area> = emptyList(),
     val selectedAreaId: Long? = null,
     val chart: OrganizationChart? = null,
+    val highlightedEmployeeId: EmployeeId? = null,
     val errorMessage: String? = null
 )
