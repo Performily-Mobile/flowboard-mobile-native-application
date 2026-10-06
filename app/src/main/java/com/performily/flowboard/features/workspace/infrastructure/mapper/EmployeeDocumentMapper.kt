@@ -3,6 +3,7 @@ package com.performily.flowboard.features.workspace.infrastructure.mapper
 import com.performily.flowboard.core.domain.FileReference
 import com.performily.flowboard.features.workspace.domain.entity.EmployeeDocument
 import com.performily.flowboard.features.workspace.domain.valueobject.DocumentType
+import com.performily.flowboard.features.workspace.infrastructure.remote.AttachEmployeeDocumentRequestDto
 import com.performily.flowboard.features.workspace.infrastructure.remote.EmployeeDocumentDto
 import java.time.LocalDateTime
 
@@ -21,4 +22,13 @@ object EmployeeDocumentMapper {
             uploadedAt = LocalDateTime.parse(dto.uploadedAt)
         )
     }
+
+    fun toAttachRequest(documentType: DocumentType, file: FileReference): AttachEmployeeDocumentRequestDto =
+        AttachEmployeeDocumentRequestDto(
+            documentType = documentType.name,
+            fileName = file.fileName,
+            contentType = file.contentType,
+            sizeInBytes = file.sizeInBytes,
+            storageUrl = file.storageUrl
+        )
 }

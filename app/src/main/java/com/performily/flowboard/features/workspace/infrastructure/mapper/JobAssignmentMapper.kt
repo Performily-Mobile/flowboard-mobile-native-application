@@ -2,6 +2,7 @@ package com.performily.flowboard.features.workspace.infrastructure.mapper
 
 import com.performily.flowboard.features.workspace.domain.entity.JobAssignment
 import com.performily.flowboard.features.workspace.domain.valueobject.AssignmentChangeType
+import com.performily.flowboard.features.workspace.infrastructure.remote.AssignJobRequestDto
 import com.performily.flowboard.features.workspace.infrastructure.remote.JobAssignmentDto
 import java.time.LocalDate
 
@@ -20,4 +21,11 @@ object JobAssignmentMapper {
             current = dto.current
         )
     }
+
+    fun toAssignRequest(areaId: Long, positionId: Long, effectiveDate: LocalDate): AssignJobRequestDto =
+        AssignJobRequestDto(
+            areaId = areaId,
+            positionId = positionId,
+            effectiveDate = effectiveDate.toString()
+        )
 }

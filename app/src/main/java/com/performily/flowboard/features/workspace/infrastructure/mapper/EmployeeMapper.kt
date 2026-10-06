@@ -15,6 +15,9 @@ import com.performily.flowboard.features.workspace.domain.valueobject.PhoneNumbe
 import com.performily.flowboard.features.workspace.domain.valueobject.TerminationDetails
 import com.performily.flowboard.features.workspace.infrastructure.remote.EmployeeDto
 import com.performily.flowboard.features.workspace.infrastructure.remote.RegisterEmployeeRequestDto
+import com.performily.flowboard.features.workspace.infrastructure.remote.ReinstateEmployeeRequestDto
+import com.performily.flowboard.features.workspace.infrastructure.remote.TerminateEmployeeRequestDto
+import com.performily.flowboard.features.workspace.infrastructure.remote.UpdateEmployeePersonalDataRequestDto
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -87,4 +90,37 @@ object EmployeeMapper {
             directManagerId = directManagerId?.value
         )
     }
+
+    fun toUpdatePersonalDataRequest(
+        name: PersonName,
+        birthDate: BirthDate,
+        email: EmailAddress,
+        phoneNumber: PhoneNumber,
+        address: Address
+    ): UpdateEmployeePersonalDataRequestDto {
+        return UpdateEmployeePersonalDataRequestDto(
+            firstName = name.firstName.trim(),
+            lastName = name.lastName.trim(),
+            birthDate = birthDate.value.toString(),
+            email = email.value,
+            phoneNumber = phoneNumber.value,
+            street = address.street?.takeIf { it.isNotBlank() },
+            district = address.district?.takeIf { it.isNotBlank() },
+            province = address.province?.takeIf { it.isNotBlank() },
+            department = address.department?.takeIf { it.isNotBlank() }
+        )
+    }
+
+    fun toTerminateRequest(termination: TerminationDetails): TerminateEmployeeRequestDto =
+        TerminateEmployeeRequestDto(
+            reason = termination.reason.trim(),
+            terminationDate = termination.terminationDate.toString()
+        )
+
+    fun toReinstateRequest(areaId: Long, positionId: Long, reinstatementDate: LocalDate): ReinstateEmployeeRequestDto =
+        ReinstateEmployeeRequestDto(
+            areaId = areaId,
+            positionId = positionId,
+            reinstatementDate = reinstatementDate.toString()
+        )
 }

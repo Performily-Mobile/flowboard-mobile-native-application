@@ -21,4 +21,9 @@ class AreaRepositoryImpl @Inject constructor(
         return apiCall { service.createArea(request) }
             .mapCatching { dto -> AreaMapper.toDomain(dto) }
     }
+
+    override suspend fun deactivateArea(id: Long): Result<Area> {
+        return apiCall { service.deactivateArea(id) }
+            .mapCatching { dto -> AreaMapper.toDomain(dto) }
+    }
 }

@@ -3,7 +3,9 @@ package com.performily.flowboard.features.workspace.infrastructure.remote
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface AreaService {
 
@@ -12,4 +14,7 @@ interface AreaService {
 
     @POST("areas")
     suspend fun createArea(@Body request: CreateAreaRequestDto): Response<AreaDto>
+
+    @PATCH("areas/{areaId}/deactivate")
+    suspend fun deactivateArea(@Path("areaId") areaId: Long): Response<AreaDto>
 }
