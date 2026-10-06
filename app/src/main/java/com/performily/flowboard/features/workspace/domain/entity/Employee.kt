@@ -34,7 +34,11 @@ data class Employee(
 ) {
     val isActive: Boolean get() = status == EmploymentStatus.ACTIVE
 
+    val isTerminated: Boolean get() = status == EmploymentStatus.TERMINATED
+
     val hasDirectManager: Boolean get() = directManagerId != null
+
+    fun isManagedBy(managerId: EmployeeId): Boolean = directManagerId == managerId
 
     val jobDescription: String get() = "$positionTitle · $areaName"
 }

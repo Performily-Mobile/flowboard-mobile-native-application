@@ -7,4 +7,6 @@ interface AreaRepository {
     suspend fun getAreas(): Result<List<Area>>
 
     suspend fun createArea(name: String, description: String?): Result<Area>
+
+    suspend fun deactivateArea(id: Long): Result<Area>
 }
