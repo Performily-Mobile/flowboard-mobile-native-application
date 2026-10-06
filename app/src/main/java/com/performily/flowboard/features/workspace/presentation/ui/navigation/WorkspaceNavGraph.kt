@@ -51,8 +51,7 @@ fun NavGraphBuilder.workspaceNavGraph(navController: NavController) {
                 onEmployeeClick = { employeeId -> navController.navigate(EmployeeDetailRoute(employeeId)) },
                 onRegisterClick = { navController.navigate(RegisterEmployeeRoute) },
                 onOrganizationClick = { navController.navigate(OrganizationRoute) },
-                onOrganizationChartClick = { navController.navigate(OrganizationChartRoute()) },
-                onMyProfileClick = { navController.navigate(MyProfileRoute) }
+                onOrganizationChartClick = { navController.navigate(OrganizationChartRoute()) }
             )
         }
 

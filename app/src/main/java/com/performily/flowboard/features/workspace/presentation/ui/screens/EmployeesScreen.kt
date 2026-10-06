@@ -58,7 +58,6 @@ fun EmployeesScreen(
     onRegisterClick: () -> Unit,
     onOrganizationClick: () -> Unit,
     onOrganizationChartClick: () -> Unit,
-    onMyProfileClick: () -> Unit,
     viewModel: EmployeesViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -90,14 +89,6 @@ fun EmployeesScreen(
                                 onClick = {
                                     menuExpanded = false
                                     onOrganizationChartClick()
-                                }
-                            )
-                            // TEMPORAL: acceso a "Mi perfil" hasta que exista la navegación por rol (IAM).
-                            DropdownMenuItem(
-                                text = { Text("Mi perfil") },
-                                onClick = {
-                                    menuExpanded = false
-                                    onMyProfileClick()
                                 }
                             )
                         }
