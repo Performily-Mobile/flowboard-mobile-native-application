@@ -14,6 +14,7 @@ data class AttendanceAreaUiState(
     val period: AttendancePeriod = currentMonthAreaPeriod(),
     val areas: List<AttendanceArea> = emptyList(),
     val selectedArea: AttendanceArea? = null,
+    val statusFilter: String = "TODOS",
     val report: AttendanceAreaReport? = null,
     val isLoading: Boolean = false,
     val errorMessage: String? = null
