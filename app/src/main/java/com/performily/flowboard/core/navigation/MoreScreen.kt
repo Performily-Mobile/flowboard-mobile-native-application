@@ -35,6 +35,7 @@ import com.performily.flowboard.core.designsystem.theme.Divider
 fun MoreScreen(
     onOrganizationClick: () -> Unit,
     onMyProfileClick: () -> Unit,
+    onPayslipsClick: () -> Unit,
     onPendingClick: (title: String) -> Unit
 ) {
     Scaffold(
@@ -60,9 +61,7 @@ fun MoreScreen(
             MoreItem(FlowboardIcons.Gift, "Beneficios", "Catálogo, asignación y entregas") {
                 onPendingClick("Beneficios")
             }
-            MoreItem(FlowboardIcons.CreditCard, "Boletas y pagos", "Carga, publicación y estado de depósito") {
-                onPendingClick("Boletas y pagos")
-            }
+            MoreItem(FlowboardIcons.CreditCard, "Boletas y pagos", "Carga, publicación y estado de depósito", onPayslipsClick)
             MoreItem(FlowboardIcons.Favorite, "Bienestar", "Espacios, dispositivos e indicadores") {
                 onPendingClick("Bienestar")
             }

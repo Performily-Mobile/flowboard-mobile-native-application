@@ -15,6 +15,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.performily.flowboard.core.session.UserRole
+import com.performily.flowboard.features.payroll.presentation.ui.navigation.PaymentStatusRoute
+import com.performily.flowboard.features.payroll.presentation.ui.navigation.UploadPayslipsRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.EditPersonalDataRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.RegisterEmployeeRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.WorkspaceNavGraphRoute
@@ -22,7 +24,10 @@ import com.performily.flowboard.features.workspace.presentation.ui.navigation.Wo
 /** Formularios de pantalla completa: ahí no se muestra la barra inferior. */
 private val routesWithoutBottomBar = listOf(
     RegisterEmployeeRoute::class,
-    EditPersonalDataRoute::class
+    EditPersonalDataRoute::class,
+    // Payroll RR.HH.: MA-67 y MA-69 no muestran la barra inferior.
+    UploadPayslipsRoute::class,
+    PaymentStatusRoute::class
 )
 
 @Composable
