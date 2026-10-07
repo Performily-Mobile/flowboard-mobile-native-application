@@ -40,10 +40,6 @@ fun NavGraphBuilder.attendanceNavGraph(navController: NavController) {
         composable<AttendanceHomeRoute> {
             AttendanceHomeScreen(
                 onAreaReport = { navController.navigate(AttendanceAreaReportRoute) },
-                onEmployeeReport = {
-                    // The employee report is normally opened from an area report row.
-                    navController.navigate(AttendanceAreaReportRoute)
-                },
                 onHoursReport = { navController.navigate(AttendanceHoursRoute) },
                 onJustify = { attendanceRecordId, workDate ->
                     navController.navigate(JustifyAttendanceRoute(attendanceRecordId, workDate.toString()))
@@ -55,7 +51,14 @@ fun NavGraphBuilder.attendanceNavGraph(navController: NavController) {
             AttendanceAreaScreen(
                 onEmployeeClick = { employeeId, employeeName ->
                     navController.navigate(AttendanceEmployeeRoute(employeeId, employeeName))
-                }
+                },
+                onRecords = {
+                    navController.navigate(AttendanceHomeRoute) {
+                        popUpTo(AttendanceHomeRoute) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                },
+                onHoursReport = { navController.navigate(AttendanceHoursRoute) }
             )
         }
 
@@ -69,7 +72,15 @@ fun NavGraphBuilder.attendanceNavGraph(navController: NavController) {
         }
 
         composable<AttendanceHoursRoute> {
-            AttendanceHoursScreen()
+            AttendanceHoursScreen(
+                onRecords = {
+                    navController.navigate(AttendanceHomeRoute) {
+                        popUpTo(AttendanceHomeRoute) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                },
+                onAreaReport = { navController.navigate(AttendanceAreaReportRoute) }
+            )
         }
 
         composable<JustifyAttendanceRoute> { entry ->
