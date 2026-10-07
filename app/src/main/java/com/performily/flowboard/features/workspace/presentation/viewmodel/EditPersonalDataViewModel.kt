@@ -72,14 +72,20 @@ class EditPersonalDataViewModel @Inject constructor(
 
     fun onPhoneChange(value: String) = updateField(PersonalDataField.PHONE) { it.copy(phoneNumber = value) }
 
-    fun onStreetChange(value: String) = _state.update { it.copy(street = value) }
+    fun onStreetChange(value: String) = updateField(PersonalDataField.ADDRESS) { it.copy(street = value) }
 
-    fun onDistrictChange(value: String) = _state.update { it.copy(district = value) }
+    fun onDistrictChange(value: String) = updateField(PersonalDataField.ADDRESS) { it.copy(district = value) }
 
-    fun onProvinceChange(value: String) = _state.update { it.copy(province = value) }
+    fun onProvinceChange(value: String) = updateField(PersonalDataField.ADDRESS) { it.copy(province = value) }
 
-    fun onDepartmentChange(value: String) = _state.update { it.copy(department = value) }
+    fun onDepartmentChange(value: String) = updateField(PersonalDataField.ADDRESS) { it.copy(department = value) }
 
+    /**
+     * Validates the form and saves the personal data.
+     *
+     * PersonName validates first and last name together, so a last-name error is moved to its own
+     * field. The address is optional but cannot be partially filled: either all four parts or none.
+     */
     fun onSave() {
         val id = employeeId ?: return
         val current = _state.value
@@ -91,12 +97,17 @@ class EditPersonalDataViewModel @Inject constructor(
         }
         val email = validate(errors, PersonalDataField.EMAIL) { EmailAddress(current.email) }
         val phone = validate(errors, PersonalDataField.PHONE) { PhoneNumber.of(current.phoneNumber) }
-        // PersonName valida nombres y apellidos juntos: ubicamos el error en el campo correcto.
         errors[PersonalDataField.FIRST_NAME]?.let { message ->
             if (message.contains("apellido", ignoreCase = true)) {
                 errors.remove(PersonalDataField.FIRST_NAME)
                 errors[PersonalDataField.LAST_NAME] = message
             }
+        }
+
+        val filledAddressParts = listOf(current.street, current.district, current.province, current.department)
+            .count { it.isNotBlank() }
+        if (filledAddressParts in 1..3) {
+            errors[PersonalDataField.ADDRESS] = "Completa los cuatro campos de la dirección o déjalos todos vacíos."
         }
 
         if (errors.isNotEmpty() || name == null || birthDate == null || email == null || phone == null) {
