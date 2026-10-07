@@ -6,7 +6,18 @@ import retrofit2.Response
 import java.io.IOException
 import kotlin.coroutines.cancellation.CancellationException
 
-class ApiException(val code: String?, override val message: String) : Exception(message)
+/**
+ * Error returned by the backend.
+ *
+ * @property code backend error code, or null when the failure is not an API error.
+ * @property message generic text describing the type of error.
+ * @property details concrete reason (for example the business rule that was violated), if any.
+ */
+class ApiException(
+    val code: String?,
+    override val message: String,
+    val details: String? = null
+) : Exception(message)
 
 suspend fun <T : Any> apiCall(request: suspend () -> Response<T>): Result<T> {
     return try {
@@ -32,7 +43,8 @@ private fun parseError(response: Response<*>): ApiException {
         val json = Gson().fromJson(raw, JsonObject::class.java)
         ApiException(
             code = json?.get("code")?.asString,
-            message = json?.get("message")?.asString ?: "Error ${response.code()}"
+            message = json?.get("message")?.asString ?: "Error ${response.code()}",
+            details = json?.get("details")?.takeIf { !it.isJsonNull }?.asString
         )
     } catch (exception: Exception) {
         ApiException(null, "Error ${response.code()}")
