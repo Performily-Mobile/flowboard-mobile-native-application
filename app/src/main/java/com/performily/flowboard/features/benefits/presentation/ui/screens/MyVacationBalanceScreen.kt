@@ -47,8 +47,10 @@ import com.performily.flowboard.features.benefits.presentation.ui.components.Vac
 import com.performily.flowboard.features.benefits.presentation.viewmodel.MyVacationBalanceViewModel
 
 /**
- * MA-57 · Saldo de vacaciones del colaborador. Sin conexión muestra los datos
- * guardados con el aviso "Sin conexión. Mostrando datos sincronizados el …".
+ * My vacation balance screen (MA-57).
+ *
+ * Without connection it shows the saved data with the notice
+ * "Sin conexión. Mostrando datos sincronizados el …".
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,6 +89,7 @@ fun MyVacationBalanceScreen(
             )
             else -> BalanceContent(
                 synced = synced,
+                errorMessage = state.errorMessage,
                 onRetry = viewModel::load,
                 onRequestVacation = onRequestVacation,
                 modifier = contentModifier
@@ -98,6 +101,7 @@ fun MyVacationBalanceScreen(
 @Composable
 private fun BalanceContent(
     synced: SyncedVacationBalance,
+    errorMessage: String?,
     onRetry: () -> Unit,
     onRequestVacation: () -> Unit,
     modifier: Modifier = Modifier
@@ -120,6 +124,18 @@ private fun BalanceContent(
                 )
             }
         }
+        if (errorMessage != null && !synced.fromCache) {
+            item {
+                BenefitsBanner(
+                    message = errorMessage,
+                    icon = FlowboardIcons.Warning,
+                    containerColor = BenefitsColors.WarningBanner,
+                    contentColor = BenefitsColors.OnWarningBanner,
+                    actionLabel = "Reintentar",
+                    onAction = onRetry
+                )
+            }
+        }
         item { BalanceCard(balance = balance, onRequestVacation = onRequestVacation) }
         item { SectionHeader("Movimientos") }
         if (balance.movements.isEmpty()) {
@@ -135,7 +151,11 @@ private fun BalanceContent(
     }
 }
 
-/** Tarjeta principal: días disponibles, barra de lo usado y botón para solicitar. */
+/**
+ * Main card.
+ *
+ * Shows the available days, a bar with the used share and the button to request vacations.
+ */
 @Composable
 private fun BalanceCard(balance: VacationBalance, onRequestVacation: () -> Unit) {
     BenefitCard {

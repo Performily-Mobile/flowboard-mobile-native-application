@@ -18,15 +18,25 @@ class VacationBalanceRepositoryImpl @Inject constructor(
     private val cache: VacationBalanceCache
 ) : VacationBalanceRepository {
 
+    /**
+     * Loads the balance of the signed-in employee.
+     *
+     * The local copy is saved only when the response could be mapped correctly. When there is no
+     * connection (or the server does not answer) the last saved copy is returned instead.
+     *
+     * @param employeeId the employee whose balance is requested.
+     * @return the balance with its sync timestamp, or the original failure when no cached copy applies.
+     */
     override suspend fun getMyBalance(employeeId: Long): Result<SyncedVacationBalance> {
         val response = apiCall { service.getMyBalance(employeeId) }
         response.onSuccess { dto ->
             val now = LocalDateTime.now()
-            cache.save(employeeId, dto, now)
-            return runCatching { SyncedVacationBalance(VacationBalanceMapper.toDomain(dto), now, fromCache = false) }
+            return runCatching { VacationBalanceMapper.toDomain(dto) }.map { balance ->
+                runCatching { cache.save(employeeId, dto, now) }
+                SyncedVacationBalance(balance, now, fromCache = false)
+            }
         }
         val error = response.exceptionOrNull() ?: IllegalStateException("No se pudo cargar el saldo.")
-        // Sin conexión (o el servidor no responde) se muestra la última copia guardada.
         val cached = if (error.isConnectionProblem()) cache.load(employeeId) else null
         return if (cached != null) {
             runCatching { SyncedVacationBalance(VacationBalanceMapper.toDomain(cached.balance), cached.syncedAt, fromCache = true) }
@@ -53,6 +63,19 @@ class VacationBalanceRepositoryImpl @Inject constructor(
         return apiCall { service.adjust(employeeId, request) }.mapCatching { VacationBalanceMapper.toDomain(it) }
     }
 
-    /** Los errores del backend traen código; los de red o de un servidor caído no. */
-    private fun Throwable.isConnectionProblem(): Boolean = this is ApiException && code == null
+    /**
+     * Tells whether this failure is a connectivity problem.
+     *
+     * Backend errors carry a code; network errors do not. A response that does not come from the
+     * backend (such as "Error 502" from a proxy) has no code either, but the server did answer,
+     * so it is not treated as a lack of connection.
+     */
+    private fun Throwable.isConnectionProblem(): Boolean {
+        val api = this as? ApiException ?: return false
+        return api.code == null && !HTTP_ERROR_MESSAGE.matches(api.message)
+    }
+
+    private companion object {
+        val HTTP_ERROR_MESSAGE = Regex("""^Error \d+$""")
+    }
 }

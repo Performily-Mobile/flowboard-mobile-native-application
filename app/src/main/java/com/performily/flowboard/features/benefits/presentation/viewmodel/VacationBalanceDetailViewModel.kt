@@ -3,20 +3,27 @@ package com.performily.flowboard.features.benefits.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.performily.flowboard.features.benefits.application.usecase.AdjustVacationBalanceUseCase
+import com.performily.flowboard.features.benefits.application.usecase.AdjustmentField
+import com.performily.flowboard.features.benefits.application.usecase.AdjustmentValidationException
 import com.performily.flowboard.features.benefits.application.usecase.GetVacationBalanceUseCase
+import com.performily.flowboard.features.benefits.domain.entity.VacationBalance
 import com.performily.flowboard.features.benefits.domain.valueobject.AdjustmentOperation
 import com.performily.flowboard.features.benefits.presentation.state.AdjustmentForm
 import com.performily.flowboard.features.benefits.presentation.state.VacationBalanceDetailUiState
-import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitsFormatters
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import javax.inject.Inject
 
-/** MA-63 · Saldo de vacaciones de un colaborador y su ajuste manual (US42). */
+/**
+ * ViewModel of the vacation balance detail (MA-63, US42).
+ *
+ * Shows the balance of an employee and handles its manual adjustment.
+ */
 @HiltViewModel
 class VacationBalanceDetailViewModel @Inject constructor(
     private val getVacationBalance: GetVacationBalanceUseCase,
@@ -65,40 +72,50 @@ class VacationBalanceDetailViewModel @Inject constructor(
     fun onReasonChange(value: String) =
         _state.update { it.copy(adjustmentForm = it.adjustmentForm.copy(reason = value.take(MAX_REASON), reasonError = null)) }
 
+    /**
+     * Saves the manual adjustment.
+     *
+     * The adjustment rules (quantity, reason, enough balance) are validated by the use case. The
+     * POST response lacks names (employee, area and movement authors), so the balance is fetched
+     * again and, if that fails, the names are completed from the previous balance. Validation
+     * errors are flagged on their field; any other error is shown below the form.
+     */
     fun saveAdjustment() {
         val balance = _state.value.balance ?: return
         val form = _state.value.adjustmentForm
+        if (form.isSaving) return
         val days = form.days.toBigDecimalOrNull()
-        val daysError = if (days == null || days.signum() <= 0) "Ingresa una cantidad mayor que cero." else null
-        val reasonError = if (form.reason.isBlank()) "Ingresa el motivo del ajuste." else null
-        if (daysError != null || reasonError != null || days == null) {
-            _state.update { it.copy(adjustmentForm = form.copy(daysError = daysError, reasonError = reasonError)) }
+        if (days == null) {
+            _state.update { it.copy(adjustmentForm = form.copy(daysError = "Ingresa una cantidad válida.")) }
             return
         }
 
-        _state.update { it.copy(adjustmentForm = form.copy(isSaving = true, errorMessage = null)) }
+        _state.update { it.copy(adjustmentForm = form.copy(isSaving = true, daysError = null, reasonError = null, errorMessage = null)) }
         viewModelScope.launch {
             adjustVacationBalance(balance, form.operation, days, form.reason)
-                .onSuccess { updated ->
+                .onSuccess { adjusted ->
+                    val refreshed = getVacationBalance(balance.employeeId).getOrNull()
+                    val updated = refreshed ?: withKnownNames(adjusted, balance)
                     val signed = if (form.operation == AdjustmentOperation.ADD) days else days.negate()
                     _state.update {
                         it.copy(
                             balance = updated,
                             isAdjustSheetVisible = false,
-                            snackbarMessage = "Ajuste guardado: ${BenefitsFormatters.signedDays(signed)}. " +
-                                "Disponibles: ${BenefitsFormatters.number(updated.availableDays)}."
+                            snackbarMessage = "Ajuste guardado: ${signedDaysText(signed)}. " +
+                                "Disponibles: ${numberText(updated.availableDays)}."
                         )
                     }
                 }
                 .onFailure { exception ->
                     val message = exception.benefitsMessage(BenefitsAction.ADJUST, "No se pudo guardar el ajuste.")
+                    val field = (exception as? AdjustmentValidationException)?.field
                     _state.update {
                         it.copy(
                             adjustmentForm = it.adjustmentForm.copy(
                                 isSaving = false,
-                                // Los errores de cantidad se marcan en su campo; el resto, debajo del formulario.
-                                daysError = message.takeIf { text -> text.contains("días") || text.contains("cantidad") },
-                                errorMessage = message.takeUnless { text -> text.contains("días") || text.contains("cantidad") }
+                                daysError = message.takeIf { field == AdjustmentField.DAYS },
+                                reasonError = message.takeIf { field == AdjustmentField.REASON },
+                                errorMessage = message.takeIf { field == null }
                             )
                         )
                     }
@@ -107,6 +124,35 @@ class VacationBalanceDetailViewModel @Inject constructor(
     }
 
     fun onSnackbarShown() = _state.update { it.copy(snackbarMessage = null) }
+
+    private fun withKnownNames(adjusted: VacationBalance, previous: VacationBalance): VacationBalance {
+        val authors = previous.movements.associate { it.id to it.authorName }
+        return adjusted.copy(
+            employeeName = adjusted.employeeName ?: previous.employeeName,
+            areaName = adjusted.areaName ?: previous.areaName,
+            movements = adjusted.movements.map { movement ->
+                movement.copy(authorName = movement.authorName ?: authors[movement.id])
+            }
+        )
+    }
+
+    /**
+     * Formats a number without trailing zeros.
+     *
+     * Examples: "2.5", "3".
+     */
+    private fun numberText(value: BigDecimal): String = value.stripTrailingZeros().toPlainString()
+
+    /**
+     * Formats a signed number of days.
+     *
+     * Examples: "+2.5 días", "−3 días", "+1 día".
+     */
+    private fun signedDaysText(value: BigDecimal): String {
+        val sign = if (value.signum() < 0) "−" else "+"
+        val abs = value.abs()
+        return "$sign${numberText(abs)} ${if (abs.compareTo(BigDecimal.ONE) == 0) "día" else "días"}"
+    }
 
     private companion object {
         const val MAX_REASON = 250

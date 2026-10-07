@@ -44,7 +44,11 @@ import com.performily.flowboard.features.benefits.presentation.ui.components.Ben
 import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitsSelectField
 import com.performily.flowboard.features.benefits.presentation.viewmodel.AssignBenefitViewModel
 
-/** MA-61 · Asignar beneficio (pantalla completa, sin barra inferior). */
+/**
+ * Assign benefit screen (MA-61).
+ *
+ * Full-screen form without the bottom bar.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AssignBenefitScreen(
@@ -156,6 +160,7 @@ private fun AssignForm(state: AssignBenefitUiState, viewModel: AssignBenefitView
                 optionLabel = { it.name },
                 onSelect = viewModel::onAreaSelected,
                 supportingText = areaHelper(state),
+                isError = state.previewError != null,
                 modifier = Modifier.fillMaxWidth()
             )
         } else {
@@ -200,6 +205,7 @@ private fun AssignForm(state: AssignBenefitUiState, viewModel: AssignBenefitView
                 label = "Hasta",
                 value = state.endDate,
                 onValueChange = viewModel::onEndDateChange,
+                minDate = state.startDate,
                 isError = state.dateError != null,
                 modifier = Modifier.weight(1f)
             )
@@ -225,9 +231,14 @@ private fun AssignForm(state: AssignBenefitUiState, viewModel: AssignBenefitView
     }
 }
 
-/** "Se asignará a los 48 colaboradores activos del área." */
+/**
+ * Builds the helper text of the area selector.
+ *
+ * Example: "Se asignará a los 48 colaboradores activos del área."
+ */
 private fun areaHelper(state: AssignBenefitUiState): String? {
     val area = state.selectedArea ?: return null
+    state.previewError?.let { return it }
     if (state.isLoadingPreview) return "Calculando colaboradores…"
     val active = state.preview?.activeEmployees?.toLong() ?: area.activeEmployees
     return when (active) {

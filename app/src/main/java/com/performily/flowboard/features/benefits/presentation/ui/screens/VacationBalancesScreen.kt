@@ -25,13 +25,19 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitListRow
+import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitsBanner
+import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitsColors
 import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitsFormatters
 import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitsLoading
 import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitsMessageState
 import com.performily.flowboard.features.benefits.presentation.ui.components.InitialsAvatar
 import com.performily.flowboard.features.benefits.presentation.viewmodel.VacationBalancesViewModel
 
-/** Saldos de vacaciones de los colaboradores activos. Tocar uno abre su saldo (MA-63). */
+/**
+ * Vacation balances screen.
+ *
+ * Lists the balances of active employees; tapping one opens its detail (MA-63).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VacationBalancesScreen(
@@ -57,6 +63,7 @@ fun VacationBalancesScreen(
         val contentModifier = Modifier
             .fillMaxSize()
             .padding(paddingValues)
+        val errorMessage = state.errorMessage
         when {
             state.isLoading -> BenefitsLoading(modifier = contentModifier)
             state.errorMessage != null && state.balances.isEmpty() -> BenefitsMessageState(
@@ -70,6 +77,19 @@ fun VacationBalancesScreen(
                 modifier = contentModifier,
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
             ) {
+                if (errorMessage != null && state.balances.isNotEmpty()) {
+                    item {
+                        BenefitsBanner(
+                            message = errorMessage,
+                            icon = FlowboardIcons.Warning,
+                            containerColor = BenefitsColors.WarningBanner,
+                            contentColor = BenefitsColors.OnWarningBanner,
+                            modifier = Modifier.padding(bottom = 8.dp),
+                            actionLabel = "Reintentar",
+                            onAction = viewModel::load
+                        )
+                    }
+                }
                 item {
                     OutlinedTextField(
                         value = state.query,

@@ -28,7 +28,11 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 
-/** Campo desplegable de solo lectura (Tipo de beneficio, Área, Colaborador, Unidad). */
+/**
+ * Read-only dropdown field.
+ *
+ * Used for benefit type, area, employee and unit selection.
+ */
 @Composable
 fun <T> BenefitsSelectField(
     label: String,
@@ -82,8 +86,10 @@ fun <T> BenefitsSelectField(
 }
 
 /**
- * Campo de fecha con calendario. Con [maxDate] no deja elegir días posteriores
- * (la fecha de entrega no puede ser futura).
+ * Date field backed by a calendar picker.
+ *
+ * With [maxDate] later days cannot be picked (a delivery date cannot be in the future) and
+ * with [minDate] earlier days cannot be picked.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,6 +99,7 @@ fun BenefitsDateField(
     onValueChange: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
     maxDate: LocalDate? = null,
+    minDate: LocalDate? = null,
     isError: Boolean = false,
     supportingText: String? = null
 ) {
@@ -119,11 +126,14 @@ fun BenefitsDateField(
 
     if (showDialog) {
         val maxMillis = maxDate?.toEpochMillis()
+        val minMillis = minDate?.toEpochMillis()
         val state = rememberDatePickerState(
             initialSelectedDateMillis = value.toEpochMillis(),
             selectableDates = object : SelectableDates {
-                override fun isSelectableDate(utcTimeMillis: Long): Boolean = maxMillis == null || utcTimeMillis <= maxMillis
-                override fun isSelectableYear(year: Int): Boolean = maxDate == null || year <= maxDate.year
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+                    (maxMillis == null || utcTimeMillis <= maxMillis) && (minMillis == null || utcTimeMillis >= minMillis)
+                override fun isSelectableYear(year: Int): Boolean =
+                    (maxDate == null || year <= maxDate.year) && (minDate == null || year >= minDate.year)
             }
         )
         DatePickerDialog(
@@ -145,7 +155,11 @@ fun BenefitsDateField(
     }
 }
 
-/** Botón segmentado de dos o más opciones: "Colaborador / Área completa", "Agregar / Descontar días". */
+/**
+ * Segmented button with two or more options.
+ *
+ * Used for "Colaborador / Área completa" and "Agregar / Descontar días".
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> BenefitsSegmented(

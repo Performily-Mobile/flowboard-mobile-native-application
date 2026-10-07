@@ -11,7 +11,11 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-/** Textos y formatos de Benefits tal como aparecen en el prototipo (MA-57 a MA-63). */
+/**
+ * Benefits text formatters.
+ *
+ * Texts and formats exactly as they appear in the prototype (MA-57 to MA-63).
+ */
 internal object BenefitsFormatters {
     private val symbols = DecimalFormatSymbols(Locale.US)
     private val moneyFormat = DecimalFormat("#,##0.00", symbols)
@@ -24,17 +28,29 @@ internal object BenefitsFormatters {
         "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
     )
 
-    /** 1240 -> "1,240"; 2.50 -> "2.5" */
+    /**
+     * Formats a plain number.
+     *
+     * Example: 1240 -> "1,240"; 2.50 -> "2.5".
+     */
     fun number(value: BigDecimal): String = numberFormat.format(value)
 
-    /** "S/ 1,240.00", "1 día", "2.5 días", "1 unidad" */
+    /**
+     * Formats a quantity with its unit.
+     *
+     * Examples: "S/ 1,240.00", "1 día", "2.5 días", "1 unidad".
+     */
     fun quantity(value: BigDecimal, unit: BenefitUnit): String = when (unit) {
         BenefitUnit.MONEY -> "S/ ${moneyFormat.format(value)}"
         BenefitUnit.DAYS -> "${number(value)} ${if (isOne(value)) "día" else "días"}"
         BenefitUnit.UNITS -> "${number(value)} ${if (isOne(value)) "unidad" else "unidades"}"
     }
 
-    /** "+2.5 días", "−3 días", "+1 día" (con el signo menos tipográfico del prototipo). */
+    /**
+     * Formats a signed number of days using the typographic minus sign of the prototype.
+     *
+     * Examples: "+2.5 días", "−3 días", "+1 día".
+     */
     fun signedDays(value: BigDecimal): String {
         val sign = if (value.signum() < 0) "−" else "+"
         val abs = value.abs()
@@ -45,11 +61,19 @@ internal object BenefitsFormatters {
 
     fun shortDate(date: LocalDate): String = date.format(shortDateFormat)
 
-    /** "el 26/09 a las 08:10" */
+    /**
+     * Formats a date and time for display.
+     *
+     * Example: "el 26/09 a las 08:10".
+     */
     fun syncedAt(dateTime: LocalDateTime): String =
         "el ${dateTime.format(shortDateFormat)} a las ${dateTime.format(timeFormat)}"
 
-    /** Periodo de una asignación: "diciembre 2026" si es un solo mes, si no "01/10/2026 – 15/11/2026". */
+    /**
+     * Formats the validity period of an assignment.
+     *
+     * Shows "diciembre 2026" for a single month, otherwise "01/10/2026 – 15/11/2026".
+     */
     fun period(start: LocalDate, end: LocalDate): String =
         if (start.year == end.year && start.month == end.month) {
             "${monthNames[start.monthValue - 1]} ${start.year}"
@@ -57,14 +81,24 @@ internal object BenefitsFormatters {
             "${date(start)} – ${date(end)}"
         }
 
-    /** Código de una solicitud como en Request: 142 -> "S-0142". */
+    /**
+     * Formats a request code as the Request context does.
+     *
+     * Example: 142 -> "S-0142".
+     */
     fun requestCode(requestId: Long): String = "S-%04d".format(requestId)
 
-    /** "María Quispe Rojas" -> "MQ" */
+    /**
+     * Builds avatar initials from a full name.
+     *
+     * Example: "María Quispe Rojas" -> "MQ".
+     */
     fun initials(name: String): String =
         name.split(" ").filter { it.isNotBlank() }.take(2).joinToString("") { it.first().uppercase() }
 
-    /** Título de un movimiento de vacaciones (MA-57, MA-63). */
+    /**
+     * Builds the title of a vacation movement (MA-57, MA-63).
+     */
     fun movementTitle(movement: VacationMovement): String = when (movement.type) {
         VacationMovementType.ACCRUAL -> movement.reason ?: "Acumulación"
         VacationMovementType.USAGE -> movement.requestId?.let { "Uso · Solicitud ${requestCode(it)}" } ?: "Uso de vacaciones"
@@ -72,17 +106,21 @@ internal object BenefitsFormatters {
         VacationMovementType.MANUAL_ADJUSTMENT -> "Ajuste manual"
     }
 
-    /** Detalle bajo el título: fecha, y para un ajuste quién lo hizo y el motivo. */
+    /**
+     * Builds the detail line under a movement title.
+     *
+     * Shows the date and, for an adjustment, who made it and the reason.
+     */
     fun movementDetail(movement: VacationMovement): String {
-        val date = movement.occurredAt.toLocalDate()
+        val day = movement.occurredAt.toLocalDate()
         return when (movement.type) {
             VacationMovementType.MANUAL_ADJUSTMENT -> listOfNotNull(
-                shortDate(date),
+                shortDate(day),
                 movement.authorName?.let { "$it (RR.HH.)" },
                 movement.reason?.let { "Motivo: $it" }
             ).joinToString(" · ")
-            VacationMovementType.REVERSAL -> "${shortDate(date)} · Solicitud aprobada anulada"
-            else -> date(date)
+            VacationMovementType.REVERSAL -> "${shortDate(day)} · Solicitud aprobada anulada"
+            else -> date(day)
         }
     }
 

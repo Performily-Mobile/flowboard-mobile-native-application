@@ -3,6 +3,7 @@ package com.performily.flowboard.features.benefits.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.performily.flowboard.features.benefits.application.usecase.AssignBenefitUseCase
+import com.performily.flowboard.features.benefits.application.usecase.AssignmentField
 import com.performily.flowboard.features.benefits.application.usecase.GetAssignmentTargetsUseCase
 import com.performily.flowboard.features.benefits.application.usecase.GetBenefitTypesUseCase
 import com.performily.flowboard.features.benefits.application.usecase.PreviewAreaAssignmentUseCase
@@ -25,8 +26,10 @@ import java.time.LocalDate
 import javax.inject.Inject
 
 /**
- * MA-61 · Asignar beneficio (US38). Al elegir "Área completa" pide al backend la
- * vista previa para mostrar cuántos lo recibirán y cuántos se omitirán.
+ * ViewModel of the assign benefit screen (MA-61, US38).
+ *
+ * When "Área completa" is chosen it requests the preview from the backend to show how many
+ * employees will receive the benefit and how many will be skipped.
  */
 @HiltViewModel
 class AssignBenefitViewModel @Inject constructor(
@@ -73,36 +76,46 @@ class AssignBenefitViewModel @Inject constructor(
     }
 
     fun onModeSelected(mode: AssignTargetMode) {
-        _state.update { it.copy(mode = mode, preview = null, errorMessage = null) }
+        _state.update { it.copy(mode = mode, preview = null, previewError = null, errorMessage = null) }
         refreshPreview()
     }
 
     fun onAreaSelected(area: AreaOption) {
-        _state.update { it.copy(selectedArea = area, preview = null, errorMessage = null) }
+        _state.update { it.copy(selectedArea = area, preview = null, previewError = null, errorMessage = null) }
         refreshPreview()
     }
 
     fun onEmployeeSelected(employee: EmployeeOption) =
         _state.update { it.copy(selectedEmployee = employee, errorMessage = null) }
 
+    /**
+     * Updates the quantity keeping only digits and a single decimal point.
+     */
     fun onQuantityChange(value: String) {
-        // Solo dígitos y un punto decimal.
         val clean = value.filter { it.isDigit() || it == '.' }
         if (clean.count { it == '.' } > 1) return
         _state.update { it.copy(quantity = clean, quantityError = null, errorMessage = null) }
     }
 
+    /**
+     * Updates the start date; when it moves past the end date, the end date moves with it.
+     */
     fun onStartDateChange(date: LocalDate) {
         _state.update { state ->
-            // Si el inicio pasa al fin, el fin se mueve con él.
             val end = if (state.endDate.isBefore(date)) date else state.endDate
             state.copy(startDate = date, endDate = end, dateError = null, errorMessage = null)
         }
         refreshPreview()
     }
 
+    /**
+     * Updates the end date, which can never be earlier than the start date.
+     */
     fun onEndDateChange(date: LocalDate) {
-        _state.update { it.copy(endDate = date, dateError = null, errorMessage = null) }
+        _state.update { state ->
+            val end = if (date.isBefore(state.startDate)) state.startDate else date
+            state.copy(endDate = end, dateError = null, errorMessage = null)
+        }
         refreshPreview()
     }
 
@@ -112,18 +125,33 @@ class AssignBenefitViewModel @Inject constructor(
         val area = current.selectedArea
         previewJob?.cancel()
         if (current.mode != AssignTargetMode.AREA || type == null || area == null || current.endDate.isBefore(current.startDate)) {
-            _state.update { it.copy(preview = null, isLoadingPreview = false) }
+            _state.update { it.copy(preview = null, previewError = null, isLoadingPreview = false) }
             return
         }
-        _state.update { it.copy(isLoadingPreview = true) }
+        _state.update { it.copy(isLoadingPreview = true, previewError = null) }
         previewJob = viewModelScope.launch {
-            val result = previewAreaAssignment(type.id, area.id, current.startDate, current.endDate)
-            _state.update { it.copy(isLoadingPreview = false, preview = result.getOrNull()) }
+            previewAreaAssignment(type.id, area.id, current.startDate, current.endDate)
+                .onSuccess { preview ->
+                    _state.update { it.copy(isLoadingPreview = false, preview = preview, previewError = null) }
+                }
+                .onFailure { exception ->
+                    _state.update {
+                        it.copy(
+                            isLoadingPreview = false,
+                            preview = null,
+                            previewError = exception.benefitsMessage(
+                                BenefitsAction.LOAD,
+                                "No se pudo calcular cuántos colaboradores lo recibirán."
+                            )
+                        )
+                    }
+                }
         }
     }
 
     fun onSubmit() {
         val current = _state.value
+        if (current.isSubmitting) return
         val type = current.selectedType ?: return
         val quantity = current.quantity.toBigDecimalOrNull()
         if (quantity == null) {
@@ -133,8 +161,11 @@ class AssignBenefitViewModel @Inject constructor(
         val validation = AssignBenefitUseCase.validate(type, quantity, current.startDate, current.endDate)
         if (validation != null) {
             _state.update {
-                if (current.endDate.isBefore(current.startDate)) it.copy(dateError = validation)
-                else it.copy(quantityError = validation)
+                when (validation.field) {
+                    AssignmentField.DATES -> it.copy(dateError = validation.message)
+                    AssignmentField.QUANTITY -> it.copy(quantityError = validation.message)
+                    AssignmentField.TYPE -> it.copy(errorMessage = validation.message)
+                }
             }
             return
         }

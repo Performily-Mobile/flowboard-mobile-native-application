@@ -8,8 +8,29 @@ import java.math.BigDecimal
 import javax.inject.Inject
 
 /**
- * MA-63 · Ajuste manual del saldo (US42). Necesita motivo, queda con el nombre de
- * quien lo hizo y no puede dejar el saldo en negativo.
+ * Adjustment form field.
+ *
+ * Identifies the form field a validation error belongs to.
+ */
+enum class AdjustmentField {
+    DAYS,
+    REASON
+}
+
+/**
+ * Adjustment validation error.
+ *
+ * Carries the affected field so the screen can flag it where it belongs.
+ *
+ * @property field the form field that failed validation.
+ */
+class AdjustmentValidationException(val field: AdjustmentField, message: String) : IllegalArgumentException(message)
+
+/**
+ * Manual vacation balance adjustment (MA-63, US42).
+ *
+ * Requires a reason, records who performed it and can never leave the balance negative.
+ * Validation failures are reported as [AdjustmentValidationException] with a Spanish message.
  */
 class AdjustVacationBalanceUseCase @Inject constructor(
     private val repository: VacationBalanceRepository,
@@ -22,18 +43,29 @@ class AdjustVacationBalanceUseCase @Inject constructor(
         reason: String
     ): Result<VacationBalance> {
         val cleanReason = reason.trim()
-        return when {
-            days.signum() <= 0 -> Result.failure(IllegalArgumentException("Ingresa una cantidad mayor que cero."))
-            days.scale() > 2 -> Result.failure(IllegalArgumentException("Usa como máximo 2 decimales."))
-            cleanReason.isEmpty() -> Result.failure(IllegalArgumentException("Ingresa el motivo del ajuste."))
-            cleanReason.length > MAX_REASON -> Result.failure(IllegalArgumentException("El motivo admite hasta  caracteres."))
+        val normalized = days.stripTrailingZeros()
+        val error: AdjustmentValidationException? = when {
+            days.signum() <= 0 ->
+                AdjustmentValidationException(AdjustmentField.DAYS, "Ingresa una cantidad mayor que cero.")
+            normalized.scale() > MAX_DECIMALS ->
+                AdjustmentValidationException(AdjustmentField.DAYS, "Usa como máximo 2 decimales.")
+            normalized.precision() - normalized.scale() > MAX_INTEGER_DIGITS ->
+                AdjustmentValidationException(AdjustmentField.DAYS, "La cantidad admite hasta 4 dígitos enteros.")
+            cleanReason.isEmpty() ->
+                AdjustmentValidationException(AdjustmentField.REASON, "Ingresa el motivo del ajuste.")
+            cleanReason.length > MAX_REASON ->
+                AdjustmentValidationException(AdjustmentField.REASON, "El motivo admite hasta $MAX_REASON caracteres.")
             operation == AdjustmentOperation.DEDUCT && days > balance.availableDays ->
-                Result.failure(IllegalArgumentException("No puede descontar más de los días disponibles."))
-            else -> repository.adjust(balance.employeeId, operation, days, cleanReason, currentEmployee.currentEmployeeId().value)
+                AdjustmentValidationException(AdjustmentField.DAYS, "No puede descontar más de los días disponibles.")
+            else -> null
         }
+        if (error != null) return Result.failure(error)
+        return repository.adjust(balance.employeeId, operation, days, cleanReason, currentEmployee.currentEmployeeId().value)
     }
 
     private companion object {
         const val MAX_REASON = 250
+        const val MAX_DECIMALS = 2
+        const val MAX_INTEGER_DIGITS = 4
     }
 }

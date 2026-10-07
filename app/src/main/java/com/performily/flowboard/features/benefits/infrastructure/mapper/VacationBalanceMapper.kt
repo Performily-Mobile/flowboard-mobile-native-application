@@ -27,7 +27,7 @@ object VacationBalanceMapper {
                     reason = movement.reason?.takeIf { it.isNotBlank() },
                     authorName = movement.authorName?.takeIf { it.isNotBlank() },
                     requestId = movement.requestId,
-                    occurredAt = BenefitsEnumMapper.dateTime(movement.occurredAt) ?: LocalDateTime.MIN
+                    occurredAt = BenefitsEnumMapper.dateTime(movement.occurredAt) ?: LocalDateTime.of(1970, 1, 1, 0, 0)
                 )
             }
             .sortedByDescending { it.occurredAt }

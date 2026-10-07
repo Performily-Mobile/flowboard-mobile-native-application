@@ -7,13 +7,21 @@ import com.performily.flowboard.features.benefits.domain.entity.EmployeeOption
 import java.time.LocalDate
 import java.time.YearMonth
 
-/** "Asignar a" del prototipo. */
+/**
+ * Assignment target mode.
+ *
+ * Options of the "Asignar a" selector: a single employee or a whole area.
+ */
 enum class AssignTargetMode(val label: String) {
     EMPLOYEE("Colaborador"),
     AREA("Área completa")
 }
 
-/** MA-61 · Asignar beneficio. Por defecto la vigencia es el mes actual. */
+/**
+ * UI state of the assign benefit screen (MA-61).
+ *
+ * The validity period defaults to the current month.
+ */
 data class AssignBenefitUiState(
     val isLoading: Boolean = false,
     val loadError: String? = null,
@@ -29,24 +37,43 @@ data class AssignBenefitUiState(
     val endDate: LocalDate = YearMonth.now().atEndOfMonth(),
     val preview: AreaAssignmentPreview? = null,
     val isLoadingPreview: Boolean = false,
+    /**
+     * Area preview failure message.
+     *
+     * While set, assigning to an area is blocked until the preview is computed successfully.
+     */
+    val previewError: String? = null,
     val quantityError: String? = null,
     val dateError: String? = null,
     val errorMessage: String? = null,
     val isSubmitting: Boolean = false,
-    /** Cuando tiene valor, la asignación se hizo y la pantalla vuelve con este mensaje. */
+    /**
+     * Success message after assigning.
+     *
+     * When set, the assignment was made and the screen returns with this message.
+     */
     val resultMessage: String? = null
 ) {
     val hasTarget: Boolean
         get() = if (mode == AssignTargetMode.AREA) selectedArea != null else selectedEmployee != null
 
-    /** Al asignar a un área donde todos ya lo tienen, no hay nada que asignar. */
+    /**
+     * Whether there is nothing to assign.
+     *
+     * True when assigning to an area where every employee already has the benefit.
+     */
     val nothingToAssign: Boolean
         get() = mode == AssignTargetMode.AREA && preview != null && preview.toAssign == 0
 
     val canSubmit: Boolean
-        get() = !isSubmitting && selectedType != null && hasTarget && quantity.isNotBlank() && !nothingToAssign
+        get() = !isSubmitting && selectedType != null && hasTarget && quantity.isNotBlank() && !nothingToAssign &&
+            !(mode == AssignTargetMode.AREA && previewError != null)
 
-    /** "Asignar a 46 colaboradores" con la vista previa del área; si no, "Asignar beneficio". */
+    /**
+     * Submit button label.
+     *
+     * Shows "Asignar a 46 colaboradores" when the area preview is available, otherwise "Asignar beneficio".
+     */
     val submitLabel: String
         get() {
             val count = preview?.toAssign

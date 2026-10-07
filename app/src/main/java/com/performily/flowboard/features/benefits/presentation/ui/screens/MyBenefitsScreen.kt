@@ -33,6 +33,7 @@ import com.performily.flowboard.features.benefits.domain.entity.BenefitAssignmen
 import com.performily.flowboard.features.benefits.domain.entity.EmployeeBenefits
 import com.performily.flowboard.features.benefits.domain.valueobject.AssignmentStatus
 import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitCard
+import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitsBanner
 import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitChip
 import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitListRow
 import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitsColors
@@ -43,10 +44,18 @@ import com.performily.flowboard.features.benefits.presentation.ui.components.Ico
 import com.performily.flowboard.features.benefits.presentation.ui.components.SectionHeader
 import com.performily.flowboard.features.benefits.presentation.viewmodel.MyBenefitsViewModel
 
-/** En "Vigentes" se muestran también los últimos entregados, como en MA-58. */
+/**
+ * Number of delivered benefits shown in the "Vigentes" section.
+ *
+ * The latest delivered ones are listed there too, as in MA-58.
+ */
 private const val RECENT_DELIVERED = 2
 
-/** MA-58 / MA-59 · Mis beneficios: vigentes y entregados. */
+/**
+ * My benefits screen (MA-58, MA-59).
+ *
+ * Lists current and delivered benefits.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyBenefitsScreen(
@@ -84,6 +93,18 @@ fun MyBenefitsScreen(
                     }
             }
             val benefits = state.benefits
+            val errorMessage = state.errorMessage
+            if (benefits != null && errorMessage != null) {
+                BenefitsBanner(
+                    message = errorMessage,
+                    icon = FlowboardIcons.Warning,
+                    containerColor = BenefitsColors.WarningBanner,
+                    contentColor = BenefitsColors.OnWarningBanner,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    actionLabel = "Reintentar",
+                    onAction = viewModel::load
+                )
+            }
             when {
                 state.isLoading -> BenefitsLoading()
                 benefits == null -> BenefitsMessageState(
@@ -141,7 +162,9 @@ private fun DeliveredTab(delivered: List<BenefitAssignment>) {
     }
 }
 
-/** Tarjeta de un beneficio vigente (MA-58). */
+/**
+ * Card of a current benefit (MA-58).
+ */
 @Composable
 private fun CurrentBenefitCard(assignment: BenefitAssignment) {
     BenefitCard {
@@ -166,7 +189,11 @@ private fun CurrentBenefitCard(assignment: BenefitAssignment) {
     }
 }
 
-/** Fila de un beneficio entregado (MA-59): "Entregado el 15/07/2026 · S/ 1,240.00". */
+/**
+ * Row of a delivered benefit (MA-59).
+ *
+ * Example: "Entregado el 15/07/2026 · S/ 1,240.00".
+ */
 @Composable
 private fun DeliveredRow(assignment: BenefitAssignment) {
     val deliveredOn = assignment.delivery?.deliveredOn

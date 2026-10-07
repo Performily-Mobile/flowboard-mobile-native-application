@@ -32,7 +32,11 @@ import com.performily.flowboard.features.benefits.presentation.state.BenefitType
 import com.performily.flowboard.features.benefits.presentation.state.DeliveryForm
 import java.time.LocalDate
 
-/** MA-60 · Hoja "Nuevo tipo de beneficio": nombre, unidad de medida y si maneja saldo. */
+/**
+ * New benefit type sheet (MA-60).
+ *
+ * Collects the name, the unit of measure and whether the type tracks a balance.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateBenefitTypeSheet(
@@ -44,7 +48,7 @@ fun CreateBenefitTypeSheet(
     onDismiss: () -> Unit
 ) {
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!form.isSaving) onDismiss() },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ) {
         Column(
@@ -87,7 +91,11 @@ fun CreateBenefitTypeSheet(
     }
 }
 
-/** MA-60 · Confirmación para activar o desactivar un tipo del catálogo. */
+/**
+ * Benefit type status confirmation (MA-60).
+ *
+ * Asks the user to confirm activating or deactivating a catalog type.
+ */
 @Composable
 fun ToggleBenefitTypeDialog(
     benefitType: BenefitType,
@@ -117,7 +125,11 @@ fun ToggleBenefitTypeDialog(
     )
 }
 
-/** MA-62 · Diálogo "Registrar entrega". Una entrega solo se registra una vez. */
+/**
+ * Register delivery dialog (MA-62).
+ *
+ * A delivery can only be registered once.
+ */
 @Composable
 fun RegisterDeliveryDialog(
     form: DeliveryForm,
@@ -142,6 +154,7 @@ fun RegisterDeliveryDialog(
                     label = "Fecha de entrega",
                     value = form.deliveredOn,
                     onValueChange = onDateChange,
+                    minDate = assignment.startDate,
                     maxDate = LocalDate.now(),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -171,7 +184,11 @@ fun RegisterDeliveryDialog(
     )
 }
 
-/** MA-63 · Hoja "Ajustar saldo": agregar o descontar días con un motivo obligatorio. */
+/**
+ * Adjust balance sheet (MA-63).
+ *
+ * Adds or deducts vacation days with a mandatory reason.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdjustBalanceSheet(
@@ -183,7 +200,7 @@ fun AdjustBalanceSheet(
     onDismiss: () -> Unit
 ) {
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!form.isSaving) onDismiss() },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ) {
         Column(
@@ -250,7 +267,7 @@ private fun DialogActions(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
     ) {
-        TextButton(onClick = onCancel) { Text("Cancelar") }
+        TextButton(onClick = onCancel, enabled = !isLoading) { Text("Cancelar") }
         Button(onClick = onConfirm, enabled = enabled, shape = RoundedCornerShape(8.dp)) {
             if (isLoading) {
                 CircularProgressIndicator(
