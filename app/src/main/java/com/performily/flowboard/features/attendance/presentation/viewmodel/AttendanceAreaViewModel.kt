@@ -39,6 +39,10 @@ class AttendanceAreaViewModel @Inject constructor(
         load()
     }
 
+    fun setStatusFilter(status: String) {
+        _state.update { it.copy(statusFilter = status) }
+    }
+
     fun load() {
         val area = _state.value.selectedArea ?: return
         viewModelScope.launch {
