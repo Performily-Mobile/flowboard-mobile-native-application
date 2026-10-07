@@ -4,14 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.performily.flowboard.features.wellbeing.application.usecase.DefineThresholdUseCase
 import com.performily.flowboard.features.wellbeing.application.usecase.GetThresholdsUseCase
+import com.performily.flowboard.features.wellbeing.application.usecase.ValidateThresholdRangesUseCase
 import com.performily.flowboard.features.wellbeing.domain.entity.MetricThreshold
-import com.performily.flowboard.features.wellbeing.domain.service.ThresholdRangesValidator
 import com.performily.flowboard.features.wellbeing.domain.valueobject.HealthIndicator
 import com.performily.flowboard.features.wellbeing.domain.valueobject.MetricType
 import com.performily.flowboard.features.wellbeing.domain.valueobject.ThresholdRange
 import com.performily.flowboard.features.wellbeing.presentation.state.ThresholdRowState
 import com.performily.flowboard.features.wellbeing.presentation.state.ThresholdsUiState
-import com.performily.flowboard.features.wellbeing.presentation.ui.components.WellbeingFormatters
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,23 +21,32 @@ import java.math.BigDecimal
 import javax.inject.Inject
 
 /**
- * MA-74 · Configuración de umbrales (US49).
- * Valida mientras se escribe con las mismas reglas que el backend, para que el
- * error aparezca en la fila exacta y "Guardar" solo se active con rangos válidos.
+ * MA-74 - Threshold configuration (US49).
+ *
+ * Validates while the user types with the same rules as the backend, so the error appears on
+ * the exact row and "Guardar" is enabled only with valid ranges.
  */
 @HiltViewModel
 class ThresholdsViewModel @Inject constructor(
     private val getThresholds: GetThresholdsUseCase,
-    private val defineThreshold: DefineThresholdUseCase
+    private val defineThreshold: DefineThresholdUseCase,
+    private val validateRanges: ValidateThresholdRangesUseCase
 ) : ViewModel() {
-
-    private val validator = ThresholdRangesValidator()
 
     private val _state = MutableStateFlow(ThresholdsUiState())
     val state: StateFlow<ThresholdsUiState> = _state.asStateFlow()
 
+    /**
+     * Loads the saved thresholds and builds the editable drafts.
+     *
+     * Does nothing when the drafts of this office are already loaded or a load is running.
+     *
+     * @param officeId office to configure
+     * @param officeName name shown in the top bar
+     */
     fun load(officeId: Long, officeName: String) {
-        if (_state.value.officeId == officeId && _state.value.drafts.isNotEmpty()) return
+        val current = _state.value
+        if (current.officeId == officeId && (current.drafts.isNotEmpty() || current.isLoading)) return
         _state.update { ThresholdsUiState(officeId = officeId, officeName = officeName, isLoading = true) }
         viewModelScope.launch {
             getThresholds(officeId)
@@ -60,8 +68,15 @@ class ThresholdsViewModel @Inject constructor(
         }
     }
 
+    /** Reloads after a failed load, when the user taps "Reintentar". */
+    fun retry() {
+        val current = _state.value
+        val officeId = current.officeId ?: return
+        load(officeId, current.officeName)
+    }
+
     fun onMetricSelected(metricType: MetricType) {
-        _state.update { it.copy(selectedMetric = metricType) }
+        _state.update { it.copy(selectedMetric = metricType, saveError = null) }
         validate()
     }
 
@@ -69,6 +84,12 @@ class ThresholdsViewModel @Inject constructor(
 
     fun onMaxChange(indicator: HealthIndicator, value: String) = updateRow(indicator) { it.copy(max = value) }
 
+    /**
+     * Saves the ranges of the selected metric.
+     *
+     * A failure is reported in [ThresholdsUiState.saveError], which does not disable the save
+     * button, so the user can retry without editing a field.
+     */
     fun onSave() {
         val current = _state.value
         val officeId = current.officeId ?: return
@@ -76,7 +97,7 @@ class ThresholdsViewModel @Inject constructor(
         val metric = current.selectedMetric
         val ranges = parseRows(current.rows).ranges
 
-        _state.update { it.copy(isSaving = true) }
+        _state.update { it.copy(isSaving = true, saveError = null) }
         viewModelScope.launch {
             defineThreshold(officeId, metric, ranges)
                 .onSuccess {
@@ -84,13 +105,13 @@ class ThresholdsViewModel @Inject constructor(
                         it.copy(
                             isSaving = false,
                             configuredMetrics = it.configuredMetrics + metric,
-                            snackbarMessage = "Umbrales de ${WellbeingFormatters.alertName(metric).lowercase()} guardados."
+                            snackbarMessage = "Umbrales de ${metric.shortLabel.lowercase()} guardados."
                         )
                     }
                 }
                 .onFailure { exception ->
                     _state.update {
-                        it.copy(isSaving = false, generalError = exception.wellbeingMessage("No se pudieron guardar los umbrales."))
+                        it.copy(isSaving = false, saveError = exception.wellbeingMessage("No se pudieron guardar los umbrales."))
                     }
                 }
         }
@@ -101,18 +122,21 @@ class ThresholdsViewModel @Inject constructor(
     private fun updateRow(indicator: HealthIndicator, change: (ThresholdRowState) -> ThresholdRowState) {
         _state.update { state ->
             val rows = state.rows.map { row -> if (row.indicator == indicator) change(row) else row }
-            state.copy(drafts = state.drafts + (state.selectedMetric to rows))
+            state.copy(drafts = state.drafts + (state.selectedMetric to rows), saveError = null)
         }
         validate()
     }
 
-    /** Valida las filas de la métrica seleccionada y deja los errores en el estado. */
+    /**
+     * Validates the rows of the selected metric and stores the errors in the state.
+     *
+     * Format errors of a row take priority over range errors.
+     */
     private fun validate() {
         _state.update { state ->
             val parsed = parseRows(state.rows)
-            val validation = validator.validate(state.selectedMetric, parsed.ranges)
+            val validation = validateRanges(state.selectedMetric, parsed.ranges)
             state.copy(
-                // Los errores de formato de la fila tienen prioridad sobre los de rango.
                 rowErrors = validation.rowErrors + parsed.errors,
                 generalError = validation.generalError
             )
@@ -135,7 +159,11 @@ class ThresholdsViewModel @Inject constructor(
 
     private data class ParsedRows(val ranges: List<ThresholdRange>, val errors: Map<HealthIndicator, String>)
 
-    /** Una fila vacía no se envía (el nivel queda sin definir); a medio llenar es un error. */
+    /**
+     * Converts the text rows into ranges.
+     *
+     * A blank row is not sent (the level stays undefined); a half-filled or non-numeric row is an error.
+     */
     private fun parseRows(rows: List<ThresholdRowState>): ParsedRows {
         val ranges = mutableListOf<ThresholdRange>()
         val errors = mutableMapOf<HealthIndicator, String>()
@@ -154,7 +182,11 @@ class ThresholdsViewModel @Inject constructor(
     private fun BigDecimal.plain(): String = stripTrailingZeros().toPlainString()
 
     companion object {
-        /** Valores sugeridos cuando la métrica aún no tiene umbral; el usuario los ajusta y guarda. */
+        /**
+         * Suggested values used when a metric has no threshold yet; the user adjusts and saves them.
+         *
+         * @param metric metric to suggest ranges for
+         */
         fun defaultRanges(metric: MetricType): List<ThresholdRange> = when (metric) {
             MetricType.TEMPERATURE -> listOf(
                 range(HealthIndicator.OPTIMAL, 18, 24),

@@ -13,7 +13,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/** MA-71 · Registro de un espacio (US47). */
+/**
+ * MA-71 - Registers a workspace (US47).
+ *
+ * Text inputs are truncated to the maximum lengths the backend validates.
+ */
 @HiltViewModel
 class NewOfficeViewModel @Inject constructor(
     private val createOffice: CreateOfficeUseCase
@@ -22,16 +26,24 @@ class NewOfficeViewModel @Inject constructor(
     private val _state = MutableStateFlow(NewOfficeUiState())
     val state: StateFlow<NewOfficeUiState> = _state.asStateFlow()
 
-    fun onNameChange(value: String) = _state.update { it.copy(name = value, nameError = null, errorMessage = null) }
+    fun onNameChange(value: String) =
+        _state.update { it.copy(name = value.take(MAX_NAME), nameError = null, errorMessage = null) }
 
     fun onAreaChange(value: String) = _state.update { it.copy(area = value) }
 
-    fun onAddressChange(value: String) = _state.update { it.copy(address = value, addressError = null) }
+    fun onAddressChange(value: String) =
+        _state.update { it.copy(address = value.take(MAX_ADDRESS), addressError = null) }
 
-    fun onFloorChange(value: String) = _state.update { it.copy(floor = value, floorError = null) }
+    fun onFloorChange(value: String) =
+        _state.update { it.copy(floor = value.take(MAX_FLOOR), floorError = null) }
 
-    fun onReferenceChange(value: String) = _state.update { it.copy(reference = value) }
+    fun onReferenceChange(value: String) = _state.update { it.copy(reference = value.take(MAX_REFERENCE)) }
 
+    /**
+     * Validates the form and creates the office.
+     *
+     * A repeated name is shown on the name field itself, as in the prototype.
+     */
     fun onSubmit() {
         val form = _state.value
         val nameError = if (form.name.isBlank()) "Ingresa el nombre del espacio." else null
@@ -49,7 +61,6 @@ class NewOfficeViewModel @Inject constructor(
                 .onFailure { exception ->
                     val message = exception.wellbeingMessage("No se pudo crear el espacio.")
                     _state.update {
-                        // Un nombre repetido se marca en el propio campo, como en el prototipo.
                         if ((exception as? ApiException)?.code == "OFFICE_CONFLICT") {
                             it.copy(isSubmitting = false, nameError = message)
                         } else {
@@ -58,5 +69,13 @@ class NewOfficeViewModel @Inject constructor(
                     }
                 }
         }
+    }
+
+    private companion object {
+        /** Maximum lengths validated by the backend (CreateOfficeResource). */
+        const val MAX_NAME = 80
+        const val MAX_ADDRESS = 150
+        const val MAX_FLOOR = 30
+        const val MAX_REFERENCE = 150
     }
 }

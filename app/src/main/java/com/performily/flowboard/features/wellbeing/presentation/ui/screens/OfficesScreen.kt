@@ -21,18 +21,32 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.features.wellbeing.presentation.ui.components.BannerTone
 import com.performily.flowboard.features.wellbeing.presentation.ui.components.OfficeCard
+import com.performily.flowboard.features.wellbeing.presentation.ui.components.StatusBanner
 import com.performily.flowboard.features.wellbeing.presentation.ui.components.WellbeingLoading
 import com.performily.flowboard.features.wellbeing.presentation.ui.components.WellbeingMessageState
 import com.performily.flowboard.features.wellbeing.presentation.viewmodel.OfficesViewModel
 import kotlinx.coroutines.delay
 
-/** Cada cuánto se refrescan los indicadores mientras la pantalla está abierta. */
+/** How often the indicators are refreshed while the screen is visible. */
 internal const val WELLBEING_REFRESH_MILLIS = 30_000L
 
-/** MA-70 · Espacios: estado general de cada espacio de trabajo. */
+/**
+ * MA-70 - Offices: overall state of each workspace.
+ *
+ * The list is reloaded every [WELLBEING_REFRESH_MILLIS] only while the screen is at least
+ * started, so nothing is requested while the app is in the background.
+ *
+ * @param onBack called when the user leaves the screen
+ * @param onOfficeClick called with the id of the tapped office
+ * @param onNewOfficeClick called when the user wants to register an office
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OfficesScreen(
@@ -42,12 +56,14 @@ fun OfficesScreen(
     viewModel: OfficesViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Se recarga al volver a la pantalla y cada 30 s para que las lecturas no queden viejas.
-    LaunchedEffect(Unit) {
-        while (true) {
-            viewModel.load()
-            delay(WELLBEING_REFRESH_MILLIS)
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (true) {
+                viewModel.load()
+                delay(WELLBEING_REFRESH_MILLIS)
+            }
         }
     }
 
@@ -83,7 +99,7 @@ fun OfficesScreen(
                 title = "No se pudieron cargar los espacios",
                 message = state.errorMessage.orEmpty(),
                 actionLabel = "Reintentar",
-                onAction = viewModel::load,
+                onAction = viewModel::retry,
                 modifier = contentModifier
             )
 
@@ -97,10 +113,17 @@ fun OfficesScreen(
 
             else -> LazyColumn(
                 modifier = contentModifier,
-                // Espacio inferior para que el FAB no tape la última tarjeta.
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                if (state.errorMessage != null) {
+                    item {
+                        StatusBanner(
+                            message = "No se pudo actualizar. Mostrando el último dato disponible.",
+                            tone = BannerTone.WARNING
+                        )
+                    }
+                }
                 item {
                     Text(
                         text = "Estado ambiental de cada espacio de trabajo",

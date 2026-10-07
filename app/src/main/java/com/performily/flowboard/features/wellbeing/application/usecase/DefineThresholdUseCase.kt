@@ -2,20 +2,27 @@ package com.performily.flowboard.features.wellbeing.application.usecase
 
 import com.performily.flowboard.features.wellbeing.domain.entity.MetricThreshold
 import com.performily.flowboard.features.wellbeing.domain.repository.ThresholdRepository
-import com.performily.flowboard.features.wellbeing.domain.service.ThresholdRangesValidator
 import com.performily.flowboard.features.wellbeing.domain.valueobject.MetricType
 import com.performily.flowboard.features.wellbeing.domain.valueobject.ThresholdRange
 import javax.inject.Inject
 
 /**
- * MA-74 · Define o redefine los rangos de una métrica (US49). Valida antes de enviar
- * con las mismas reglas del backend, que igual vuelve a validar.
+ * MA-74 - Defines or redefines the ranges of a metric (US49).
+ *
+ * Validates before sending with the same rules as the backend, which validates again.
  */
-class DefineThresholdUseCase @Inject constructor(private val repository: ThresholdRepository) {
-    private val validator = ThresholdRangesValidator()
-
+class DefineThresholdUseCase @Inject constructor(
+    private val repository: ThresholdRepository,
+    private val validateRanges: ValidateThresholdRangesUseCase
+) {
+    /**
+     * @param officeId office that owns the threshold
+     * @param metricType metric to configure
+     * @param ranges new ranges of the metric
+     * @return the saved threshold, or a failure with the first validation message
+     */
     suspend operator fun invoke(officeId: Long, metricType: MetricType, ranges: List<ThresholdRange>): Result<MetricThreshold> {
-        val validation = validator.validate(metricType, ranges)
+        val validation = validateRanges(metricType, ranges)
         if (!validation.isValid) {
             val message = validation.generalError ?: validation.rowErrors.values.first()
             return Result.failure(IllegalArgumentException(message))

@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.features.wellbeing.domain.valueobject.MetricType
 import com.performily.flowboard.features.wellbeing.presentation.ui.components.BannerTone
 import com.performily.flowboard.features.wellbeing.presentation.ui.components.MetricSelector
 import com.performily.flowboard.features.wellbeing.presentation.ui.components.OutlinedPanel
@@ -42,7 +43,13 @@ import com.performily.flowboard.features.wellbeing.presentation.ui.components.We
 import com.performily.flowboard.features.wellbeing.presentation.ui.components.WellbeingMessageState
 import com.performily.flowboard.features.wellbeing.presentation.viewmodel.ThresholdsViewModel
 
-/** MA-74 · Umbrales: rangos de cada indicador por métrica. */
+/**
+ * MA-74 - Thresholds: ranges of each indicator per metric.
+ *
+ * @param officeId office being configured
+ * @param officeName name shown in the top bar
+ * @param onBack called when the user leaves the screen
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThresholdsScreen(
@@ -122,6 +129,8 @@ fun ThresholdsScreen(
             state.errorMessage != null -> WellbeingMessageState(
                 title = "No se pudieron cargar los umbrales",
                 message = state.errorMessage.orEmpty(),
+                actionLabel = "Reintentar",
+                onAction = viewModel::retry,
                 modifier = contentModifier
             )
 
@@ -134,6 +143,7 @@ fun ThresholdsScreen(
                 MetricSelector(selected = state.selectedMetric, onSelect = viewModel::onMetricSelected)
 
                 state.generalError?.let { StatusBanner(message = it, tone = BannerTone.DANGER) }
+                state.saveError?.let { StatusBanner(message = it, tone = BannerTone.DANGER) }
 
                 OutlinedPanel {
                     Text(WellbeingFormatters.thresholdTitle(state.selectedMetric), style = MaterialTheme.typography.titleSmall)
@@ -164,6 +174,13 @@ fun ThresholdsScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (state.selectedMetric == MetricType.TEMPERATURE) {
+                    Text(
+                        text = "Las lecturas por debajo del primer rango se clasifican con el nivel de ese primer rango.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }

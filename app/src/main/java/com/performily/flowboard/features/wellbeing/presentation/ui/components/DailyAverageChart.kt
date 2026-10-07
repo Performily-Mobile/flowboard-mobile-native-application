@@ -25,14 +25,21 @@ import com.performily.flowboard.core.designsystem.theme.Divider
 import com.performily.flowboard.features.wellbeing.domain.entity.DailyAverage
 import com.performily.flowboard.features.wellbeing.domain.valueobject.MetricType
 import java.math.BigDecimal
+import kotlin.math.ceil
 
 private const val WEEK_DAYS = 7
 
 /**
- * MA-75 · Barras con el promedio de cada día. Los días deficientes o peligrosos
- * se pintan de otro color para que se vean a simple vista.
- * Con 7 días o menos la etiqueta es la inicial del día (L M M J V S D);
- * con más días se usa el número del día del mes.
+ * MA-75 - Bars with the average of each day.
+ *
+ * Poor or hazardous days are painted in another color so they stand out. With 7 days or fewer
+ * the label is the weekday initial (L M M J V S D); with more days only about seven evenly
+ * spaced labels are shown, using the day of the month, so they do not overlap. The bars are
+ * scaled between the lowest value (or zero) and the highest value (or zero), so negative
+ * averages, such as temperatures below zero, remain visible.
+ *
+ * @param metricType metric being charted
+ * @param dailyAverages one average per day, in ascending date order
  */
 @Composable
 fun DailyAverageChart(
@@ -43,8 +50,10 @@ fun DailyAverageChart(
     OutlinedPanel(modifier = modifier) {
         Text(WellbeingFormatters.chartTitle(metricType), style = MaterialTheme.typography.titleSmall)
 
-        val maxValue = dailyAverages.maxOfOrNull { it.average }?.takeIf { it > BigDecimal.ZERO } ?: BigDecimal.ONE
+        val maxValue = dailyAverages.maxOfOrNull { it.average }?.max(BigDecimal.ZERO) ?: BigDecimal.ZERO
+        val minValue = dailyAverages.minOfOrNull { it.average }?.min(BigDecimal.ZERO) ?: BigDecimal.ZERO
         val useWeekdays = dailyAverages.size <= WEEK_DAYS
+        val labelStep = if (useWeekdays) 1 else ceil(dailyAverages.size / WEEK_DAYS.toDouble()).toInt()
 
         Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
@@ -54,18 +63,33 @@ fun DailyAverageChart(
             )
             Bars(
                 values = dailyAverages,
+                minValue = minValue,
                 maxValue = maxValue,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(140.dp)
             )
+            if (minValue.signum() < 0) {
+                Text(
+                    text = WellbeingFormatters.number(minValue),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             Row(modifier = Modifier.fillMaxWidth()) {
-                dailyAverages.forEach { day ->
+                dailyAverages.forEachIndexed { index, day ->
+                    val label = when {
+                        index % labelStep != 0 -> ""
+                        useWeekdays -> WellbeingFormatters.weekdayInitial(day.date)
+                        else -> day.date.dayOfMonth.toString()
+                    }
                     Text(
-                        text = if (useWeekdays) WellbeingFormatters.weekdayInitial(day.date) else day.date.dayOfMonth.toString(),
+                        text = label,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        softWrap = false,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -80,10 +104,15 @@ fun DailyAverageChart(
     }
 }
 
+/**
+ * Draws the baseline and one bar per day.
+ *
+ * @param minValue lowest value of the scale, zero or negative
+ * @param maxValue highest value of the scale, zero or positive
+ */
 @Composable
-private fun Bars(values: List<DailyAverage>, maxValue: BigDecimal, modifier: Modifier) {
+private fun Bars(values: List<DailyAverage>, minValue: BigDecimal, maxValue: BigDecimal, modifier: Modifier) {
     Canvas(modifier = modifier) {
-        // Línea base del gráfico.
         drawLine(
             color = Divider,
             start = Offset(0f, size.height),
@@ -94,10 +123,11 @@ private fun Bars(values: List<DailyAverage>, maxValue: BigDecimal, modifier: Mod
 
         val slot = size.width / values.size
         val barWidth = (slot * 0.6f).coerceAtMost(32.dp.toPx())
-        val max = maxValue.toFloat()
+        val low = minValue.toFloat()
+        val span = (maxValue.toFloat() - low).takeIf { it > 0f } ?: 1f
 
         values.forEachIndexed { index, day ->
-            val ratio = (day.average.toFloat() / max).coerceIn(0f, 1f)
+            val ratio = ((day.average.toFloat() - low) / span).coerceIn(0f, 1f)
             val barHeight = (size.height * ratio).coerceAtLeast(2.dp.toPx())
             drawRoundRect(
                 color = WellbeingColors.chartBar(day.indicator),
@@ -109,6 +139,7 @@ private fun Bars(values: List<DailyAverage>, maxValue: BigDecimal, modifier: Mod
     }
 }
 
+/** Colored square with its label, used in the chart legend. */
 @Composable
 private fun LegendItem(color: Color, label: String) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {

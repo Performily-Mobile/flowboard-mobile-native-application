@@ -10,8 +10,10 @@ import com.performily.flowboard.features.wellbeing.infrastructure.remote.MetricS
 import com.performily.flowboard.features.wellbeing.infrastructure.remote.OfficeDto
 import com.performily.flowboard.features.wellbeing.infrastructure.remote.OfficeStatusDto
 
+/** Maps office DTOs to domain entities and builds the create-office request. */
 object OfficeMapper {
 
+    /** Maps the response of POST /offices. */
     fun toDomain(dto: OfficeDto): Office = Office(
         id = dto.id,
         name = dto.name,
@@ -20,6 +22,7 @@ object OfficeMapper {
         active = dto.active
     )
 
+    /** Maps the response of GET /offices and GET /offices/{id}/status. */
     fun toDomain(dto: OfficeStatusDto): OfficeStatus = OfficeStatus(
         office = Office(
             id = dto.id,
@@ -32,12 +35,17 @@ object OfficeMapper {
         overallIndicator = WellbeingEnumMapper.indicator(dto.overallIndicator),
         lastReadingAt = WellbeingEnumMapper.dateTime(dto.lastReadingAt),
         metrics = dto.metrics.orEmpty()
-            .mapNotNull(::toDomain)
+            .mapNotNull { toMetricStatus(it) }
             .sortedBy { MetricType.entries.indexOf(it.metricType) },
         devices = dto.devices.orEmpty().map(DeviceMapper::toDomain).sortedBy { it.code }
     )
 
-    private fun toDomain(dto: MetricStatusDto): MetricStatus? {
+    /**
+     * Maps one metric status.
+     *
+     * @return the status, or null when the metric type is unknown to the app
+     */
+    private fun toMetricStatus(dto: MetricStatusDto): MetricStatus? {
         val metricType = WellbeingEnumMapper.metricType(dto.metricType) ?: return null
         return MetricStatus(
             metricType = metricType,
@@ -50,6 +58,7 @@ object OfficeMapper {
         )
     }
 
+    /** Builds the body of POST /offices. */
     fun toCreateRequest(name: String, area: String?, address: String, floor: String, reference: String?): CreateOfficeRequestDto =
         CreateOfficeRequestDto(name = name, area = area, address = address, floor = floor, reference = reference)
 }

@@ -11,34 +11,47 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-/** Textos y formatos de Wellbeing tal como aparecen en el prototipo. */
+/** Texts and formats of Wellbeing as they appear in the prototype. */
 internal object WellbeingFormatters {
-    private val numberFormat = DecimalFormat("#,##0.#", DecimalFormatSymbols(Locale.US))
+    private val numberSymbols = DecimalFormatSymbols(Locale.US)
     private val dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy")
     private val shortDateFormat = DateTimeFormatter.ofPattern("dd/MM")
     private val timeFormat = DateTimeFormatter.ofPattern("HH:mm")
 
-    /** 1620 -> "1,620"; 23.40 -> "23.4" */
-    fun number(value: BigDecimal): String = numberFormat.format(value)
+    /**
+     * Formats a number with thousands separators and at most one decimal.
+     *
+     * A new [DecimalFormat] is created per call because the class is not thread-safe.
+     * Examples: 1620 becomes "1,620" and 23.40 becomes "23.4".
+     */
+    fun number(value: BigDecimal): String = DecimalFormat("#,##0.#", numberSymbols).format(value)
 
-    /** "23.4 °C", "1,620 ppm" */
+    /** Formats a value with its unit, for example "23.4 °C" or "1,620 ppm". */
     fun value(value: BigDecimal, metricType: MetricType): String = "${number(value)} ${metricType.unit}"
 
-    /** "20–24 °C" */
+    /** Formats a range with its unit, for example "20–24 °C". */
     fun range(min: BigDecimal, max: BigDecimal, metricType: MetricType): String =
         "${number(min)}–${number(max)} ${metricType.unit}"
 
+    /** Formats a date as dd/MM/yyyy. */
     fun date(date: LocalDate): String = date.format(dateFormat)
 
+    /** Formats a date range as "dd/MM/yyyy – dd/MM/yyyy". */
     fun dateRange(from: LocalDate, to: LocalDate): String = "${date(from)} – ${date(to)}"
 
+    /** Formats a time as HH:mm. */
     fun time(dateTime: LocalDateTime): String = dateTime.format(timeFormat)
 
-    /** "el 25/09 a las 18:02" */
+    /** Formats a day and time, for example "el 25/09 a las 18:02". */
     fun dayAndTime(dateTime: LocalDateTime): String =
         "el ${dateTime.format(shortDateFormat)} a las ${dateTime.format(timeFormat)}"
 
-    /** Duración desde una fecha hasta ahora: "2 min", "6 h", "3 d". */
+    /**
+     * Formats the duration from a date until now, for example "2 min", "6 h" or "3 d".
+     *
+     * @param since start of the period
+     * @param now end of the period, injectable for tests
+     */
     fun elapsed(since: LocalDateTime, now: LocalDateTime = LocalDateTime.now()): String {
         val minutes = Duration.between(since, now).toMinutes().coerceAtLeast(0)
         return when {
@@ -49,9 +62,10 @@ internal object WellbeingFormatters {
         }
     }
 
-    /** "hace 2 min" */
+    /** Formats the elapsed time as a relative phrase, for example "hace 2 min". */
     fun ago(since: LocalDateTime, now: LocalDateTime = LocalDateTime.now()): String = "hace ${elapsed(since, now)}"
 
+    /** Returns the display label of a health indicator. */
     fun indicatorLabel(indicator: HealthIndicator): String = when (indicator) {
         HealthIndicator.OPTIMAL -> "Óptimo"
         HealthIndicator.ACCEPTABLE -> "Aceptable"
@@ -59,13 +73,14 @@ internal object WellbeingFormatters {
         HealthIndicator.HAZARDOUS -> "Peligro"
     }
 
-    /** Nombre de la métrica en los avisos: "Calidad del aire en nivel peligroso". */
+    /** Returns the metric name used in alerts, for example "Calidad del aire". */
     fun alertName(metricType: MetricType): String = when (metricType) {
         MetricType.TEMPERATURE -> "Temperatura"
         MetricType.ILLUMINATION -> "Iluminación"
         MetricType.AIR_QUALITY -> "Calidad del aire"
     }
 
+    /** Returns the lowercase level name used in alert sentences. */
     fun levelName(indicator: HealthIndicator): String = when (indicator) {
         HealthIndicator.OPTIMAL -> "óptimo"
         HealthIndicator.ACCEPTABLE -> "aceptable"
@@ -73,21 +88,21 @@ internal object WellbeingFormatters {
         HealthIndicator.HAZARDOUS -> "peligroso"
     }
 
-    /** Título del gráfico del histórico: "CO₂ promedio diario (ppm)". */
+    /** Returns the title of the history chart, for example "CO₂ promedio diario (ppm)". */
     fun chartTitle(metricType: MetricType): String = when (metricType) {
         MetricType.TEMPERATURE -> "Temperatura promedio diaria (°C)"
         MetricType.ILLUMINATION -> "Iluminación promedio diaria (lx)"
         MetricType.AIR_QUALITY -> "CO₂ promedio diario (ppm)"
     }
 
-    /** Subtítulo del umbral en la pantalla de umbrales: "Calidad del aire · CO₂ (ppm)". */
+    /** Returns the subtitle of the thresholds screen, for example "Calidad del aire · CO₂ (ppm)". */
     fun thresholdTitle(metricType: MetricType): String = when (metricType) {
         MetricType.TEMPERATURE -> "Temperatura · °C"
         MetricType.ILLUMINATION -> "Iluminación · lx"
         MetricType.AIR_QUALITY -> "Calidad del aire · CO₂ (ppm)"
     }
 
-    /** Inicial del día de la semana en español: L M M J V S D. */
+    /** Returns the Spanish initial of the weekday: L M M J V S D. */
     fun weekdayInitial(date: LocalDate): String = when (date.dayOfWeek.value) {
         1 -> "L"
         2 -> "M"

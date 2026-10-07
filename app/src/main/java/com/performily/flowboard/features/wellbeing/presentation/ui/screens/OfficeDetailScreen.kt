@@ -35,7 +35,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.features.wellbeing.domain.entity.Device
 import com.performily.flowboard.features.wellbeing.domain.entity.OfficeStatus
@@ -53,8 +56,16 @@ import com.performily.flowboard.features.wellbeing.presentation.viewmodel.Office
 import kotlinx.coroutines.delay
 
 /**
- * MA-72 · Indicadores de un espacio y MA-81 · Sin lecturas.
- * Muestra el aviso que corresponda, una tarjeta por métrica y los dispositivos vinculados.
+ * MA-72 - Indicators of an office, and MA-81 - no readings.
+ *
+ * Shows the banner that applies, one card per metric and the linked devices. The status is
+ * refreshed on entry (also when coming back from Thresholds) and every
+ * [WELLBEING_REFRESH_MILLIS], only while the screen is at least started.
+ *
+ * @param officeId office to show
+ * @param onBack called when the user leaves the screen
+ * @param onThresholdsClick called with the office id and name to open the thresholds screen
+ * @param onHistoryClick called with the office id and name to open the history screen
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,12 +78,14 @@ fun OfficeDetailScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Se refresca al entrar (también al volver de Umbrales) y cada 30 s.
-    LaunchedEffect(officeId) {
-        while (true) {
-            viewModel.load(officeId)
-            delay(WELLBEING_REFRESH_MILLIS)
+    LaunchedEffect(officeId, lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (true) {
+                viewModel.load(officeId)
+                delay(WELLBEING_REFRESH_MILLIS)
+            }
         }
     }
 
@@ -140,12 +153,13 @@ fun OfficeDetailScreen(
                 title = "No se pudo cargar el espacio",
                 message = state.errorMessage ?: "Inténtalo nuevamente.",
                 actionLabel = "Reintentar",
-                onAction = { viewModel.load(officeId) },
+                onAction = viewModel::retry,
                 modifier = contentModifier
             )
 
             else -> OfficeDetailContent(
                 status = status,
+                isStale = state.errorMessage != null,
                 onLinkClick = viewModel::showLinkSheet,
                 onDeviceClick = viewModel::requestUnlink,
                 modifier = contentModifier
@@ -159,6 +173,7 @@ fun OfficeDetailScreen(
             code = state.linkForm.code,
             codeError = state.linkForm.codeError,
             inventory = state.linkForm.inventory,
+            inventoryError = state.linkForm.inventoryError,
             isLoadingInventory = state.linkForm.isLoadingInventory,
             isLinking = state.linkForm.isLinking,
             onCodeChange = viewModel::onLinkCodeChange,
@@ -177,9 +192,18 @@ fun OfficeDetailScreen(
     }
 }
 
+/**
+ * Body of the detail screen.
+ *
+ * @param status status of the office
+ * @param isStale true when the last refresh failed and the data shown may be outdated
+ * @param onLinkClick called when the user wants to link a device
+ * @param onDeviceClick called with the tapped device, to unlink it
+ */
 @Composable
 private fun OfficeDetailContent(
     status: OfficeStatus,
+    isStale: Boolean,
     onLinkClick: () -> Unit,
     onDeviceClick: (Device) -> Unit,
     modifier: Modifier = Modifier
@@ -195,6 +219,13 @@ private fun OfficeDetailContent(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
+        if (isStale) {
+            StatusBanner(
+                message = "No se pudo actualizar. Mostrando el último dato disponible.",
+                tone = BannerTone.WARNING
+            )
+        }
 
         bannerFor(status)?.let { (message, tone) -> StatusBanner(message = message, tone = tone) }
 
@@ -235,11 +266,13 @@ private fun OfficeDetailContent(
 }
 
 /**
- * Aviso superior, en este orden de prioridad:
- * 1. Sin ninguna lectura (MA-81).
- * 2. El espacio dejó de reportar: no se calcula el indicador (MA-81).
- * 3. Una métrica dejó de reportar mientras las demás siguen al día.
- * 4. Una métrica vigente en nivel deficiente o peligroso (MA-72).
+ * Builds the top banner, in this order of priority:
+ * 1. No reading at all (MA-81).
+ * 2. The office stopped reporting: no indicator is computed (MA-81).
+ * 3. One metric stopped reporting while the others are up to date.
+ * 4. An up-to-date metric at a poor or hazardous level (MA-72).
+ *
+ * @return the message and tone, or null when no banner applies
  */
 private fun bannerFor(status: OfficeStatus): Pair<String, BannerTone>? {
     val lastReading = status.lastReadingAt
@@ -267,6 +300,7 @@ private fun bannerFor(status: OfficeStatus): Pair<String, BannerTone>? {
         BannerTone.DANGER
 }
 
+/** Confirmation dialog shown before unlinking a device. */
 @Composable
 private fun UnlinkDeviceDialog(
     device: Device,

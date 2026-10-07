@@ -28,9 +28,18 @@ import androidx.compose.ui.unit.dp
 import com.performily.flowboard.features.wellbeing.domain.entity.Device
 
 /**
- * MA-73 · Vincular dispositivo. Se escribe el código o se toca uno del inventario
- * para completarlo. El error del backend (código inexistente o ya vinculado) se
- * muestra debajo del campo.
+ * MA-73 - Link device.
+ *
+ * The user types the code or taps an inventory device to fill it in. The backend error
+ * (unknown code or already linked) is shown below the field.
+ *
+ * @param officeName name of the office the device will be assigned to
+ * @param code typed device code
+ * @param codeError error of the last link attempt
+ * @param inventory devices available in the inventory
+ * @param inventoryError error while loading the inventory, shown instead of the empty message
+ * @param isLoadingInventory true while the inventory is loading
+ * @param isLinking true while the link request is running
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,6 +48,7 @@ fun LinkDeviceSheet(
     code: String,
     codeError: String?,
     inventory: List<Device>,
+    inventoryError: String?,
     isLoadingInventory: Boolean,
     isLinking: Boolean,
     onCodeChange: (String) -> Unit,
@@ -85,6 +95,12 @@ fun LinkDeviceSheet(
                         .size(24.dp)
                         .align(Alignment.CenterHorizontally),
                     strokeWidth = 2.dp
+                )
+
+                inventoryError != null -> Text(
+                    text = inventoryError,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error
                 )
 
                 inventory.isEmpty() -> Text(
