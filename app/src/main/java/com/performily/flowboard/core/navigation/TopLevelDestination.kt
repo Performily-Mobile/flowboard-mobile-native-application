@@ -3,6 +3,12 @@ package com.performily.flowboard.core.navigation
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.session.UserRole
+import com.performily.flowboard.features.benefits.presentation.ui.navigation.AssignBenefitRoute
+import com.performily.flowboard.features.benefits.presentation.ui.navigation.BenefitsAdminRoute
+import com.performily.flowboard.features.benefits.presentation.ui.navigation.MyBenefitsRoute
+import com.performily.flowboard.features.benefits.presentation.ui.navigation.MyVacationBalanceRoute
+import com.performily.flowboard.features.benefits.presentation.ui.navigation.VacationBalanceDetailRoute
+import com.performily.flowboard.features.benefits.presentation.ui.navigation.VacationBalancesRoute
 import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.NewOfficeRoute
 import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.OfficeDetailRoute
 import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.OfficesRoute
@@ -59,7 +65,13 @@ enum class TopLevelDestination(
             NewOfficeRoute::class,
             OfficeDetailRoute::class,
             ThresholdsRoute::class,
-            ReadingHistoryRoute::class
+            ReadingHistoryRoute::class,
+            BenefitsAdminRoute::class,
+            AssignBenefitRoute::class,
+            VacationBalancesRoute::class,
+            VacationBalanceDetailRoute::class,
+            MyBenefitsRoute::class,
+            MyVacationBalanceRoute::class
         )
     ),
 
