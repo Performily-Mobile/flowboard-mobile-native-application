@@ -22,6 +22,11 @@ import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.Ne
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.EditPersonalDataRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.RegisterEmployeeRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.WorkspaceNavGraphRoute
+import com.performily.flowboard.features.request.presentation.ui.navigation.NewRequestRoute
+import com.performily.flowboard.features.request.presentation.ui.navigation.NewRequestTypeRoute
+import com.performily.flowboard.features.request.presentation.ui.navigation.RequestDetailRoute
+import com.performily.flowboard.features.request.presentation.ui.navigation.RequestTypesRoute
+import com.performily.flowboard.features.request.presentation.ui.navigation.ReviewRequestRoute
 
 /** Formularios de pantalla completa: ahí no se muestra la barra inferior. */
 private val routesWithoutBottomBar = listOf(
@@ -31,7 +36,12 @@ private val routesWithoutBottomBar = listOf(
     AssignBenefitRoute::class,
     // Payroll RR.HH.: MA-67 y MA-69 no muestran la barra inferior.
     UploadPayslipsRoute::class,
-    PaymentStatusRoute::class
+    PaymentStatusRoute::class,
+    NewRequestRoute::class,
+    RequestDetailRoute::class,
+    ReviewRequestRoute::class,
+    RequestTypesRoute::class,
+    NewRequestTypeRoute::class
 )
 
 @Composable

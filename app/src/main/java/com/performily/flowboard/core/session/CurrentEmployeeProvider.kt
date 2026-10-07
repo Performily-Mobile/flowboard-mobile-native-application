@@ -18,7 +18,7 @@ class CurrentEmployeeProvider @Inject constructor() {
     fun currentRole(): UserRole = DEFAULT_ROLE
 
     private companion object {
-        const val DEFAULT_EMPLOYEE_ID = 1L
+        const val DEFAULT_EMPLOYEE_ID = 2L
         val DEFAULT_ROLE = UserRole.HUMAN_RESOURCES
     }
 }
