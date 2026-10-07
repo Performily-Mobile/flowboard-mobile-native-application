@@ -6,6 +6,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.WellbeingNavGraphRoute
+import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.wellbeingNavGraph
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.MyProfileRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.OrganizationRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.workspaceNavGraph
@@ -22,11 +24,13 @@ fun AppNavHost(
         modifier = modifier
     ) {
         workspaceNavGraph(navController)
+        wellbeingNavGraph(navController)
 
         composable<MoreRoute> {
             MoreScreen(
                 onOrganizationClick = { navController.navigate(OrganizationRoute) },
                 onMyProfileClick = { navController.navigate(MyProfileRoute) },
+                onWellbeingClick = { navController.navigate(WellbeingNavGraphRoute) },
                 onPendingClick = { title -> navController.navigate(PendingFeatureRoute(title)) }
             )
         }

@@ -3,6 +3,11 @@ package com.performily.flowboard.core.navigation
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.session.UserRole
+import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.NewOfficeRoute
+import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.OfficeDetailRoute
+import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.OfficesRoute
+import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.ReadingHistoryRoute
+import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.ThresholdsRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.EditPersonalDataRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.EmployeeDetailRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.EmployeesRoute
@@ -49,7 +54,12 @@ enum class TopLevelDestination(
             OrganizationChartRoute::class,
             MyProfileRoute::class,
             MyRecordRoute::class,
-            PendingFeatureRoute::class
+            PendingFeatureRoute::class,
+            OfficesRoute::class,
+            NewOfficeRoute::class,
+            OfficeDetailRoute::class,
+            ThresholdsRoute::class,
+            ReadingHistoryRoute::class
         )
     ),
 
