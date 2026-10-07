@@ -8,8 +8,6 @@ import java.time.LocalDateTime
 
 /**
  * Solicitud de un colaborador (vacaciones, descanso médico, permiso por horas...).
- * Los nombres de las personas no vienen del backend de Request: se completan con
- * Workspace a través de [RequestPerson] (capa anticorrupción).
  */
 data class Request(
     val id: Long,
@@ -32,7 +30,7 @@ data class Request(
     val isUnderReview: Boolean get() = status == RequestStatus.UNDER_REVIEW
     val isResolved: Boolean get() = status.isFinal
 
-    /** "Henry Cabrera", o "Recursos Humanos" si la atiende RR.HH. */
+
     val approverName: String
         get() = when (approverType) {
             ApproverType.HR_STAFF -> "Recursos Humanos"
@@ -41,10 +39,10 @@ data class Request(
 
     val requesterName: String get() = requester?.name ?: "Colaborador #$requesterId"
 
-    /** Último cambio que llevó la solicitud a su estado actual (aprobación, rechazo, devolución...). */
+
     val lastChange: RequestHistoryEntry? get() = history.lastOrNull { it.newStatus == status }
 
-    /** Comentario con el que se devolvió a revisión (MA-44). */
+  
     val reviewComment: RequestHistoryEntry?
         get() = history.lastOrNull { it.newStatus == RequestStatus.UNDER_REVIEW }
 
@@ -56,7 +54,7 @@ data class RequestFieldValue(
     val value: String
 )
 
-/** Un cambio de estado del historial (MA-42, MA-44). previousStatus es null en el envío. */
+
 data class RequestHistoryEntry(
     val id: Long,
     val previousStatus: RequestStatus?,

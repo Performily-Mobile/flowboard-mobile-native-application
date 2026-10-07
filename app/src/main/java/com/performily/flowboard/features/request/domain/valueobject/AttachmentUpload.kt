@@ -1,10 +1,6 @@
 package com.performily.flowboard.features.request.domain.valueobject
 
-/**
- * Archivo elegido como sustento de una solicitud, antes de guardarse.
- * sourceUri es la referencia local del archivo (por ejemplo, content://...).
- * Acepta PDF, JPG o PNG de hasta 5 MB, como dice el prototipo (MA-39).
- */
+
 data class AttachmentUpload(
     val sourceUri: String,
     val fileName: String,

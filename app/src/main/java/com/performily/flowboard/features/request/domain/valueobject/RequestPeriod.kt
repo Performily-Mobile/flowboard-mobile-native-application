@@ -5,10 +5,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 
-/**
- * Periodo de una solicitud. Puede ser de días completos (vacaciones) o de unas
- * horas dentro de un mismo día (permiso por horas). Mismas reglas que el backend.
- */
+
 data class RequestPeriod(
     val startDate: LocalDate,
     val endDate: LocalDate,
@@ -26,10 +23,9 @@ data class RequestPeriod(
 
     val hasHours: Boolean get() = startTime != null
 
-    /** Días calendario que se piden; es lo que el backend descuenta del saldo. */
+   
     val days: Int get() = if (hasHours) 0 else ChronoUnit.DAYS.between(startDate, endDate).toInt() + 1
 
-    /** Horas pedidas en un permiso por horas. */
     val hours: Double
         get() = if (startTime != null && endTime != null) Duration.between(startTime, endTime).toMinutes() / 60.0 else 0.0
 }
