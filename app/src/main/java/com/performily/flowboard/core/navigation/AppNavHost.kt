@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.MyProfileRoute
+import com.performily.flowboard.features.attendance.presentation.ui.navigation.attendanceNavGraph
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.OrganizationRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.workspaceNavGraph
 
@@ -22,6 +23,7 @@ fun AppNavHost(
         modifier = modifier
     ) {
         workspaceNavGraph(navController)
+        attendanceNavGraph(navController)
 
         composable<MoreRoute> {
             MoreScreen(

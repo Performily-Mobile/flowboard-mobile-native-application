@@ -17,11 +17,13 @@ import androidx.navigation.compose.rememberNavController
 import com.performily.flowboard.core.session.UserRole
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.EditPersonalDataRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.RegisterEmployeeRoute
+import com.performily.flowboard.features.attendance.presentation.ui.navigation.JustifyAttendanceRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.WorkspaceNavGraphRoute
 
 /** Formularios de pantalla completa: ahí no se muestra la barra inferior. */
 private val routesWithoutBottomBar = listOf(
     RegisterEmployeeRoute::class,
+    JustifyAttendanceRoute::class,
     EditPersonalDataRoute::class
 )
 
@@ -37,7 +39,7 @@ fun FlowboardApp(viewModel: AppShellViewModel = hiltViewModel()) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
     val showBottomBar = currentDestination != null &&
-        routesWithoutBottomBar.none { currentDestination.hasRoute(it) }
+            routesWithoutBottomBar.none { currentDestination.hasRoute(it) }
 
     Scaffold(
         // Cada pantalla maneja sus propios márgenes del sistema con su Scaffold.
