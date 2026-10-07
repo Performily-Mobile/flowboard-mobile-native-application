@@ -9,6 +9,7 @@ import com.performily.flowboard.features.payroll.application.usecase.PayslipUplo
 import com.performily.flowboard.features.payroll.application.usecase.PublishPeriodPayslipsUseCase
 import com.performily.flowboard.features.payroll.application.usecase.ReplacePayslipFileUseCase
 import com.performily.flowboard.features.payroll.application.usecase.UploadPayslipUseCase
+import com.performily.flowboard.features.payroll.application.usecase.ValidatePayslipFileUseCase
 import com.performily.flowboard.features.payroll.domain.entity.PayrollPeriod
 import com.performily.flowboard.features.payroll.domain.entity.Payslip
 import com.performily.flowboard.features.payroll.domain.valueobject.PayrollSystemFile
@@ -16,8 +17,7 @@ import com.performily.flowboard.features.payroll.presentation.state.DuplicatePro
 import com.performily.flowboard.features.payroll.presentation.state.SelectedPayslipFile
 import com.performily.flowboard.features.payroll.presentation.state.UploadPayslipsUiState
 import com.performily.flowboard.features.payroll.presentation.state.UploadProgress
-import com.performily.flowboard.features.payroll.presentation.ui.components.fullName
-import com.performily.flowboard.features.payroll.presentation.ui.components.inlineLabel
+import com.performily.flowboard.features.payroll.presentation.state.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
@@ -27,15 +27,19 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
-/** MA-67 / MA-68 · Carga y publicación de boletas de un período (RR.HH.). */
+/**
+ * View model of the payslip upload screen: upload and publication of the payslips of a period (MA-67 and MA-68).
+ */
 @HiltViewModel
 class UploadPayslipsViewModel @Inject constructor(
     private val getPayrollPeriods: GetPayrollPeriodsUseCase,
     private val getPayslipsByPeriod: GetPayslipsByPeriodUseCase,
     private val uploadPayslip: UploadPayslipUseCase,
     private val replacePayslipFile: ReplacePayslipFileUseCase,
-    private val publishPeriodPayslips: PublishPeriodPayslipsUseCase
+    private val publishPeriodPayslips: PublishPeriodPayslipsUseCase,
+    private val validatePayslipFile: ValidatePayslipFileUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(UploadPayslipsUiState())
@@ -60,7 +64,7 @@ class UploadPayslipsViewModel @Inject constructor(
                     if (selected != null) loadPayslips() else _state.update { it.copy(entries = emptyList()) }
                 }
                 .onFailure { exception ->
-                    _state.update { it.copy(isLoadingPeriods = false, errorMessage = exception.message) }
+                    _state.update { it.copy(isLoadingPeriods = false, errorMessage = exception.toUserMessage()) }
                 }
         }
     }
@@ -79,23 +83,35 @@ class UploadPayslipsViewModel @Inject constructor(
             getPayslipsByPeriod(periodId)
                 .onSuccess { entries -> _state.update { it.copy(isLoadingPayslips = false, entries = entries) } }
                 .onFailure { exception ->
-                    _state.update { it.copy(isLoadingPayslips = false, errorMessage = exception.message) }
+                    _state.update { it.copy(isLoadingPayslips = false, errorMessage = exception.toUserMessage()) }
                 }
         }
     }
 
     /**
-     * Valida y carga los archivos elegidos, uno por uno. Si un colaborador ya tiene boleta
-     * en el período, se detiene y pregunta si se reemplaza (MA-68).
+     * Validates and uploads the picked files one by one.
+     *
+     * If an employee already has a payslip in the period, the upload waits and asks whether it should
+     * be replaced (MA-68). Duplicates cannot be detected until the payslips of the period are loaded,
+     * so nothing is uploaded while they are loading or when their loading failed. An unexpected
+     * failure is reported in the banner and never leaves the screen locked in the loading state.
+     *
+     * @param files files picked in the system document picker
      */
     fun onFilesSelected(files: List<SelectedPayslipFile>) {
         val period = _state.value.selectedPeriod ?: return
         if (_state.value.isUploading || files.isEmpty()) return
+        if (_state.value.isLoadingPeriods || _state.value.isLoadingPayslips || _state.value.errorMessage != null) {
+            _state.update {
+                it.copy(bannerMessage = "Espera a que se carguen las boletas del período antes de subir archivos.")
+            }
+            return
+        }
 
         val errors = mutableListOf<String>()
         val valid = files.mapNotNull { selected ->
-            PayrollSystemFile.from(selected.uri, selected.name, selected.contentType, selected.sizeInBytes)
-                .onFailure { errors += it.message.orEmpty() }
+            validatePayslipFile(selected.uri, selected.name, selected.contentType, selected.sizeInBytes)
+                .onFailure { errors += it.toUserMessage() }
                 .getOrNull()
         }
         _state.update {
@@ -110,29 +126,37 @@ class UploadPayslipsViewModel @Inject constructor(
             val known = _state.value.entries.map { it.payslip }.toMutableList()
             var uploaded = 0
             var replaced = 0
-            valid.forEachIndexed { index, file ->
-                _state.update { it.copy(upload = UploadProgress(current = index + 1, total = valid.size)) }
-                uploadPayslip(period.id, file, known)
-                    .onSuccess { result ->
-                        when (result) {
-                            is PayslipUploadResult.Uploaded -> {
-                                known += result.payslip
-                                uploaded++
-                            }
-                            is PayslipUploadResult.Duplicate -> {
-                                if (askReplace(result.existing, period, file)) {
-                                    replacePayslipFile(result.existing, file)
-                                        .onSuccess { updated ->
-                                            val index = known.indexOfFirst { it.id == updated.id }
-                                            if (index >= 0) known[index] = updated
-                                            replaced++
-                                        }
-                                        .onFailure { errors += "${file.fileName}: ${it.message}" }
+            try {
+                valid.forEachIndexed { index, file ->
+                    _state.update { it.copy(upload = UploadProgress(current = index + 1, total = valid.size)) }
+                    uploadPayslip(period.id, file, known)
+                        .onSuccess { result ->
+                            when (result) {
+                                is PayslipUploadResult.Uploaded -> {
+                                    known += result.payslip
+                                    uploaded++
+                                }
+                                is PayslipUploadResult.Duplicate -> {
+                                    if (!result.existing.canBeReplaced) {
+                                        errors.add("${file.fileName}: el colaborador ya tiene su boleta pagada y no se puede reemplazar.")
+                                    } else if (askReplace(result.existing, period, file)) {
+                                        replacePayslipFile(result.existing, file)
+                                            .onSuccess { updated ->
+                                                val knownIndex = known.indexOfFirst { it.id == updated.id }
+                                                if (knownIndex >= 0) known[knownIndex] = updated
+                                                replaced++
+                                            }
+                                            .onFailure { errors.add("${file.fileName}: ${it.toUserMessage()}") }
+                                    }
                                 }
                             }
                         }
-                    }
-                    .onFailure { errors += "${file.fileName}: ${it.message}" }
+                        .onFailure { errors.add("${file.fileName}: ${it.toUserMessage()}") }
+                }
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                errors.add(exception.toUserMessage())
             }
             _state.update {
                 it.copy(upload = null, bannerMessage = errors.toBannerMessage(), message = summary(uploaded, replaced))
@@ -157,7 +181,7 @@ class UploadPayslipsViewModel @Inject constructor(
                     loadPayslips()
                 }
                 .onFailure { exception ->
-                    _state.update { it.copy(isPublishing = false, message = exception.message) }
+                    _state.update { it.copy(isPublishing = false, message = exception.toUserMessage()) }
                 }
         }
     }

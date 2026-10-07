@@ -13,7 +13,7 @@ import com.performily.flowboard.features.payroll.domain.entity.PayrollPeriod
 import com.performily.flowboard.features.payroll.domain.valueobject.PaymentStatus
 import com.performily.flowboard.features.payroll.presentation.state.PaymentSheetState
 import com.performily.flowboard.features.payroll.presentation.state.PaymentStatusUiState
-import com.performily.flowboard.features.payroll.presentation.ui.components.fullName
+import com.performily.flowboard.features.payroll.presentation.state.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +24,9 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
-/** MA-69 · Estado de pagos por período, área y estado (RR.HH., US45 y US46). */
+/**
+ * View model of the payment status screen (MA-69): payments by period, area and status (HR, US45 and US46).
+ */
 @HiltViewModel
 class PaymentStatusViewModel @Inject constructor(
     private val getPayrollPeriods: GetPayrollPeriodsUseCase,
@@ -40,18 +42,45 @@ class PaymentStatusViewModel @Inject constructor(
     private var started = false
     private var reportJob: Job? = null
 
-    /** Se llama al abrir la pantalla con el período que venía seleccionado en MA-67. */
+    /**
+     * Starts the screen once, with the period that was selected in MA-67.
+     *
+     * @param initialPeriodId id of the period to select first, or null to use the most recent one
+     */
     fun start(initialPeriodId: Long?) {
         if (started) return
         started = true
-        viewModelScope.launch {
-            getPayrollAreas().onSuccess { areas -> _state.update { it.copy(areas = areas) } }
-        }
         loadPeriods(initialPeriodId)
     }
 
+    /**
+     * Loads the areas used by the area filter.
+     *
+     * A failure is reported with a message and the areas are requested again on the next retry.
+     */
+    private fun loadAreas() {
+        viewModelScope.launch {
+            getPayrollAreas()
+                .onSuccess { areas -> _state.update { it.copy(areas = areas) } }
+                .onFailure { exception ->
+                    _state.update {
+                        it.copy(message = "No se pudieron cargar las áreas: ${exception.toUserMessage()}")
+                    }
+                }
+        }
+    }
+
+    /**
+     * Loads the payroll periods and then the report of the selected one.
+     *
+     * Also requests the areas again when they are not loaded yet, so the retry button recovers
+     * from a failed first load.
+     *
+     * @param initialPeriodId id of the period to select, by default the one already selected
+     */
     fun loadPeriods(initialPeriodId: Long? = _state.value.selectedPeriod?.id) {
         _state.update { it.copy(isLoading = true, errorMessage = null) }
+        if (_state.value.areas.isEmpty()) loadAreas()
         viewModelScope.launch {
             getPayrollPeriods()
                 .onSuccess { periods ->
@@ -60,7 +89,7 @@ class PaymentStatusViewModel @Inject constructor(
                     if (selected != null) loadReport() else _state.update { it.copy(isLoading = false, entries = emptyList()) }
                 }
                 .onFailure { exception ->
-                    _state.update { it.copy(isLoading = false, errorMessage = exception.message) }
+                    _state.update { it.copy(isLoading = false, errorMessage = exception.toUserMessage()) }
                 }
         }
     }
@@ -87,13 +116,20 @@ class PaymentStatusViewModel @Inject constructor(
         reportJob = viewModelScope.launch {
             _state.update { it.copy(isLoading = true, errorMessage = null) }
             getPaymentStatusReport(period.id, current.selectedArea?.id, current.selectedStatus)
-                .onSuccess { entries -> _state.update { it.copy(isLoading = false, entries = entries) } }
+                .onSuccess { entries -> _state.update { it.copy(isLoading = false, errorMessage = null, entries = entries) } }
                 .onFailure { exception ->
-                    _state.update { it.copy(isLoading = false, errorMessage = exception.message) }
+                    _state.update { it.copy(isLoading = false, errorMessage = exception.toUserMessage()) }
                 }
         }
     }
 
+    /**
+     * Opens the "Actualizar estado de pago" sheet for a payslip.
+     *
+     * A pending payslip opens without a selected option; the others show what is already registered.
+     *
+     * @param entry the payslip entry that was tapped
+     */
     fun onEntryClick(entry: PayslipEntry) {
         val payment = entry.payslip.payment
         _state.update {
@@ -101,7 +137,6 @@ class PaymentStatusViewModel @Inject constructor(
                 sheet = PaymentSheetState(
                     entry = entry,
                     subtitle = "${entry.fullName} · ${entry.payslip.period.label}",
-                    // Una boleta pendiente abre sin opción elegida; las demás muestran lo ya registrado.
                     choice = payment.status.takeIf { status -> status != PaymentStatus.PENDING },
                     paidOn = payment.paidOn ?: LocalDate.now(),
                     reason = payment.observationReason.orEmpty()
@@ -130,7 +165,10 @@ class PaymentStatusViewModel @Inject constructor(
             val result = when (sheet.choice) {
                 PaymentStatus.PAID -> markPayslipAsPaid(payslip, requireNotNull(sheet.paidOn))
                 PaymentStatus.OBSERVED -> markPayslipAsObserved(payslip, sheet.reason)
-                else -> return@launch
+                else -> {
+                    updateSheet { it.copy(isSaving = false) }
+                    return@launch
+                }
             }
             result
                 .onSuccess {
@@ -138,7 +176,7 @@ class PaymentStatusViewModel @Inject constructor(
                     loadReport()
                 }
                 .onFailure { exception ->
-                    updateSheet { it.copy(isSaving = false, errorMessage = exception.message) }
+                    updateSheet { it.copy(isSaving = false, errorMessage = exception.toUserMessage()) }
                 }
         }
     }

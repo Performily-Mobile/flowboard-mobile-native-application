@@ -10,8 +10,12 @@ import com.performily.flowboard.features.payroll.domain.valueobject.PublicationS
 import java.time.LocalDate
 
 /**
- * Aggregate root: boleta de un colaborador en un período de planilla.
- * Repositorio y estado de pago: nada se calcula, solo se guarda el neto que emite el sistema de planilla.
+ * Aggregate root: payslip of an employee in a payroll period.
+ *
+ * Repository and payment status: nothing is calculated, only the net amount issued by the payroll
+ * system is stored.
+ *
+ * @property employeeName name of the employee sent by the backend, used when Workspace does not respond
  */
 data class Payslip(
     val id: Long,
@@ -22,15 +26,20 @@ data class Payslip(
     val issueDate: LocalDate,
     val netAmount: Money,
     val publicationStatus: PublicationStatus,
-    val payment: PaymentDetails
+    val payment: PaymentDetails,
+    val employeeName: String? = null
 ) {
     val isPublished: Boolean get() = publicationStatus == PublicationStatus.PUBLISHED
 
     val isUnderReview: Boolean get() = publicationStatus == PublicationStatus.UNDER_REVIEW
 
-    /** El estado de pago solo se registra en boletas publicadas. */
+    /**
+     * Whether the payment status can be registered; it is only registered on published payslips.
+     */
     val canUpdatePayment: Boolean get() = isPublished
 
-    /** Una boleta pagada ya no se puede reemplazar. */
+    /**
+     * Whether the file can be replaced; a paid payslip can no longer be replaced.
+     */
     val canBeReplaced: Boolean get() = payment.status != PaymentStatus.PAID
 }

@@ -7,14 +7,20 @@ import java.time.LocalDate
 import java.time.format.DateTimeParseException
 
 /**
- * Boleta en PDF emitida por el sistema de planilla de la organización, antes de guardarse.
+ * PDF payslip issued by the payroll system of the organization, before it is stored.
  *
- * Flowboard no calcula nada: el colaborador, la fecha de emisión y el monto neto vienen
- * en el nombre del archivo que exporta el sistema de planilla (traducción del ACL):
+ * Flowboard does not calculate anything: the employee, the issue date and the net amount come in
+ * the name of the file exported by the payroll system (translation of the ACL):
  *
- *     <idColaborador>_<AAAA-MM-DD>_<neto>.pdf     por ejemplo: 12_2026-09-30_1420.00.pdf
+ *     <employeeId>_<yyyy-MM-dd>_<netAmount>.pdf     for example: 12_2026-09-30_1420.00.pdf
  *
- * sourceUri es la referencia local del archivo elegido (por ejemplo, content://...).
+ * @property sourceUri local reference of the picked file, for example a content URI
+ * @property fileName name of the file
+ * @property contentType content type of the file
+ * @property sizeInBytes size of the file in bytes
+ * @property employeeId employee the payslip belongs to
+ * @property issueDate date the payslip was issued
+ * @property netAmount net amount issued by the payroll system
  */
 data class PayrollSystemFile(
     val sourceUri: String,
@@ -33,7 +39,15 @@ data class PayrollSystemFile(
         private val NAME_PATTERN = Regex("""^(\d+)_(\d{4}-\d{2}-\d{2})_(\d+(?:\.\d{1,2})?)\.pdf$""", RegexOption.IGNORE_CASE)
 
         /**
-         * Valida el archivo elegido y lee sus datos. Los mensajes de error se muestran tal cual al usuario.
+         * Validates the picked file and reads its data.
+         *
+         * The error messages are shown as they are to the user.
+         *
+         * @param sourceUri local reference of the picked file
+         * @param fileName name of the file
+         * @param contentType content type reported by the provider
+         * @param sizeInBytes size of the file in bytes
+         * @return the payslip file, or a failure with a message for the user
          */
         fun from(sourceUri: String, fileName: String, contentType: String, sizeInBytes: Long): Result<PayrollSystemFile> =
             runCatching {
@@ -47,13 +61,15 @@ data class PayrollSystemFile(
                     ?: throw IllegalArgumentException(
                         "$fileName no sigue el formato del sistema de planilla ($NAME_FORMAT)."
                     )
-                val (employeeId, issueDate, netAmount) = match.destructured
+                val (employeeIdText, issueDate, netAmount) = match.destructured
+                val employeeNumber = employeeIdText.toLongOrNull()
+                    ?: throw IllegalArgumentException("$fileName tiene un identificador de colaborador no válido.")
                 PayrollSystemFile(
                     sourceUri = sourceUri,
                     fileName = fileName,
                     contentType = contentType,
                     sizeInBytes = sizeInBytes,
-                    employeeId = EmployeeId(employeeId.toLong()),
+                    employeeId = EmployeeId(employeeNumber),
                     issueDate = parseDate(fileName, issueDate),
                     netAmount = Money(BigDecimal(netAmount))
                 )

@@ -32,9 +32,15 @@ import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.features.payroll.presentation.state.SelectedPayslipFile
 
 /**
- * Tarjeta punteada "Seleccionar archivos del sistema de planilla" (MA-67).
- * Abre el selector del sistema y permite elegir varios archivos a la vez. Cualquier tipo
- * se puede elegir: la validación (solo PDF) la hace el dominio y se muestra en el banner de error.
+ * Dashed card used to pick the payslip files exported by the payroll system (MA-67).
+ *
+ * Opens the system document picker and allows selecting several files at once. Any file type
+ * can be picked: the PDF-only validation is done by the domain and shown in the error banner.
+ *
+ * @param enabled whether the card can be tapped
+ * @param supportingText helper text shown under the title, for example the upload progress
+ * @param onFilesSelected called with the description of every picked file
+ * @param modifier modifier applied to the card
  */
 @Composable
 fun PayslipUploadZone(
@@ -96,9 +102,19 @@ fun PayslipUploadZone(
     }
 }
 
-/** Lee nombre, tipo y tamaño del archivo elegido en el selector del sistema. */
+/**
+ * Describes a file picked in the system document picker.
+ *
+ * When the provider does not report a size, it is read directly from the file descriptor.
+ * When the provider reports a generic content type for a file named ".pdf", the type is
+ * normalized to PDF.
+ *
+ * @receiver context used to query the content resolver
+ * @param uri content URI of the picked file
+ * @return the name, content type and size of the file
+ */
 private fun Context.describeFile(uri: Uri): SelectedPayslipFile {
-    val contentType = contentResolver.getType(uri) ?: "application/octet-stream"
+    val providerType = contentResolver.getType(uri)
     var name: String? = null
     var size = 0L
     contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE), null, null, null)
@@ -110,9 +126,23 @@ private fun Context.describeFile(uri: Uri): SelectedPayslipFile {
                 if (sizeIndex >= 0 && !cursor.isNull(sizeIndex)) size = cursor.getLong(sizeIndex)
             }
         }
+    if (size <= 0L) {
+        size = runCatching {
+            contentResolver.openFileDescriptor(uri, "r")?.use { it.statSize } ?: 0L
+        }.getOrDefault(0L).coerceAtLeast(0L)
+    }
+    val fileName = name ?: uri.lastPathSegment ?: "archivo"
+    val contentType = if (
+        (providerType == null || providerType == "application/octet-stream") &&
+        fileName.endsWith(".pdf", ignoreCase = true)
+    ) {
+        "application/pdf"
+    } else {
+        providerType ?: "application/octet-stream"
+    }
     return SelectedPayslipFile(
         uri = uri.toString(),
-        name = name ?: uri.lastPathSegment ?: "archivo",
+        name = fileName,
         contentType = contentType,
         sizeInBytes = size
     )

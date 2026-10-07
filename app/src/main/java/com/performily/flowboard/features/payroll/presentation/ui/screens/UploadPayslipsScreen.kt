@@ -52,7 +52,13 @@ import com.performily.flowboard.features.payroll.presentation.ui.components.toMa
 import com.performily.flowboard.features.payroll.presentation.ui.components.uploadedPayslipsLabel
 import com.performily.flowboard.features.payroll.presentation.viewmodel.UploadPayslipsViewModel
 
-/** MA-67 · Cargar boletas (RR.HH.) y MA-68 · Boleta duplicada. */
+/**
+ * Payslip upload screen for HR (MA-67), including the duplicate payslip prompt (MA-68).
+ *
+ * @param onBack called when the user navigates back
+ * @param onViewPaymentStatus called with the selected payroll period id to open the payment status screen
+ * @param viewModel view model that holds the state of the screen
+ */
 @Composable
 fun UploadPayslipsScreen(
     onBack: () -> Unit,
@@ -121,7 +127,8 @@ fun UploadPayslipsScreen(
             }
             item {
                 PayslipUploadZone(
-                    enabled = state.selectedPeriod != null && !state.isUploading && !state.isPublishing,
+                    enabled = state.selectedPeriod != null && !state.isUploading && !state.isPublishing &&
+                        !state.isLoadingPeriods && !state.isLoadingPayslips && state.errorMessage == null,
                     supportingText = state.upload
                         ?.let { "Cargando ${it.current} de ${it.total}..." }
                         ?: "Solo PDF · una boleta por colaborador",
@@ -145,6 +152,14 @@ fun UploadPayslipsScreen(
     }
 }
 
+/**
+ * Adds the payslip list, or its loading, error and empty states, to the screen list.
+ *
+ * While the duplicate dialog (MA-68) is open, the amounts are masked behind the scrim.
+ *
+ * @param state current screen state
+ * @param onRetry called when the user taps the retry button
+ */
 private fun LazyListScope.payslipsSection(
     state: UploadPayslipsUiState,
     onRetry: () -> Unit
@@ -188,7 +203,6 @@ private fun LazyListScope.payslipsSection(
                 PayslipListItem(
                     name = entry.listName,
                     initials = entry.initials,
-                    // Con el diálogo de MA-68 abierto, los montos quedan ocultos detrás del velo.
                     amount = if (state.duplicate != null) {
                         entry.payslip.netAmount.toMaskedDisplay()
                     } else {

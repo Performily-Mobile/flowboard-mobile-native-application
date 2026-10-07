@@ -7,8 +7,10 @@ import com.performily.flowboard.features.payroll.domain.valueobject.PayrollSyste
 import javax.inject.Inject
 
 /**
- * Reemplaza el archivo de una boleta ya cargada. La boleta vuelve a "Por publicar"
- * para que RR.HH. revise el archivo nuevo. Una boleta pagada no se puede reemplazar.
+ * Replaces the file of a payslip that was already uploaded.
+ *
+ * The payslip goes back to "Por publicar" so HR reviews the new file. A paid payslip cannot be
+ * replaced. When the backend rejects the replacement, the stored copy is deleted.
  */
 class ReplacePayslipFileUseCase @Inject constructor(
     private val storage: PayslipFileStorage,
@@ -17,7 +19,7 @@ class ReplacePayslipFileUseCase @Inject constructor(
 
     suspend operator fun invoke(existing: Payslip, file: PayrollSystemFile): Result<Payslip> {
         if (!existing.canBeReplaced) {
-            return Result.failure(IllegalStateException("La boleta de ${file.fileName} ya está pagada y no se puede reemplazar."))
+            return Result.failure(IllegalStateException("La boleta de ${existing.period.label} ya está pagada y no se puede reemplazar."))
         }
         return storage.store(file).fold(
             onSuccess = { storageUrl ->
@@ -26,7 +28,7 @@ class ReplacePayslipFileUseCase @Inject constructor(
                     file = file.toFileReference(storageUrl),
                     issueDate = file.issueDate,
                     netAmount = file.netAmount
-                )
+                ).onFailure { storage.delete(storageUrl) }
             },
             onFailure = { Result.failure(it) }
         )

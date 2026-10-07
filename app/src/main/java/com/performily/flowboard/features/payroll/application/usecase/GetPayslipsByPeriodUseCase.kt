@@ -5,8 +5,10 @@ import com.performily.flowboard.features.payroll.domain.repository.PayslipReposi
 import javax.inject.Inject
 
 /**
- * Boletas cargadas en un período (vista de RR.HH.), con el nombre de su colaborador,
- * en orden alfabético por apellido.
+ * Returns the payslips uploaded in a period (HR view) with the name of their employee,
+ * sorted alphabetically by last name.
+ *
+ * If Workspace does not respond, the list is still shown without the Workspace names.
  */
 class GetPayslipsByPeriodUseCase @Inject constructor(
     private val repository: PayslipRepository,
@@ -15,10 +17,9 @@ class GetPayslipsByPeriodUseCase @Inject constructor(
 
     suspend operator fun invoke(payrollPeriodId: Long): Result<List<PayslipEntry>> =
         repository.getPayslipsByPeriod(payrollPeriodId).map { payslips ->
-            // Si Workspace no responde, la lista se muestra igual sin los nombres.
             val employees = employeeDirectory.getEmployees().getOrDefault(emptyList()).associateBy { it.id }
             payslips
                 .map { PayslipEntry(it, employees[it.employeeId]) }
-                .sortedBy { (it.employee?.sortableName ?: "").lowercase() }
+                .sortedBy { (it.employee?.sortableName ?: it.payslip.employeeName.orEmpty()).lowercase() }
         }
 }

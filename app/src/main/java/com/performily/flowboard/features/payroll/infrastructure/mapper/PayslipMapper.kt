@@ -19,6 +19,16 @@ object PayslipMapper {
 
     private const val DEFAULT_CONTENT_TYPE = "application/pdf"
 
+    /**
+     * Maps a payslip received from the backend to the domain entity.
+     *
+     * The backend does not expose the location of the file, so the storage URL stays empty: the
+     * file is downloaded through a temporary link. Server data is rebuilt without the creation
+     * rules (future dates), because the clock or time zone of the phone may differ from the server.
+     *
+     * @param dto the payslip as sent by the backend
+     * @return the domain payslip
+     */
     fun toDomain(dto: PayslipDto): Payslip = Payslip(
         id = dto.id,
         employeeId = EmployeeId(dto.employeeId),
@@ -28,19 +38,19 @@ object PayslipMapper {
             fileName = dto.fileName,
             contentType = dto.contentType ?: DEFAULT_CONTENT_TYPE,
             sizeInBytes = dto.sizeInBytes,
-            // El backend no expone la ubicación del archivo: se descarga con un enlace temporal.
             storageUrl = ""
         ),
         issueDate = LocalDate.parse(dto.issueDate),
         netAmount = Money(dto.netAmount, dto.currency ?: Money.DEFAULT_CURRENCY),
         publicationStatus = PublicationStatus.valueOf(dto.publicationStatus),
-        payment = toPaymentDetails(dto)
+        payment = toPaymentDetails(dto),
+        employeeName = dto.employeeName?.trim()?.takeIf { it.isNotEmpty() }
     )
 
     private fun toPaymentDetails(dto: PayslipDto): PaymentDetails =
         when (PaymentStatus.valueOf(dto.paymentStatus)) {
             PaymentStatus.PENDING -> PaymentDetails.pending()
-            PaymentStatus.PAID -> PaymentDetails.paid(LocalDate.parse(requireNotNull(dto.paidOn)))
+            PaymentStatus.PAID -> PaymentDetails(PaymentStatus.PAID, paidOn = LocalDate.parse(requireNotNull(dto.paidOn)))
             PaymentStatus.OBSERVED -> PaymentDetails.observed(requireNotNull(dto.observationReason))
         }
 

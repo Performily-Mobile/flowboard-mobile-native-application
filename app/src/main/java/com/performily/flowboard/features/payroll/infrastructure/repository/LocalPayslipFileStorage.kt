@@ -11,23 +11,59 @@ import java.io.File
 import javax.inject.Inject
 
 /**
- * Implementación TEMPORAL del almacenamiento de boletas (mismo enfoque que Workspace).
- * Copia el PDF a la memoria interna de la app y devuelve su URI local.
- * Cuando se defina el almacenamiento real, se crea otra implementación de PayslipFileStorage
- * y se cambia el @Binds en PayrollRepositoryModule.
+ * Temporary payslip storage, following the same approach as Workspace.
+ *
+ * Copies the PDF to the internal storage of the app and returns its local URI. When the real
+ * storage is defined, another implementation of [PayslipFileStorage] is created and the
+ * `@Binds` in `PayrollRepositoryModule` is changed.
  */
 class LocalPayslipFileStorage @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) : PayslipFileStorage {
 
+    /**
+     * Copies the picked file to the internal storage.
+     *
+     * The size reported by the picker may not be the real one, so the copied file is validated
+     * (not empty and not larger than the maximum size) and removed if it is not valid.
+     *
+     * @param file the validated payslip file to store
+     * @return the local URI of the copy, or a failure with a message for the user
+     */
     override suspend fun store(file: PayrollSystemFile): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
             val directory = File(context.filesDir, DIRECTORY).apply { mkdirs() }
             val target = File(directory, "${System.currentTimeMillis()}_${file.fileName.sanitized()}")
-            val input = context.contentResolver.openInputStream(Uri.parse(file.sourceUri))
-                ?: error("No se pudo leer ${file.fileName}.")
-            input.use { source -> target.outputStream().use { source.copyTo(it) } }
+            try {
+                val input = context.contentResolver.openInputStream(Uri.parse(file.sourceUri))
+                    ?: error("No se pudo leer ${file.fileName}.")
+                input.use { source -> target.outputStream().use { source.copyTo(it) } }
+                val written = target.length()
+                check(written > 0L) { "${file.fileName} está vacío." }
+                check(written <= PayrollSystemFile.MAX_SIZE_IN_BYTES) { "${file.fileName} supera los 5 MB." }
+            } catch (exception: Exception) {
+                target.delete()
+                throw exception
+            }
             Uri.fromFile(target).toString()
+        }
+    }
+
+    /**
+     * Deletes a copy created by [store], only when it is inside the payslips directory of the app.
+     *
+     * @param storageUrl local URI returned by [store]
+     */
+    override suspend fun delete(storageUrl: String) {
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val path = Uri.parse(storageUrl).path
+                if (path != null) {
+                    val stored = File(path)
+                    val directory = File(context.filesDir, DIRECTORY)
+                    if (stored.parentFile?.absolutePath == directory.absolutePath) stored.delete()
+                }
+            }
         }
     }
 

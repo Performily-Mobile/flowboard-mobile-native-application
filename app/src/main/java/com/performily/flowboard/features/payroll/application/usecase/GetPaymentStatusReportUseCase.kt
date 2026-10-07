@@ -6,35 +6,50 @@ import com.performily.flowboard.features.payroll.domain.valueobject.PaymentStatu
 import javax.inject.Inject
 
 /**
- * Reporte de pagos por período, área y estado (US46).
- * Solo cuentan las boletas publicadas: el estado de pago no se registra en una boleta por publicar.
- * El área de cada colaborador la define Workspace.
+ * Builds the payment report by period, area and status (US46).
+ *
+ * Only published payslips count, because the payment status is not registered on an unpublished
+ * payslip. The area of each employee is defined by Workspace.
  */
 class GetPaymentStatusReportUseCase @Inject constructor(
     private val repository: PayslipRepository,
     private val employeeDirectory: PayrollEmployeeDirectory
 ) {
 
+    /**
+     * Returns the published payslips of a period that match the filters.
+     *
+     * Filtering by area requires Workspace, so its failure is returned to the user in that case.
+     * Suspending calls are made outside `mapCatching` so a cancellation is never swallowed.
+     *
+     * @param payrollPeriodId id of the payroll period
+     * @param areaId area to filter by, or null for all areas
+     * @param status payment status to filter by, or null for all statuses
+     * @return the entries sorted by employee name
+     */
     suspend operator fun invoke(
         payrollPeriodId: Long,
         areaId: Long?,
         status: PaymentStatus?
-    ): Result<List<PayslipEntry>> =
-        repository.getPayslipsByPeriod(payrollPeriodId).mapCatching { payslips ->
-            val employees = if (areaId != null) {
-                // Sin Workspace no se puede filtrar por área: el error se muestra al usuario.
-                employeeDirectory.getEmployees().getOrThrow()
-            } else {
-                employeeDirectory.getEmployees().getOrDefault(emptyList())
-            }.associateBy { it.id }
+    ): Result<List<PayslipEntry>> {
+        val payslips = repository.getPayslipsByPeriod(payrollPeriodId)
+            .getOrElse { return Result.failure(it) }
+        val employeesResult = employeeDirectory.getEmployees()
+        val employees = if (areaId != null) {
+            employeesResult.getOrElse { return Result.failure(it) }
+        } else {
+            employeesResult.getOrDefault(emptyList())
+        }.associateBy { it.id }
 
+        return Result.success(
             payslips
                 .asSequence()
                 .filter { it.isPublished }
                 .filter { status == null || it.payment.status == status }
                 .map { PayslipEntry(it, employees[it.employeeId]) }
                 .filter { areaId == null || it.employee?.areaId == areaId }
-                .sortedBy { (it.employee?.sortableName ?: "").lowercase() }
+                .sortedBy { (it.employee?.sortableName ?: it.payslip.employeeName.orEmpty()).lowercase() }
                 .toList()
-        }
+        )
+    }
 }
