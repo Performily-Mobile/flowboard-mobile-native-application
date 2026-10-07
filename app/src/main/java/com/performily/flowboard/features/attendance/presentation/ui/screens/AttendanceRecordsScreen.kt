@@ -1,5 +1,6 @@
 package com.performily.flowboard.features.attendance.presentation.ui.screens
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,10 +11,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -26,40 +27,47 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.features.attendance.domain.valueobject.AttendanceStatus
+import com.performily.flowboard.features.attendance.domain.valueobject.label
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceDatePickerField
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceEmptyState
-import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceEmployeeAvatar
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceFilterDropdown
-import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceMetricCard
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendancePageHeader
+import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceRecordItem
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceSectionTabs
-import com.performily.flowboard.features.attendance.presentation.viewmodel.AttendanceHoursViewModel
+import com.performily.flowboard.features.attendance.presentation.viewmodel.AttendanceAreaViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AttendanceHoursScreen(
-    onRecords: () -> Unit,
+fun AttendanceRecordsScreen(
     onAreaReport: () -> Unit,
-    viewModel: AttendanceHoursViewModel = hiltViewModel()
+    onHoursReport: () -> Unit,
+    viewModel: AttendanceAreaViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val report = state.report
+    val records = state.report?.records.orEmpty()
+    val filteredRecords = if (state.statusFilter == "TODOS") records else records.filter { it.status.name == state.statusFilter }
 
     Scaffold { paddingValues ->
-        Column(Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp)
+        ) {
             AttendancePageHeader(
-                subtitle = "Consulta las horas efectivas y el sobretiempo acumulado por colaborador."
+                subtitle = "Consulta los registros de asistencia del personal y sus marcaciones."
             )
             AttendanceSectionTabs(
-                selectedIndex = 2,
+                selectedIndex = 0,
                 onSelected = { index ->
                     when (index) {
-                        0 -> onRecords()
                         1 -> onAreaReport()
+                        2 -> onHoursReport()
                     }
                 }
             )
             Spacer(Modifier.height(12.dp))
+
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 AttendanceDatePickerField(
                     label = "Desde",
@@ -84,16 +92,32 @@ fun AttendanceHoursScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(8.dp))
-            FilterChip(
-                selected = state.orderByOvertime,
-                onClick = viewModel::toggleOrder,
-                label = { Text(if (state.orderByOvertime) "Mayor sobretiempo" else "Orden alfabético") }
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = state.statusFilter == "TODOS",
+                    onClick = { viewModel.setStatusFilter("TODOS") },
+                    label = { Text("Todos") }
+                )
+                AttendanceStatus.entries.forEach { status ->
+                    FilterChip(
+                        selected = state.statusFilter == status.name,
+                        onClick = { viewModel.setStatusFilter(status.name) },
+                        label = { Text(status.label()) }
+                    )
+                }
+            }
             Spacer(Modifier.height(10.dp))
 
             Box(Modifier.fillMaxSize()) {
                 when {
-                    state.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                    state.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                     state.errorMessage != null -> Column(
                         modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -102,37 +126,25 @@ fun AttendanceHoursScreen(
                         Text(state.errorMessage.orEmpty(), color = MaterialTheme.colorScheme.error)
                         OutlinedButton(onClick = viewModel::load) { Text("Reintentar") }
                     }
-                    report == null -> AttendanceEmptyState(
-                        title = "Selecciona un área",
-                        message = "El reporte se construye con los registros reales de asistencia del período.",
+                    filteredRecords.isEmpty() -> AttendanceEmptyState(
+                        title = "No hay registros",
+                        message = "No se encontraron registros para los filtros seleccionados.",
                         modifier = Modifier.fillMaxWidth().padding(top = 28.dp)
                     )
                     else -> LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
                         item {
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                                AttendanceMetricCard("Horas efectivas", formatHours(report.totalEffectiveHours), Modifier.weight(1f))
-                                AttendanceMetricCard("Sobretiempo", formatHours(report.totalOvertimeHours), Modifier.weight(1f))
-                            }
-                            Spacer(Modifier.height(12.dp))
-                            Text("Por colaborador", style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                "${filteredRecords.size} registros",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            )
                         }
-                        items(report.employees, key = { it.employeeId }) { employee ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                AttendanceEmployeeAvatar(employee.employeeName)
-                                Column(Modifier.weight(1f)) {
-                                    Text(employee.employeeName, style = MaterialTheme.typography.bodyLarge)
-                                    Text("${formatHours(employee.effectiveHours)} efectivas", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(formatHours(employee.overtimeHours), style = MaterialTheme.typography.bodyLarge)
-                                    Text("extra", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                            }
-                            androidx.compose.material3.HorizontalDivider()
+                        items(
+                            filteredRecords.sortedByDescending { it.workDate },
+                            key = { it.id ?: "${it.employeeId}-${it.workDate}" }
+                        ) { record ->
+                            AttendanceRecordItem(record = record, showEmployee = true)
                         }
                     }
                 }
@@ -140,5 +152,3 @@ fun AttendanceHoursScreen(
         }
     }
 }
-
-private fun formatHours(value: Double): String = String.format("%.1f h", value)

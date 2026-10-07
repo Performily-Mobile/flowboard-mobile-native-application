@@ -19,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -29,25 +28,41 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceDatePickerField
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceEmptyState
+import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceEmployeeAvatar
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceFilterDropdown
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceMetricCard
-import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceRecordItem
+import com.performily.flowboard.features.attendance.presentation.ui.components.AttendancePageHeader
+import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceSectionTabs
 import com.performily.flowboard.features.attendance.presentation.viewmodel.AttendanceAreaViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AttendanceAreaScreen(
     onEmployeeClick: (Long, String) -> Unit,
+    onRecords: () -> Unit,
+    onHoursReport: () -> Unit,
     viewModel: AttendanceAreaViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val report = state.report
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Asistencia") }) }) { paddingValues ->
+    Scaffold { paddingValues ->
         Column(
             modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 16.dp)
         ) {
-            Spacer(Modifier.height(8.dp))
+            AttendancePageHeader(
+                subtitle = "Resumen de puntualidad, tardanzas e inasistencias por área."
+            )
+            AttendanceSectionTabs(
+                selectedIndex = 1,
+                onSelected = { index ->
+                    when (index) {
+                        0 -> onRecords()
+                        2 -> onHoursReport()
+                    }
+                }
+            )
+            Spacer(Modifier.height(12.dp))
             AttendanceFilterDropdown(
                 label = "Área",
                 selectedLabel = state.selectedArea?.name ?: "Selecciona un área",
@@ -96,9 +111,12 @@ fun AttendanceAreaScreen(
                                 AttendanceMetricCard("Inasistencias", report.absenceCount.toString(), Modifier.weight(1f))
                             }
                             Spacer(Modifier.height(12.dp))
-                            Text("Horas trabajadas", style = MaterialTheme.typography.labelLarge)
-                            Text("${formatHours(report.totalEffectiveHours)} · ${formatHours(report.totalOvertimeHours)} de sobretiempo", style = MaterialTheme.typography.titleMedium)
                             Spacer(Modifier.height(12.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                                AttendanceMetricCard("Horas efectivas", formatHours(report.totalEffectiveHours), Modifier.weight(1f))
+                                AttendanceMetricCard("Sobretiempo", formatHours(report.totalOvertimeHours), Modifier.weight(1f))
+                            }
+                            Spacer(Modifier.height(16.dp))
                             Text("Por colaborador", style = MaterialTheme.typography.titleMedium)
                         }
                         items(report.employees, key = { it.employeeId }) { employee ->
@@ -106,20 +124,21 @@ fun AttendanceAreaScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable { onEmployeeClick(employee.employeeId, employee.employeeName) }
-                                    .padding(vertical = 10.dp)
+                                    .padding(vertical = 8.dp)
                             ) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
+                                    AttendanceEmployeeAvatar(employee.employeeName)
                                     Column(Modifier.weight(1f)) {
                                         Text(employee.employeeName, style = MaterialTheme.typography.bodyLarge)
                                         Text(
                                             "${formatHours(employee.effectiveHours)} · ${formatHours(employee.overtimeHours)} extra" +
-                                                if (employee.lateCount > 0 || employee.absenceCount > 0) {
-                                                    " · ${employee.lateCount} tard. · ${employee.absenceCount} inas."
-                                                } else "",
+                                                    if (employee.lateCount > 0 || employee.absenceCount > 0) {
+                                                        " · ${employee.lateCount} tard. · ${employee.absenceCount} inas."
+                                                    } else "",
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
