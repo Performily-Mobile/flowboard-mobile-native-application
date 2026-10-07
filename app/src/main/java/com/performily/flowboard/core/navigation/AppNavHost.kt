@@ -17,6 +17,8 @@ import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.we
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.MyProfileRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.OrganizationRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.workspaceNavGraph
+import com.performily.flowboard.features.request.presentation.ui.navigation.RequestTypesRoute
+import com.performily.flowboard.features.request.presentation.ui.navigation.requestNavGraph
 
 @Composable
 fun AppNavHost(
@@ -33,6 +35,7 @@ fun AppNavHost(
         payrollNavGraph(navController)
         wellbeingNavGraph(navController)
         benefitsNavGraph(navController, onRequestVacation = { navController.navigate(RequestsRoute) })
+        requestNavGraph(navController)
 
         composable<MoreRoute> {
             MoreScreen(
@@ -43,7 +46,10 @@ fun AppNavHost(
                 onBenefitsClick = { navController.navigate(BenefitsNavGraphRoute) },
                 onMyBenefitsClick = { navController.navigate(MyBenefitsRoute) },
                 onMyVacationBalanceClick = { navController.navigate(MyVacationBalanceRoute) },
-                onPendingClick = { title -> navController.navigate(PendingFeatureRoute(title)) }
+                onPendingClick = { title ->
+                    if (title == "Tipos de solicitud") navController.navigate(RequestTypesRoute)
+                    else navController.navigate(PendingFeatureRoute(title))
+                }
             )
         }
 
@@ -57,7 +63,6 @@ fun AppNavHost(
         // PENDIENTE: reemplazar por el NavGraph de cada bounded context al integrarlo.
         composable<PanelRoute> { PendingFeatureScreen(title = "Panel") }
         composable<HomeRoute> { PendingFeatureScreen(title = "Inicio") }
-        composable<RequestsRoute> { PendingFeatureScreen(title = "Solicitudes") }
         composable<AttendanceRoute> { PendingFeatureScreen(title = "Asistencia") }
         composable<PayslipsRoute> { PendingFeatureScreen(title = "Boletas") }
     }

@@ -22,6 +22,12 @@ import com.performily.flowboard.features.workspace.presentation.ui.navigation.My
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.OrganizationChartRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.OrganizationRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.RegisterEmployeeRoute
+import com.performily.flowboard.features.request.presentation.ui.navigation.NewRequestRoute
+import com.performily.flowboard.features.request.presentation.ui.navigation.NewRequestTypeRoute
+import com.performily.flowboard.features.request.presentation.ui.navigation.RequestDetailRoute
+import com.performily.flowboard.features.request.presentation.ui.navigation.RequestTypesRoute
+import com.performily.flowboard.features.request.presentation.ui.navigation.ResolvedRequestsRoute
+import com.performily.flowboard.features.request.presentation.ui.navigation.ReviewRequestRoute
 import kotlin.reflect.KClass
 
 /**
@@ -48,7 +54,18 @@ enum class TopLevelDestination(
             EditPersonalDataRoute::class
         )
     ),
-    REQUESTS("Solicitudes", FlowboardIcons.Article, RequestsRoute, listOf(RequestsRoute::class)),
+    REQUESTS(
+        "Solicitudes",
+        FlowboardIcons.Article,
+        RequestsRoute,
+        listOf(
+            RequestsRoute::class,
+            NewRequestRoute::class,
+            RequestDetailRoute::class,
+            ReviewRequestRoute::class,
+            ResolvedRequestsRoute::class
+        )
+    ),
     ATTENDANCE("Asistencia", FlowboardIcons.Schedule, AttendanceRoute, listOf(AttendanceRoute::class)),
     MORE(
         "Más",
@@ -71,7 +88,9 @@ enum class TopLevelDestination(
             VacationBalancesRoute::class,
             VacationBalanceDetailRoute::class,
             MyBenefitsRoute::class,
-            MyVacationBalanceRoute::class
+            MyVacationBalanceRoute::class,
+            RequestTypesRoute::class,
+NewRequestTypeRoute::class
         )
     ),
 
