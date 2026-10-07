@@ -8,6 +8,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.performily.flowboard.features.payroll.presentation.ui.navigation.PayrollNavGraphRoute
 import com.performily.flowboard.features.payroll.presentation.ui.navigation.payrollNavGraph
+import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.WellbeingNavGraphRoute
+import com.performily.flowboard.features.benefits.presentation.ui.navigation.BenefitsNavGraphRoute
+import com.performily.flowboard.features.benefits.presentation.ui.navigation.MyBenefitsRoute
+import com.performily.flowboard.features.benefits.presentation.ui.navigation.MyVacationBalanceRoute
+import com.performily.flowboard.features.benefits.presentation.ui.navigation.benefitsNavGraph
+import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.wellbeingNavGraph
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.MyProfileRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.OrganizationRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.workspaceNavGraph
@@ -25,12 +31,18 @@ fun AppNavHost(
     ) {
         workspaceNavGraph(navController)
         payrollNavGraph(navController)
+        wellbeingNavGraph(navController)
+        benefitsNavGraph(navController, onRequestVacation = { navController.navigate(RequestsRoute) })
 
         composable<MoreRoute> {
             MoreScreen(
                 onOrganizationClick = { navController.navigate(OrganizationRoute) },
                 onMyProfileClick = { navController.navigate(MyProfileRoute) },
                 onPayslipsClick = { navController.navigate(PayrollNavGraphRoute) },
+                onWellbeingClick = { navController.navigate(WellbeingNavGraphRoute) },
+                onBenefitsClick = { navController.navigate(BenefitsNavGraphRoute) },
+                onMyBenefitsClick = { navController.navigate(MyBenefitsRoute) },
+                onMyVacationBalanceClick = { navController.navigate(MyVacationBalanceRoute) },
                 onPendingClick = { title -> navController.navigate(PendingFeatureRoute(title)) }
             )
         }

@@ -36,6 +36,10 @@ fun MoreScreen(
     onOrganizationClick: () -> Unit,
     onMyProfileClick: () -> Unit,
     onPayslipsClick: () -> Unit,
+    onWellbeingClick: () -> Unit,
+    onBenefitsClick: () -> Unit,
+    onMyBenefitsClick: () -> Unit,
+    onMyVacationBalanceClick: () -> Unit,
     onPendingClick: (title: String) -> Unit
 ) {
     Scaffold(
@@ -58,16 +62,14 @@ fun MoreScreen(
             MoreItem(FlowboardIcons.Article, "Tipos de solicitud", "Campos, adjuntos y descuento de saldo") {
                 onPendingClick("Tipos de solicitud")
             }
-            MoreItem(FlowboardIcons.Gift, "Beneficios", "Catálogo, asignación y entregas") {
-                onPendingClick("Beneficios")
-            }
+            MoreItem(FlowboardIcons.Gift, "Beneficios", "Catálogo, asignación y entregas", onBenefitsClick)
             MoreItem(FlowboardIcons.CreditCard, "Boletas y pagos", "Carga, publicación y estado de depósito", onPayslipsClick)
-            MoreItem(FlowboardIcons.Favorite, "Bienestar", "Espacios, dispositivos e indicadores") {
-                onPendingClick("Bienestar")
-            }
+            MoreItem(FlowboardIcons.Favorite, "Bienestar", "Espacios, dispositivos e indicadores", onWellbeingClick)
 
             MoreSectionTitle("Mi cuenta")
             MoreItem(FlowboardIcons.Person, "Mi perfil y autogestión", "Ver mi información como colaborador", onMyProfileClick)
+            MoreItem(FlowboardIcons.Gift, "Mis beneficios", "Beneficios vigentes y entregados", onMyBenefitsClick)
+            MoreItem(FlowboardIcons.Schedule, "Mi saldo de vacaciones", "Días disponibles y movimientos", onMyVacationBalanceClick)
             MoreItem(FlowboardIcons.Lock, "Cuenta y seguridad", "Huella, idioma y cierre de sesión") {
                 onPendingClick("Cuenta y seguridad")
             }
