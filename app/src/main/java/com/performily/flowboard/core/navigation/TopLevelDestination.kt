@@ -38,7 +38,11 @@ enum class TopLevelDestination(
         )
     ),
     REQUESTS("Solicitudes", FlowboardIcons.Article, RequestsRoute, listOf(RequestsRoute::class)),
-    ATTENDANCE("Asistencia", FlowboardIcons.Schedule, AttendanceRoute, listOf(AttendanceRoute::class)),
+    ATTENDANCE(
+        "Asistencia",
+        FlowboardIcons.Schedule,
+        AttendanceRoute,
+        listOf(AttendanceRoute::class)),
     MORE(
         "Más",
         FlowboardIcons.Menu,

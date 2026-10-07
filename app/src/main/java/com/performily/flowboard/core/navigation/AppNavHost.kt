@@ -44,7 +44,6 @@ fun AppNavHost(
         composable<PanelRoute> { PendingFeatureScreen(title = "Panel") }
         composable<HomeRoute> { PendingFeatureScreen(title = "Inicio") }
         composable<RequestsRoute> { PendingFeatureScreen(title = "Solicitudes") }
-        composable<AttendanceRoute> { PendingFeatureScreen(title = "Asistencia") }
         composable<PayslipsRoute> { PendingFeatureScreen(title = "Boletas") }
     }
 }
