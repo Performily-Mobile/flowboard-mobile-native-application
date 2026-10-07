@@ -27,11 +27,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/**
- * MA-37 / MA-47 / MA-79 (colaborador y jefe directo) y MA-52 / MA-53 (RR.HH.).
- * Lo que se ve depende de quién inició sesión: cada aprobador solo ve las
- * solicitudes que le asignaron.
- */
+
 @HiltViewModel
 class RequestsViewModel @Inject constructor(
     currentEmployeeProvider: CurrentEmployeeProvider,
@@ -50,7 +46,7 @@ class RequestsViewModel @Inject constructor(
     )
     val state: StateFlow<RequestsUiState> = _state.asStateFlow()
 
-    /** Carga lo que se ve en las pestañas. Las recargas no ocultan lo que ya se ve. */
+
     fun load() {
         if (role == UserRole.EMPLOYEE) loadMine()
         loadPending()
@@ -69,7 +65,6 @@ class RequestsViewModel @Inject constructor(
         load()
     }
 
-    // ---------- Mías (MA-37) ----------
 
     private fun loadMine() {
         _state.update { it.copy(isLoadingMine = it.myRequests.isEmpty(), mineError = null) }
@@ -88,8 +83,6 @@ class RequestsViewModel @Inject constructor(
     }
 
     fun onMyFilterSelected(filter: MyRequestsFilter) = _state.update { it.copy(myFilter = filter) }
-
-    // ---------- Por aprobar / RR.HH. (MA-47, MA-52) ----------
 
     private fun loadPending() {
         val typeId = _state.value.typeFilter?.id
@@ -119,7 +112,6 @@ class RequestsViewModel @Inject constructor(
         }
     }
 
-    /** "Tipo: todos" o un tipo en particular. */
     fun onTypeFilterSelected(type: RequestType?) {
         if (type?.id == _state.value.typeFilter?.id) return
         _state.update { it.copy(typeFilter = type, pending = emptyList()) }
@@ -190,8 +182,6 @@ class RequestsViewModel @Inject constructor(
                 }
         }
     }
-
-    // ---------- Todas (MA-53) ----------
 
     private fun loadAll() {
         _state.update { it.copy(isLoadingAll = it.allRequests.isEmpty(), allError = null) }

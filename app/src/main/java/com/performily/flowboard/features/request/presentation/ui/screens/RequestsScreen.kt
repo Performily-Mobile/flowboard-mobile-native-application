@@ -55,13 +55,7 @@ import com.performily.flowboard.features.request.presentation.ui.components.Requ
 import com.performily.flowboard.features.request.presentation.ui.components.RequestSegmented
 import com.performily.flowboard.features.request.presentation.viewmodel.RequestsViewModel
 
-/**
- * Pestaña "Solicitudes" de la barra inferior.
- * Colaborador: MA-37 (Mías), MA-47 (Por aprobar) y MA-79 (bandeja vacía).
- * RR.HH.: MA-52 (asignadas a RR.HH.) y MA-53 (Todas).
- *
- * @param resultMessage mensaje que dejan otras pantallas al volver (enviada, aprobada...)
- */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RequestsScreen(
@@ -165,7 +159,7 @@ fun RequestsScreen(
     }
 }
 
-/** MA-37 · Solicitudes propias con los chips de estado. */
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun MyRequestsTab(
@@ -218,10 +212,7 @@ private fun MyRequestsTab(
     }
 }
 
-/**
- * MA-47 (jefe directo) y MA-52 (RR.HH.) · Bandeja por aprobar con el filtro de
- * tipo y el orden. Vacía muestra MA-79.
- */
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun PendingTab(
@@ -305,7 +296,7 @@ private fun PendingTab(
     }
 }
 
-/** MA-53 · Todas las solicitudes de la empresa para RR.HH., filtradas por estado. */
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun AllRequestsTab(
@@ -353,7 +344,7 @@ private fun AllRequestsTab(
     }
 }
 
-/** Chip de filtro con ✓ cuando está elegido (MA-37, MA-53). */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SelectableChip(label: String, selected: Boolean, onClick: () -> Unit) {
@@ -369,7 +360,7 @@ private fun SelectableChip(label: String, selected: Boolean, onClick: () -> Unit
     )
 }
 
-/** Chip con menú desplegable: "Tipo: todos ▾", "Más antiguas primero ▾" (MA-47). */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun <T> DropdownChip(

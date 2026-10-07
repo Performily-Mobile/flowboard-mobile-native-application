@@ -5,11 +5,7 @@ import com.performily.flowboard.features.request.domain.entity.Request
 import com.performily.flowboard.features.request.domain.entity.RequestType
 import com.performily.flowboard.features.request.domain.valueobject.RequestStatus
 
-/**
- * Pestañas de "Solicitudes" según el rol.
- * Colaborador: Mías (MA-37) y Por aprobar (MA-47 / MA-79).
- * RR.HH.: RR.HH. (MA-52) y Todas (MA-53).
- */
+
 enum class RequestsTab {
     MINE,
     TO_APPROVE,
@@ -24,7 +20,6 @@ enum class RequestsTab {
     }
 }
 
-/** Chips de "Mías" (MA-37). null en status es "Todas". */
 enum class MyRequestsFilter(val label: String, val status: RequestStatus?) {
     ALL("Todas", null),
     PENDING("Pendientes", RequestStatus.IN_PROGRESS),
@@ -33,7 +28,6 @@ enum class MyRequestsFilter(val label: String, val status: RequestStatus?) {
     REJECTED("Rechazadas", RequestStatus.REJECTED)
 }
 
-/** Chips de "Todas" para RR.HH. (MA-53). */
 enum class AllRequestsFilter(val label: String, val status: RequestStatus) {
     PENDING("Pendientes", RequestStatus.IN_PROGRESS),
     UNDER_REVIEW("En revisión", RequestStatus.UNDER_REVIEW),
@@ -41,13 +35,12 @@ enum class AllRequestsFilter(val label: String, val status: RequestStatus) {
     REJECTED("Rechazadas", RequestStatus.REJECTED)
 }
 
-/** Orden de la bandeja por aprobar (MA-47). */
+
 enum class ApprovalSort(val label: String) {
     OLDEST_FIRST("Más antiguas primero"),
     NEWEST_FIRST("Más recientes primero")
 }
 
-/** Diálogo "Rechazar solicitud" abierto desde una tarjeta de la bandeja (MA-49). */
 data class RejectForm(
     val request: Request,
     val reason: String = "",
@@ -55,18 +48,15 @@ data class RejectForm(
     val isSaving: Boolean = false
 )
 
-/** MA-37 / MA-47 / MA-52 / MA-53 / MA-79 · Pestaña "Solicitudes". */
 data class RequestsUiState(
     val role: UserRole = UserRole.EMPLOYEE,
     val selectedTab: RequestsTab = RequestsTab.MINE,
 
-    // Mías
     val isLoadingMine: Boolean = false,
     val myRequests: List<Request> = emptyList(),
     val mineError: String? = null,
     val myFilter: MyRequestsFilter = MyRequestsFilter.ALL,
 
-    // Por aprobar / RR.HH.
     val isLoadingPending: Boolean = false,
     val pending: List<Request> = emptyList(),
     val pendingError: String? = null,
@@ -76,7 +66,6 @@ data class RequestsUiState(
     val processingRequestId: Long? = null,
     val rejectForm: RejectForm? = null,
 
-    // Todas (RR.HH.)
     val isLoadingAll: Boolean = false,
     val allRequests: List<Request> = emptyList(),
     val allError: String? = null,
