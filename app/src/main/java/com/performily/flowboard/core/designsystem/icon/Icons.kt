@@ -41,6 +41,10 @@ object FlowboardIcons {
         icon("check", "M9,16.17L4.83,12l-1.42,1.41L9,19 21,7l-1.41,-1.41z")
     }
 
+    val ArrowForward: ImageVector by lazy {
+        icon("arrowForward", "M12,4l-1.41,1.41L16.17,11H4v2h12.17l-5.58,5.59L12,20l8,-8z")
+    }
+
     val ArrowDropDown: ImageVector by lazy {
         icon("arrowDropDown", "M7,10l5,5 5,-5z")
     }

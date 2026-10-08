@@ -23,6 +23,7 @@ val Divider = Color(0xFFE5E7EE)
 
 val Error = Color(0xFFBA1A1A)
 val ErrorContainer = Color(0xFFFFDAD6)
+val OnErrorContainer = Color(0xFF410002)
 
 val AvatarContainer = Color(0xFFD7E3F8)
 val OnAvatarContainer = Color(0xFF315279)
@@ -32,6 +33,10 @@ val SuspendedContainer = Color(0xFFFFDDB3)
 val TerminatedContainer = Color(0xFFFFDAD6)
 val PendingContainer = Color(0xFFFFF1DC)
 val PendingOutline = Color(0xFFF5DDB8)
+
+// Payroll (MA-65 a MA-69): chip "Por publicar" / "Pendiente" y contenedor de diálogos.
+val AwaitingContainer = Color(0xFFF3C577)
+val DialogContainer = Color(0xFFEEF0F7)
 
 val PrimaryDark = Color(0xFFA2C9FE)
 val OnPrimaryDark = Color(0xFF00315C)

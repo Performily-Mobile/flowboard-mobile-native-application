@@ -7,7 +7,8 @@ enum class PersonalDataField {
     LAST_NAME,
     BIRTH_DATE,
     EMAIL,
-    PHONE
+    PHONE,
+    ADDRESS
 }
 
 data class EditPersonalDataUiState(

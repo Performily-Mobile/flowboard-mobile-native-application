@@ -146,6 +146,9 @@ fun EditPersonalDataScreen(
             FormTextField(label = "Distrito", value = state.district, onValueChange = viewModel::onDistrictChange)
             FormTextField(label = "Provincia", value = state.province, onValueChange = viewModel::onProvinceChange)
             FormTextField(label = "Departamento", value = state.department, onValueChange = viewModel::onDepartmentChange)
+            state.errorOf(PersonalDataField.ADDRESS)?.let { message ->
+                Text(text = message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
 
             state.errorMessage?.let { message ->
                 Text(text = message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)

@@ -58,8 +58,11 @@ class EmployeeDetailViewModel @Inject constructor(
     private val _state = MutableStateFlow(EmployeeDetailUiState())
     val state: StateFlow<EmployeeDetailUiState> = _state.asStateFlow()
 
-    // ---------- Carga ----------
-
+    /**
+     * Loads the employee detail, documents and job history.
+     *
+     * @param employeeId identifier of the employee to display.
+     */
     fun load(employeeId: Long) {
         val id = EmployeeId(employeeId)
         _state.update { it.copy(isLoading = true, errorMessage = null) }
@@ -104,7 +107,9 @@ class EmployeeDetailViewModel @Inject constructor(
 
     fun consumeMessage() = _state.update { it.copy(message = null) }
 
-    /** Carga áreas, posiciones y posibles jefes la primera vez que se abre una hoja que los necesita. */
+    /**
+     * Loads areas, positions and candidate managers the first time a sheet that needs them is opened.
+     */
     private fun loadCatalogs() {
         if (_state.value.areas.isNotEmpty()) return
         viewModelScope.launch {
@@ -123,8 +128,9 @@ class EmployeeDetailViewModel @Inject constructor(
         }
     }
 
-    // ---------- Reasignar puesto y jefe directo (MA-26) ----------
-
+    /**
+     * Opens the job reassignment dialog and loads the catalogs it needs.
+     */
     fun openReassignJob() {
         val employee = _state.value.employee ?: return
         loadCatalogs()
@@ -157,6 +163,11 @@ class EmployeeDetailViewModel @Inject constructor(
         it.copy(reassignJobForm = it.reassignJobForm.copy(effectiveDate = date))
     }
 
+    /**
+     * Saves the job reassignment.
+     *
+     * The direct manager is updated first because the backend validates that no cycles are created.
+     */
     fun saveReassignJob() {
         val employee = _state.value.employee ?: return
         val form = _state.value.reassignJobForm
@@ -175,7 +186,6 @@ class EmployeeDetailViewModel @Inject constructor(
 
         _state.update { it.copy(isSaving = true, actionError = null) }
         viewModelScope.launch {
-            // Primero el jefe directo: el backend valida que no se formen ciclos.
             if (managerChanged) {
                 val newManager = form.directManagerId
                 val result = if (newManager == null) {
@@ -203,13 +213,25 @@ class EmployeeDetailViewModel @Inject constructor(
         }
     }
 
-    // ---------- Registrar cese (MA-28) y cese bloqueado (MA-29) ----------
-
+    /**
+     * Opens the termination dialog.
+     *
+     * The direct reports are checked first: if that check fails the dialog is not opened, since
+     * termination cannot proceed without knowing whether the employee has subordinates.
+     */
     fun openTerminate() {
         val employee = _state.value.employee ?: return
         _state.update { it.copy(isSaving = true, actionError = null) }
         viewModelScope.launch {
-            val subordinates = getSubordinates(employee.id).getOrDefault(emptyList())
+            val subordinatesResult = getSubordinates(employee.id)
+            val failure = subordinatesResult.exceptionOrNull()
+            if (failure != null) {
+                _state.update {
+                    it.copy(isSaving = false, message = failure.message ?: "No se pudo verificar si tiene subordinados.")
+                }
+                return@launch
+            }
+            val subordinates = subordinatesResult.getOrDefault(emptyList())
             _state.update {
                 it.copy(
                     isSaving = false,
@@ -233,6 +255,9 @@ class EmployeeDetailViewModel @Inject constructor(
         it.copy(terminationForm = it.terminationForm.copy(terminationDate = date, dateError = null))
     }
 
+    /**
+     * Registers the termination of the employee.
+     */
     fun saveTermination() {
         val employee = _state.value.employee ?: return
         val form = _state.value.terminationForm
@@ -263,8 +288,9 @@ class EmployeeDetailViewModel @Inject constructor(
         }
     }
 
-    // ---------- Reincorporar (MA-30) ----------
-
+    /**
+     * Opens the reinstatement dialog.
+     */
     fun openReinstate() {
         val employee = _state.value.employee ?: return
         loadCatalogs()
@@ -315,8 +341,9 @@ class EmployeeDetailViewModel @Inject constructor(
         }
     }
 
-    // ---------- Subir documento (MA-27) ----------
-
+    /**
+     * Opens the document upload dialog.
+     */
     fun openUploadDocument() = _state.update {
         it.copy(
             activeAction = EmployeeAction.UPLOAD_DOCUMENT,
@@ -364,8 +391,11 @@ class EmployeeDetailViewModel @Inject constructor(
         }
     }
 
-    // ---------- Comunes ----------
-
+    /**
+     * Closes the active action and shows a confirmation message.
+     *
+     * @param message text shown to the user.
+     */
     private fun finishAction(message: String) {
         _state.update {
             it.copy(isSaving = false, activeAction = EmployeeAction.NONE, actionError = null, message = message)

@@ -15,14 +15,34 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.performily.flowboard.core.session.UserRole
+import com.performily.flowboard.features.payroll.presentation.ui.navigation.PaymentStatusRoute
+import com.performily.flowboard.features.payroll.presentation.ui.navigation.UploadPayslipsRoute
+import com.performily.flowboard.features.benefits.presentation.ui.navigation.AssignBenefitRoute
+import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.NewOfficeRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.EditPersonalDataRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.RegisterEmployeeRoute
 import com.performily.flowboard.features.attendance.presentation.ui.navigation.JustifyAttendanceRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.WorkspaceNavGraphRoute
+import com.performily.flowboard.features.request.presentation.ui.navigation.NewRequestRoute
+import com.performily.flowboard.features.request.presentation.ui.navigation.NewRequestTypeRoute
+import com.performily.flowboard.features.request.presentation.ui.navigation.RequestDetailRoute
+import com.performily.flowboard.features.request.presentation.ui.navigation.RequestTypesRoute
+import com.performily.flowboard.features.request.presentation.ui.navigation.ReviewRequestRoute
 
 /** Formularios de pantalla completa: ahí no se muestra la barra inferior. */
 private val routesWithoutBottomBar = listOf(
     RegisterEmployeeRoute::class,
+    EditPersonalDataRoute::class,
+    NewOfficeRoute::class,
+    AssignBenefitRoute::class,
+    // Payroll RR.HH.: MA-67 y MA-69 no muestran la barra inferior.
+    UploadPayslipsRoute::class,
+    PaymentStatusRoute::class,
+    NewRequestRoute::class,
+    RequestDetailRoute::class,
+    ReviewRequestRoute::class,
+    RequestTypesRoute::class,
+    NewRequestTypeRoute::class,
     JustifyAttendanceRoute::class,
     EditPersonalDataRoute::class
 )
