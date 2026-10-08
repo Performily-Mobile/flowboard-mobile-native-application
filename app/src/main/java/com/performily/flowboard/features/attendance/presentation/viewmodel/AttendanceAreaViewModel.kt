@@ -49,10 +49,20 @@ class AttendanceAreaViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, errorMessage = null) }
             getAreaAttendance(area.id, _state.value.period)
                 .onSuccess { report ->
-                    _state.update { it.copy(isLoading = false, report = report.copy(areaName = area.name)) }
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            report = report.copy(areaName = area.name)
+                        )
+                    }
                 }
                 .onFailure { exception ->
-                    _state.update { it.copy(isLoading = false, errorMessage = exception.message ?: "No se pudo cargar el reporte.") }
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = exception.message ?: "No se pudo cargar el reporte."
+                        )
+                    }
                 }
         }
     }
@@ -70,7 +80,11 @@ class AttendanceAreaViewModel @Inject constructor(
                     load()
                 }
                 .onFailure { exception ->
-                    _state.update { it.copy(errorMessage = exception.message ?: "No se pudieron cargar las áreas.") }
+                    _state.update {
+                        it.copy(
+                            errorMessage = exception.message ?: "No se pudieron cargar las áreas."
+                        )
+                    }
                 }
         }
     }

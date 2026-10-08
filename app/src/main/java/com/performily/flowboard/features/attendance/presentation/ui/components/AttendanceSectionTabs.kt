@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-/** Tabs principales del bounded context Attendance para la experiencia de RRHH. */
 @Composable
 fun AttendanceSectionTabs(
     selectedIndex: Int,
