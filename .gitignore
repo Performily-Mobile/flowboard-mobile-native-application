@@ -1,15 +1,31 @@
+# Gradle
+.gradle/
+build/
+/captures/
+.externalNativeBuild/
+.cxx/
+.kotlin/
+
+# Android Studio / IntelliJ
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
 local.properties
+
+# Archivos generados de la compilación
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+output-metadata.json
+
+# Claves de firma
+*.jks
+*.keystore
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
