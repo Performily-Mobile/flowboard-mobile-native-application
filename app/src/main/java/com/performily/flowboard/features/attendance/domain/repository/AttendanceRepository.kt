@@ -13,7 +13,7 @@ interface AttendanceRepository {
     suspend fun getEmployeeAttendance(employeeId: Long, period: AttendancePeriod): Result<List<AttendanceRecord>>
     suspend fun getAreaAttendance(areaId: Long, period: AttendancePeriod): Result<AttendanceAreaReport>
     suspend fun getHoursReport(period: AttendancePeriod, areaId: Long?, orderByOvertime: Boolean): Result<AttendanceHoursReport>
-    suspend fun registerPunch(type: PunchType): Result<AttendanceRecord?>
+    suspend fun registerPunch(type: PunchType): Result<Long>
     suspend fun justifyAttendance(attendanceRecordId: Long, reason: String, evidenceUrl: String?): Result<AttendanceRecord>
     suspend fun getAreas(): Result<List<AttendanceArea>>
     suspend fun searchEmployees(query: String): Result<List<AttendanceEmployee>>
