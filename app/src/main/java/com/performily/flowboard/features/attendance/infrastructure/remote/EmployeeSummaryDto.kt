@@ -6,5 +6,6 @@ data class EmployeeSummaryDto(
     val lastName: String?,
     val fullName: String?,
     val areaId: Long?,
-    val areaName: String?
+    val areaName: String?,
+    val positionTitle: String? = null
 )
