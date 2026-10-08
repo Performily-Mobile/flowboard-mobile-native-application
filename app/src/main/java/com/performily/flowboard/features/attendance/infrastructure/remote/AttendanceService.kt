@@ -11,15 +11,16 @@ interface AttendanceService {
 
     @GET("attendance/me")
     suspend fun getMyAttendance(
-        @Query("fromDate") fromDate: String,
-        @Query("toDate") toDate: String
+        @Query("employeeId") employeeId: Long,
+        @Query("from") fromDate: String,
+        @Query("to") toDate: String
     ): Response<List<AttendanceRecordDto>>
 
     @GET("attendance/employees/{employeeId}")
     suspend fun getEmployeeAttendance(
         @Path("employeeId") employeeId: Long,
-        @Query("fromDate") fromDate: String,
-        @Query("toDate") toDate: String
+        @Query("from") fromDate: String,
+        @Query("to") toDate: String
     ): Response<List<AttendanceRecordDto>>
 
     @GET("attendance/areas/{areaId}")
@@ -28,8 +29,22 @@ interface AttendanceService {
         @Query("workDate") workDate: String
     ): Response<List<AttendanceRecordDto>>
 
+    @GET("attendance/reports/employees/{employeeId}/hours")
+    suspend fun getEmployeeHours(
+        @Path("employeeId") employeeId: Long,
+        @Query("from") fromDate: String,
+        @Query("to") toDate: String
+    ): Response<AttendanceHoursSummaryDto>
+
+    @GET("attendance/reports/areas/{areaId}")
+    suspend fun getAreaSummary(
+        @Path("areaId") areaId: Long,
+        @Query("from") fromDate: String,
+        @Query("to") toDate: String
+    ): Response<AttendanceAreaSummaryDto>
+
     @POST("attendance/punches")
-    suspend fun registerPunch(@Body request: PunchRequestDto): Response<AttendanceRecordDto>
+    suspend fun registerPunch(@Body request: PunchRequestDto): Response<Long>
 
     @POST("attendance/{attendanceRecordId}/justification")
     suspend fun justifyAttendance(
