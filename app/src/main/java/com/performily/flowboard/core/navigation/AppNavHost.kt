@@ -16,11 +16,22 @@ import com.performily.flowboard.features.benefits.presentation.ui.navigation.ben
 import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.wellbeingNavGraph
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.MyProfileRoute
 import com.performily.flowboard.features.attendance.presentation.ui.navigation.attendanceNavGraph
+import com.performily.flowboard.features.dashboard.presentation.ui.navigation.dashboardNavGraph
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.OrganizationRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.workspaceNavGraph
 import com.performily.flowboard.features.request.presentation.ui.navigation.RequestTypesRoute
 import com.performily.flowboard.features.request.presentation.ui.navigation.requestNavGraph
 
+/**
+ * Root navigation host of the app.
+ *
+ * Each bounded context registers its own graph here; routes whose feature is not integrated yet
+ * show a temporary screen.
+ *
+ * @param navController controller that drives the navigation.
+ * @param startDestination route shown when the app opens, which depends on the user role.
+ * @param modifier modifier applied to the host.
+ */
 @Composable
 fun AppNavHost(
     navController: NavHostController,
@@ -38,6 +49,7 @@ fun AppNavHost(
         benefitsNavGraph(navController, onRequestVacation = { navController.navigate(RequestsRoute) })
         requestNavGraph(navController)
         attendanceNavGraph(navController)
+        dashboardNavGraph(navController)
 
         composable<MoreRoute> {
             MoreScreen(
@@ -62,11 +74,6 @@ fun AppNavHost(
             )
         }
 
-        // PENDIENTE: reemplazar por el NavGraph de cada bounded context al integrarlo.
-        composable<PanelRoute> { PendingFeatureScreen(title = "Panel") }
         composable<HomeRoute> { PendingFeatureScreen(title = "Inicio") }
-        //composable<AttendanceRoute> { PendingFeatureScreen(title = "Asistencia") }
-        //composable<RequestsRoute> { PendingFeatureScreen(title = "Solicitudes") }
-        //composable<PayslipsRoute> { PendingFeatureScreen(title = "Boletas") }
     }
 }

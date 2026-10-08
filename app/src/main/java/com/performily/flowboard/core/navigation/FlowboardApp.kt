@@ -22,14 +22,13 @@ import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.Ne
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.EditPersonalDataRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.RegisterEmployeeRoute
 import com.performily.flowboard.features.attendance.presentation.ui.navigation.JustifyAttendanceRoute
-import com.performily.flowboard.features.workspace.presentation.ui.navigation.WorkspaceNavGraphRoute
 import com.performily.flowboard.features.request.presentation.ui.navigation.NewRequestRoute
 import com.performily.flowboard.features.request.presentation.ui.navigation.NewRequestTypeRoute
 import com.performily.flowboard.features.request.presentation.ui.navigation.RequestDetailRoute
 import com.performily.flowboard.features.request.presentation.ui.navigation.RequestTypesRoute
 import com.performily.flowboard.features.request.presentation.ui.navigation.ReviewRequestRoute
 
-/** Formularios de pantalla completa: ahí no se muestra la barra inferior. */
+/** Full-screen forms, where the bottom bar is hidden. */
 private val routesWithoutBottomBar = listOf(
     RegisterEmployeeRoute::class,
     EditPersonalDataRoute::class,
@@ -42,16 +41,23 @@ private val routesWithoutBottomBar = listOf(
     ReviewRequestRoute::class,
     RequestTypesRoute::class,
     NewRequestTypeRoute::class,
-    JustifyAttendanceRoute::class,
-    EditPersonalDataRoute::class
+    JustifyAttendanceRoute::class
 )
 
+/**
+ * Root composable of the app: bottom bar by role plus the navigation host.
+ *
+ * Every screen handles its own system insets with its own Scaffold, so this one uses none.
+ * HR opens on the dashboard and employees on their home.
+ *
+ * @param viewModel shell view model that exposes the role of the signed-in user.
+ */
 @Composable
 fun FlowboardApp(viewModel: AppShellViewModel = hiltViewModel()) {
     val navController = rememberNavController()
     val destinations = remember(viewModel.role) { TopLevelDestination.forRole(viewModel.role) }
     val startDestination: Any = when (viewModel.role) {
-        UserRole.HUMAN_RESOURCES -> WorkspaceNavGraphRoute
+        UserRole.HUMAN_RESOURCES -> PanelRoute
         UserRole.EMPLOYEE -> HomeRoute
     }
 
@@ -61,7 +67,6 @@ fun FlowboardApp(viewModel: AppShellViewModel = hiltViewModel()) {
             routesWithoutBottomBar.none { currentDestination.hasRoute(it) }
 
     Scaffold(
-        // Cada pantalla maneja sus propios márgenes del sistema con su Scaffold.
         contentWindowInsets = WindowInsets(0),
         bottomBar = {
             if (showBottomBar) {
@@ -83,8 +88,17 @@ fun FlowboardApp(viewModel: AppShellViewModel = hiltViewModel()) {
     }
 }
 
-/** Cambia de pestaña sin apilar pantallas y conservando el estado de cada una. */
+/**
+ * Switches tab without stacking screens and keeping the state of each tab.
+ *
+ * The tab that is the start destination of the app (the dashboard for HR, the home for employees)
+ * is reached by popping back to it, which always works because it sits at the bottom of the stack.
+ * The other tabs are reached with a single-top navigation.
+ */
 private fun NavHostController.navigateToTopLevel(destination: TopLevelDestination) {
+    val isStartTab = graph.findStartDestination().hasRoute(destination.route::class)
+    if (isStartTab && popBackStack(destination.route, inclusive = false, saveState = true)) return
+
     navigate(destination.route) {
         popUpTo(graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true

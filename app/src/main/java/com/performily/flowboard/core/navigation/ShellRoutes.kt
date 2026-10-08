@@ -2,36 +2,34 @@ package com.performily.flowboard.core.navigation
 
 import kotlinx.serialization.Serializable
 
-/*
- * Rutas de la estructura general de la app (barra inferior y "Más").
- * Las rutas marcadas como PENDIENTE muestran una pantalla temporal: cuando cada
- * bounded context se integre (Payroll, Request, Attendance...), se reemplazan
- * en TopLevelDestination por la ruta de su propio NavGraph.
- */
-
+/** "Más" tab: entry point to the options that are not part of the main bar. */
 @Serializable
 data object MoreRoute
 
-// PENDIENTE: panel de RR.HH. (MA-18)
+/** HR dashboard tab (MA-18). */
 @Serializable
 data object PanelRoute
 
-// PENDIENTE: inicio del colaborador (MA-14)
+/** Employee home tab (MA-14). Not integrated yet: it shows a temporary screen. */
 @Serializable
 data object HomeRoute
 
-// PENDIENTE: bounded context Request
+/** Requests tab of the Request bounded context. */
 @Serializable
 data object RequestsRoute
 
-// PENDIENTE: bounded context Attendance
+/** Attendance tab of the Attendance bounded context. */
 @Serializable
 data object AttendanceRoute
 
-// PENDIENTE: bounded context Payroll
+/** Payslips tab of the Payroll bounded context. */
 @Serializable
 data object PayslipsRoute
 
-/** Pantalla temporal para opciones de "Más" que aún no están integradas. */
+/**
+ * Temporary screen for options of "Más" that are not integrated yet.
+ *
+ * @property title name of the option, shown as the screen title.
+ */
 @Serializable
 data class PendingFeatureRoute(val title: String)
