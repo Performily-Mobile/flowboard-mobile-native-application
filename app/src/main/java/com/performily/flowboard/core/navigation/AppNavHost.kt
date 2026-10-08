@@ -65,8 +65,8 @@ fun AppNavHost(
         // PENDIENTE: reemplazar por el NavGraph de cada bounded context al integrarlo.
         composable<PanelRoute> { PendingFeatureScreen(title = "Panel") }
         composable<HomeRoute> { PendingFeatureScreen(title = "Inicio") }
-        composable<AttendanceRoute> { PendingFeatureScreen(title = "Asistencia") }
-        composable<RequestsRoute> { PendingFeatureScreen(title = "Solicitudes") }
-        composable<PayslipsRoute> { PendingFeatureScreen(title = "Boletas") }
+        //composable<AttendanceRoute> { PendingFeatureScreen(title = "Asistencia") }
+        //composable<RequestsRoute> { PendingFeatureScreen(title = "Solicitudes") }
+        //composable<PayslipsRoute> { PendingFeatureScreen(title = "Boletas") }
     }
 }

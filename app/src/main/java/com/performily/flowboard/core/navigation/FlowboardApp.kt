@@ -35,7 +35,6 @@ private val routesWithoutBottomBar = listOf(
     EditPersonalDataRoute::class,
     NewOfficeRoute::class,
     AssignBenefitRoute::class,
-    // Payroll RR.HH.: MA-67 y MA-69 no muestran la barra inferior.
     UploadPayslipsRoute::class,
     PaymentStatusRoute::class,
     NewRequestRoute::class,
