@@ -10,3 +10,6 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+# DTOs leídos por Gson: no renombrar campos
+-keep class com.performily.flowboard.features.**.infrastructure.remote.** { *; }
+-keepattributes Signature, *Annotation*
