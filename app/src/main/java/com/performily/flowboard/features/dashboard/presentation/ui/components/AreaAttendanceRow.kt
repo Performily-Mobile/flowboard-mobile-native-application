@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.dashboard.domain.entity.AreaAttendance
 
 /**
@@ -33,8 +34,8 @@ internal fun AreaAttendanceRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(vertical = Spacing.s),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(

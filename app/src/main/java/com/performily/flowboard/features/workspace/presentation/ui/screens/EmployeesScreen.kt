@@ -1,19 +1,18 @@
 package com.performily.flowboard.features.workspace.presentation.ui.screens
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -25,7 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -42,7 +40,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.CollapsingHeaderLayout
+import com.performily.flowboard.core.designsystem.component.FlowboardSearchField
+import com.performily.flowboard.core.designsystem.component.rememberCollapsingHeaderState
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.workspace.domain.entity.Area
 import com.performily.flowboard.features.workspace.domain.entity.Position
 import com.performily.flowboard.features.workspace.presentation.state.EmployeesUiState
@@ -51,6 +53,15 @@ import com.performily.flowboard.features.workspace.presentation.ui.components.la
 import com.performily.flowboard.features.workspace.presentation.viewmodel.EmployeesViewModel
 import com.performily.flowboard.features.workspace.domain.valueobject.EmploymentStatus
 
+/**
+ * List of employees with a search box and filters that slide away while scrolling down.
+ *
+ * @param onEmployeeClick called with the id of the tapped employee.
+ * @param onRegisterClick called by the "Nuevo colaborador" button.
+ * @param onOrganizationClick opens areas and positions.
+ * @param onOrganizationChartClick opens the organization chart.
+ * @param viewModel view model of the screen.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmployeesScreen(
@@ -62,6 +73,7 @@ fun EmployeesScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var menuExpanded by remember { mutableStateOf(false) }
+    val headerState = rememberCollapsingHeaderState()
 
     LaunchedEffect(Unit) {
         viewModel.loadEmployees()
@@ -99,48 +111,49 @@ fun EmployeesScreen(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = onRegisterClick,
-                icon = { Icon(FlowboardIcons.Add, contentDescription = null) },
                 text = { Text("Nuevo colaborador") },
+                icon = { Icon(FlowboardIcons.Add, contentDescription = null) },
+                onClick = onRegisterClick,
+                expanded = headerState.isHeaderVisible,
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp)
-        ) {
-            Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(
-                value = state.query,
-                onValueChange = viewModel::onQueryChange,
-                placeholder = { Text("Buscar por nombre, apellido o DNI") },
-                leadingIcon = { Icon(FlowboardIcons.Search, contentDescription = null) },
-                trailingIcon = {
-                    if (state.query.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.onQueryChange("") }) {
-                            Icon(FlowboardIcons.Close, contentDescription = "Limpiar búsqueda")
-                        }
-                    }
-                },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            EmployeeFilters(
-                state = state,
-                onAreaSelected = viewModel::onAreaSelected,
-                onStatusSelected = viewModel::onStatusSelected,
-                onPositionSelected = viewModel::onPositionSelected
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-
+        CollapsingHeaderLayout(
+            modifier = Modifier.padding(paddingValues),
+            state = headerState,
+            showHeaderKey = listOf(state.employees.size, state.errorMessage != null),
+            header = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.screenHorizontal)
+                        .padding(top = 4.dp, bottom = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.m)
+                ) {
+                    FlowboardSearchField(
+                        query = state.query,
+                        onQueryChange = viewModel::onQueryChange,
+                        placeholder = "Buscar por nombre, apellido o DNI"
+                    )
+                    EmployeeFilters(
+                        state = state,
+                        onAreaSelected = viewModel::onAreaSelected,
+                        onStatusSelected = viewModel::onStatusSelected,
+                        onPositionSelected = viewModel::onPositionSelected
+                    )
+                }
+            }
+        ) { contentPadding ->
             when {
                 state.isLoading && state.employees.isEmpty() -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = contentPadding.calculateTopPadding()),
+                        contentAlignment = Alignment.Center
+                    ) {
                         CircularProgressIndicator()
                     }
                 }
@@ -150,7 +163,8 @@ fun EmployeesScreen(
                         title = "No se pudo cargar la lista",
                         message = state.errorMessage.orEmpty(),
                         actionLabel = "Reintentar",
-                        onAction = viewModel::loadEmployees
+                        onAction = viewModel::loadEmployees,
+                        modifier = Modifier.padding(top = contentPadding.calculateTopPadding())
                     )
                 }
 
@@ -159,17 +173,30 @@ fun EmployeesScreen(
                         title = "No encontramos colaboradores",
                         message = emptyMessage(state),
                         actionLabel = if (state.hasFilters) "Limpiar filtros" else null,
-                        onAction = viewModel::clearFilters
+                        onAction = viewModel::clearFilters,
+                        modifier = Modifier.padding(top = contentPadding.calculateTopPadding())
                     )
                 }
 
                 else -> {
-                    Text(
-                        text = "${state.employees.size} colaboradores · orden alfabético por apellido",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    LazyColumn(contentPadding = PaddingValues(bottom = 88.dp)) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            top = contentPadding.calculateTopPadding() + 4.dp,
+                            bottom = Spacing.fabClearance,
+                            start = Spacing.screenHorizontal,
+                            end = Spacing.screenHorizontal
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
+                    ) {
+                        item(key = "count") {
+                            Text(
+                                text = "${state.employees.size} colaboradores",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 4.dp)
+                            )
+                        }
                         items(state.employees, key = { it.id.value }) { employee ->
                             EmployeeListItem(
                                 employee = employee,
@@ -183,7 +210,7 @@ fun EmployeesScreen(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+/** Single row of filter chips (area, status, position) that scrolls sideways when it does not fit. */
 @Composable
 private fun EmployeeFilters(
     state: EmployeesUiState,
@@ -191,9 +218,11 @@ private fun EmployeeFilters(
     onStatusSelected: (EmploymentStatus?) -> Unit,
     onPositionSelected: (Position?) -> Unit
 ) {
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxWidth()
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
     ) {
         FilterMenuChip(
             name = "Área",
@@ -222,6 +251,9 @@ private fun EmployeeFilters(
     }
 }
 
+/**
+ * Filter chip that opens a menu of options; when a value is selected, tapping it clears the filter.
+ */
 @Composable
 private fun <T> FilterMenuChip(
     name: String,
@@ -269,19 +301,21 @@ private fun <T> FilterMenuChip(
     }
 }
 
+/** Centered title, message and optional action shown for the error and empty states. */
 @Composable
 private fun MessageState(
     title: String,
     message: String,
     actionLabel: String?,
-    onAction: () -> Unit
+    onAction: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(top = 48.dp, start = 16.dp, end = 16.dp),
+            .padding(top = 48.dp, start = Spacing.screenHorizontal, end = Spacing.screenHorizontal),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(Spacing.s)
     ) {
         Text(text = title, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
         Text(
@@ -296,6 +330,7 @@ private fun MessageState(
     }
 }
 
+/** Builds the empty-state message from the active search and filters. */
 private fun emptyMessage(state: EmployeesUiState): String {
     if (!state.hasFilters) return "Todavía no hay colaboradores registrados."
     val parts = buildList {

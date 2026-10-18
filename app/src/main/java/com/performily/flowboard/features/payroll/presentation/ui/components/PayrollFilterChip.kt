@@ -20,9 +20,20 @@ import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 
 /**
- * Chip de filtro de MA-69.
- * - clearable = false (Período, Área): siempre abre el menú; muestra la flecha.
- * - clearable = true (Estado): si está seleccionado, la "x" lo quita; si no, abre el menú.
+ * Pill filter chip of the payment status screen (MA-69) that opens a menu of options.
+ *
+ * With `clearable = false` (period, area) a tap always opens the menu and the chip shows an arrow.
+ * With `clearable = true` (status) a selected chip shows an "x" that removes the filter;
+ * otherwise a tap opens the menu.
+ *
+ * @param label text of the chip.
+ * @param selected true when the filter has a value.
+ * @param options options of the menu.
+ * @param optionLabel text shown for each option.
+ * @param onSelect called with the option the user picks.
+ * @param modifier modifier applied to the chip.
+ * @param clearable true to let the user remove the filter from the chip.
+ * @param onClear called when the user removes the filter.
  */
 @Composable
 fun <T> PayrollFilterChip(
@@ -42,7 +53,7 @@ fun <T> PayrollFilterChip(
             selected = selected,
             onClick = { if (showClose) onClear() else expanded = true },
             label = {
-                Text(text = label, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                Text(text = label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium, maxLines = 1)
             },
             leadingIcon = if (selected) {
                 { Icon(FlowboardIcons.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }

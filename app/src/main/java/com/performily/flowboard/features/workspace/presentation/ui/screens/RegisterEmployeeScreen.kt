@@ -31,11 +31,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.FlowboardBottomActionBar
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.workspace.presentation.ui.components.ContractAssignmentStep
 import com.performily.flowboard.features.workspace.presentation.ui.components.PersonalDataStep
 import com.performily.flowboard.features.workspace.presentation.viewmodel.RegisterEmployeeViewModel
 
+/**
+ * Two-step form to register a new employee: personal data, then contract and assignment.
+ *
+ * @param onClose called by the close button of the first step.
+ * @param onRegistered called with the id of the new employee once it is registered.
+ * @param viewModel view model of the screen.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterEmployeeScreen(
@@ -70,31 +79,32 @@ fun RegisterEmployeeScreen(
             )
         },
         bottomBar = {
-            Column(modifier = Modifier.padding(16.dp)) {
-                state.errorMessage?.let { message ->
-                    Text(
-                        text = message,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
-                Button(
-                    onClick = if (state.step == 1) viewModel::onContinue else viewModel::onSubmit,
-                    enabled = !state.isSubmitting,
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                ) {
-                    if (state.isSubmitting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            strokeWidth = 2.dp
+            FlowboardBottomActionBar {
+                Column(modifier = Modifier.weight(1f)) {
+                    state.errorMessage?.let { message ->
+                        Text(
+                            text = message,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(bottom = Spacing.s)
                         )
-                    } else {
-                        Text(if (state.step == 1) "Continuar" else "Registrar colaborador")
+                    }
+                    Button(
+                        onClick = if (state.step == 1) viewModel::onContinue else viewModel::onSubmit,
+                        enabled = !state.isSubmitting,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                    ) {
+                        if (state.isSubmitting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text(if (state.step == 1) "Continuar" else "Registrar colaborador")
+                        }
                     }
                 }
             }
@@ -105,8 +115,9 @@ fun RegisterEmployeeScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = Spacing.screenHorizontal)
+                .padding(top = 8.dp, bottom = Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
             StepIndicator(step = state.step)
             if (state.step == 1) {
@@ -135,9 +146,13 @@ fun RegisterEmployeeScreen(
     }
 }
 
+/** Caption and two-segment progress bar of the registration steps. */
 @Composable
 private fun StepIndicator(step: Int) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(
+        modifier = Modifier.padding(bottom = Spacing.s),
+        verticalArrangement = Arrangement.spacedBy(Spacing.s)
+    ) {
         Text(
             text = if (step == 1) "Paso 1 de 2 · Datos personales" else "Paso 2 de 2 · Contrato y asignación",
             style = MaterialTheme.typography.labelMedium,

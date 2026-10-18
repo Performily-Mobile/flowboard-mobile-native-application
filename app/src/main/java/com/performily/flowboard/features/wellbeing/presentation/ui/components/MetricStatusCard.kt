@@ -10,13 +10,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.performily.flowboard.features.wellbeing.domain.entity.MetricStatus
 
 /**
- * MA-72 / MA-81 · Una métrica de un espacio: valor actual, indicador y rango óptimo.
- * Sin lecturas recientes muestra "—" y "Sin dato", y cuándo fue la última lectura.
+ * One metric of a space (MA-72 / MA-81): current value, indicator and optimal range.
+ *
+ * Without recent readings it shows "—" and "Sin dato", plus when the last reading was taken.
+ *
+ * @param metric metric to show.
+ * @param modifier modifier applied to the card.
  */
 @Composable
 fun MetricStatusCard(
@@ -54,11 +59,14 @@ fun MetricStatusCard(
         Text(
             text = subtitle(metric),
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
 
+/** Optimal range line, plus the time of the last reading when the data is outdated. */
 private fun subtitle(metric: MetricStatus): String {
     val range = if (metric.optimalMin != null && metric.optimalMax != null) {
         "Rango óptimo: ${WellbeingFormatters.range(metric.optimalMin, metric.optimalMax, metric.metricType)}"

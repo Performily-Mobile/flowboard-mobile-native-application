@@ -5,27 +5,37 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
-import com.performily.flowboard.core.designsystem.theme.Divider
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.workspace.domain.entity.EmployeeDocument
 import com.performily.flowboard.features.workspace.domain.valueobject.DocumentCategory
 
+/**
+ * Documents of an employee record with category filter chips and download buttons.
+ *
+ * @param documents documents to show, already filtered.
+ * @param selectedCategory selected category, or null for all of them.
+ * @param onCategoryChange called when a category chip is tapped.
+ * @param modifier modifier applied to the tab.
+ * @param onUploadClick when not null, shows the "Subir documento" button.
+ */
 @Composable
 fun DocumentsTab(
     documents: List<EmployeeDocument>,
@@ -35,14 +45,13 @@ fun DocumentsTab(
     onUploadClick: (() -> Unit)? = null
 ) {
     val uriHandler = LocalUriHandler.current
-    Column(modifier = modifier) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)) {
         onUploadClick?.let { onClick ->
             OutlinedButton(
                 onClick = onClick,
-                shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp)
+                    .height(48.dp)
             ) {
                 Icon(FlowboardIcons.Upload, contentDescription = null)
                 Text("Subir documento", modifier = Modifier.padding(start = 8.dp))
@@ -51,9 +60,8 @@ fun DocumentsTab(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.s)
         ) {
             CategoryChip(label = "Todos", selected = selectedCategory == null) { onCategoryChange(null) }
             CategoryChip("Contratos", selectedCategory == DocumentCategory.CONTRACT) {
@@ -77,31 +85,42 @@ fun DocumentsTab(
         }
 
         documents.forEach { document ->
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.surfaceContainerLow
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                        .padding(start = 16.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(text = document.documentType.label(), style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            text = document.documentType.label(),
+                            style = MaterialTheme.typography.bodyLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                         Text(
                             text = "${document.documentType.category.label()} · Cargado el ${document.uploadedAt.toDisplay()}",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                     IconButton(onClick = { runCatching { uriHandler.openUri(document.file.storageUrl) } }) {
                         Icon(FlowboardIcons.Download, contentDescription = "Descargar")
                     }
                 }
-                HorizontalDivider(color = Divider)
             }
         }
     }
 }
 
+/** Filter chip of one document category; the pill shape comes from the theme. */
 @Composable
 private fun CategoryChip(label: String, selected: Boolean, onClick: () -> Unit) {
     FilterChip(

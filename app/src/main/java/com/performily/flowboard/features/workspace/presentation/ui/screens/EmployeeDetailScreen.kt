@@ -20,8 +20,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -34,14 +32,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.FlowboardTabs
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.workspace.domain.entity.Employee
 import com.performily.flowboard.features.workspace.presentation.state.EmployeeAction
 import com.performily.flowboard.features.workspace.presentation.ui.components.DocumentsTab
 import com.performily.flowboard.features.workspace.presentation.ui.components.EmployeeAvatar
+import com.performily.flowboard.features.workspace.presentation.ui.components.InfoBanner
 import com.performily.flowboard.features.workspace.presentation.ui.components.JobAssignmentTab
 import com.performily.flowboard.features.workspace.presentation.ui.components.PersonalDataTab
 import com.performily.flowboard.features.workspace.presentation.ui.components.ReassignJobSheet
@@ -55,6 +57,19 @@ import com.performily.flowboard.features.workspace.presentation.viewmodel.Employ
 private val tabs = listOf("Datos", "Puesto", "Expediente", "Cuenta")
 private const val DOCUMENTS_TAB = 2
 
+/**
+ * Record of one employee with tabs for personal data, job, documents and account.
+ *
+ * When the screen is opened from "Reasignar reportes", the reassign sheet opens as soon as the
+ * record is loaded.
+ *
+ * @param employeeId id of the employee shown.
+ * @param onBack called by the back button.
+ * @param onEditPersonalData opens the personal data form of the employee.
+ * @param onOpenEmployee opens another employee record, optionally with the reassign sheet open.
+ * @param openReassignOnStart true to open the reassign sheet once the record is loaded.
+ * @param viewModel view model of the screen.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmployeeDetailScreen(
@@ -73,7 +88,6 @@ fun EmployeeDetailScreen(
         viewModel.load(employeeId)
     }
 
-    // Llegamos desde "Reasignar reportes": abrimos la hoja apenas cargue la ficha.
     LaunchedEffect(state.employee != null) {
         if (openReassignOnStart && !reassignHandled && state.employee != null) {
             reassignHandled = true
@@ -130,9 +144,9 @@ fun EmployeeDetailScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(paddingValues)
-                        .padding(24.dp),
+                        .padding(Spacing.xl),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(Spacing.m)
                 ) {
                     Text(state.errorMessage ?: "No se encontró el colaborador.")
                     OutlinedButton(onClick = { viewModel.load(employeeId) }) { Text("Reintentar") }
@@ -146,23 +160,18 @@ fun EmployeeDetailScreen(
                         .padding(paddingValues)
                 ) {
                     EmployeeHeader(employee)
-                    TabRow(
-                        selectedTabIndex = state.selectedTab,
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ) {
-                        tabs.forEachIndexed { index, title ->
-                            Tab(
-                                selected = state.selectedTab == index,
-                                onClick = { viewModel.onTabSelected(index) },
-                                text = { Text(title) }
-                            )
-                        }
-                    }
+                    FlowboardTabs(
+                        labels = tabs,
+                        selectedIndex = state.selectedTab,
+                        onSelect = { viewModel.onTabSelected(it) },
+                        modifier = Modifier.padding(horizontal = Spacing.screenHorizontal, vertical = 8.dp)
+                    )
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .padding(horizontal = Spacing.screenHorizontal)
+                            .padding(top = 8.dp, bottom = Spacing.xl)
                     ) {
                         when (state.selectedTab) {
                             0 -> PersonalDataTab(employee)
@@ -177,11 +186,8 @@ fun EmployeeDetailScreen(
                                 onCategoryChange = viewModel::onDocumentFilterChange,
                                 onUploadClick = viewModel::openUploadDocument
                             )
-                            else -> Text(
-                                text = "La cuenta de acceso y el rol del colaborador se gestionan en el módulo de identidad (IAM).",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(vertical = 16.dp)
+                            else -> InfoBanner(
+                                text = "La cuenta de acceso y el rol del colaborador se gestionan en el módulo de identidad (IAM)."
                             )
                         }
                     }
@@ -261,6 +267,7 @@ fun EmployeeDetailScreen(
     }
 }
 
+/** Overflow menu of the record with the actions allowed for the employee status. */
 @Composable
 private fun EmployeeMenu(
     employee: Employee,
@@ -290,27 +297,36 @@ private fun EmployeeMenu(
     }
 }
 
+/** One entry of [EmployeeMenu]. */
 @Composable
 private fun MenuItem(text: String, onClick: () -> Unit) {
     DropdownMenuItem(text = { Text(text) }, onClick = onClick)
 }
 
+/** Avatar, name, job and status at the top of the record. */
 @Composable
 private fun EmployeeHeader(employee: Employee) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+            .padding(horizontal = Spacing.screenHorizontal, vertical = Spacing.m),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.l),
         verticalAlignment = Alignment.CenterVertically
     ) {
         EmployeeAvatar(initials = employee.name.initials, size = 56.dp)
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(text = employee.name.fullName, style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = employee.name.fullName,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
             Text(
                 text = employee.jobDescription,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             StatusChip(status = employee.status)
         }

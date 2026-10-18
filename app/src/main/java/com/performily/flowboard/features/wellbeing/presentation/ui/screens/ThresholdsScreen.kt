@@ -3,12 +3,10 @@ package com.performily.flowboard.features.wellbeing.presentation.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -31,7 +29,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.FlowboardBottomActionBar
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.wellbeing.domain.valueobject.MetricType
 import com.performily.flowboard.features.wellbeing.presentation.ui.components.BannerTone
 import com.performily.flowboard.features.wellbeing.presentation.ui.components.MetricSelector
@@ -46,9 +46,13 @@ import com.performily.flowboard.features.wellbeing.presentation.viewmodel.Thresh
 /**
  * MA-74 - Thresholds: ranges of each indicator per metric.
  *
+ * The save button sits in a bottom action bar that stays above the system navigation bar and
+ * the keyboard.
+ *
  * @param officeId office being configured
  * @param officeName name shown in the top bar
  * @param onBack called when the user leaves the screen
+ * @param viewModel view model of the screen
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,23 +102,23 @@ fun ThresholdsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (!state.isLoading && state.errorMessage == null) {
-                Button(
-                    onClick = viewModel::onSave,
-                    enabled = state.canSave,
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .height(48.dp)
-                ) {
-                    if (state.isSaving) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text("Guardar umbrales")
+                FlowboardBottomActionBar {
+                    Button(
+                        onClick = viewModel::onSave,
+                        enabled = state.canSave,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(52.dp)
+                    ) {
+                        if (state.isSaving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("Guardar umbrales")
+                        }
                     }
                 }
             }
@@ -137,8 +141,8 @@ fun ThresholdsScreen(
             else -> Column(
                 modifier = contentModifier
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = Spacing.screenHorizontal, vertical = Spacing.s),
+                verticalArrangement = Arrangement.spacedBy(Spacing.l)
             ) {
                 MetricSelector(selected = state.selectedMetric, onSelect = viewModel::onMetricSelected)
 
@@ -168,18 +172,23 @@ fun ThresholdsScreen(
                     }
                 }
 
-                Text(
-                    text = "Deja vacía una fila si no quieres usar ese nivel. Define al menos 2 niveles, " +
-                        "sin superposiciones ni vacíos entre ellos.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (state.selectedMetric == MetricType.TEMPERATURE) {
+                Column(
+                    modifier = Modifier.padding(horizontal = Spacing.xs, vertical = Spacing.xs),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.s)
+                ) {
                     Text(
-                        text = "Las lecturas por debajo del primer rango se clasifican con el nivel de ese primer rango.",
+                        text = "Deja vacía una fila si no quieres usar ese nivel. Define al menos 2 niveles, " +
+                            "sin superposiciones ni vacíos entre ellos.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    if (state.selectedMetric == MetricType.TEMPERATURE) {
+                        Text(
+                            text = "Las lecturas por debajo del primer rango se clasifican con el nivel de ese primer rango.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }

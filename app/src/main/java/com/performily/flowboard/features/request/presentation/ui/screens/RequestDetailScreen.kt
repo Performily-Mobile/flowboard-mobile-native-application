@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -37,7 +36,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.FlowboardBottomActionBar
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.request.domain.entity.Request
 import com.performily.flowboard.features.request.domain.valueobject.RequestStatus
 import com.performily.flowboard.features.request.presentation.state.RequestDetailUiState
@@ -60,6 +61,14 @@ import com.performily.flowboard.features.request.presentation.ui.components.time
 import com.performily.flowboard.features.request.presentation.viewmodel.RequestDetailViewModel
 
 
+/**
+ * Detail of one of the viewer's requests, with a bottom bar to resubmit or cancel it when allowed.
+ *
+ * @param requestId identifier of the request.
+ * @param onBack called when the back button is tapped.
+ * @param onFinished called with the result message once the request is resubmitted or cancelled.
+ * @param viewModel request detail view model.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RequestDetailScreen(
@@ -94,7 +103,16 @@ fun RequestDetailScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        bottomBar = {
+            if (!state.isLoading && state.request != null && (state.canResubmit || state.canCancel)) {
+                DetailActions(
+                    state = state,
+                    onResubmit = viewModel::resubmit,
+                    onCancel = viewModel::showCancelDialog
+                )
+            }
+        }
     ) { paddingValues ->
         val contentModifier = Modifier
             .fillMaxSize()
@@ -131,6 +149,7 @@ fun RequestDetailScreen(
     }
 }
 
+/** Scrollable detail of the request: summary, comment, attachments, data and history. */
 @Composable
 private fun DetailContent(
     state: RequestDetailUiState,
@@ -140,54 +159,66 @@ private fun DetailContent(
 ) {
     val openPicker = rememberAttachmentPicker(onPicked = viewModel::onFilePicked)
 
-    Column(modifier = modifier.padding(horizontal = 16.dp)) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(top = 8.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            SummaryCard(request)
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = Spacing.screenHorizontal)
+            .padding(top = Spacing.s, bottom = Spacing.xl),
+        verticalArrangement = Arrangement.spacedBy(Spacing.m)
+    ) {
+        SummaryCard(request)
 
-            ResolutionComment(request)
+        ResolutionComment(request)
 
-            if (state.canResubmit) {
-                state.attachments.forEach { file ->
-                    AttachmentRow(file = file, onRemove = { viewModel.removeAttachment(file) })
-                }
-                AttachmentZone(
-                    required = state.type?.requiresAttachment == true,
-                    isUploading = state.isUploading,
-                    onClick = openPicker,
-                    error = state.attachmentError
-                )
-            } else {
-                request.attachments.forEach { file -> AttachmentRow(file = file) }
+        if (state.canResubmit) {
+            state.attachments.forEach { file ->
+                AttachmentRow(file = file, onRemove = { viewModel.removeAttachment(file) })
             }
-
-            val details = buildList {
-                request.fieldValues.forEach { value ->
-                    val field = state.type?.fields?.firstOrNull { it.key == value.key }
-                    add(KeyValue(field?.label ?: value.key, RequestFormatters.fieldValue(field, value.value)))
-                }
-                add(KeyValue("Enviada", RequestFormatters.dateTime(request.submittedAt)))
-            }
-            KeyValueCard(items = details)
-
-            RequestSectionHeader("Historial")
-            RequestHistoryTimeline(items = timelineOf(request, state.viewerId))
+            AttachmentZone(
+                required = state.type?.requiresAttachment == true,
+                isUploading = state.isUploading,
+                onClick = openPicker,
+                error = state.attachmentError
+            )
+        } else {
+            request.attachments.forEach { file -> AttachmentRow(file = file) }
         }
 
-        when {
-            state.canResubmit -> Button(
-                onClick = viewModel::resubmit,
+        val details = buildList {
+            request.fieldValues.forEach { value ->
+                val field = state.type?.fields?.firstOrNull { it.key == value.key }
+                add(KeyValue(field?.label ?: value.key, RequestFormatters.fieldValue(field, value.value)))
+            }
+            add(KeyValue("Enviada", RequestFormatters.dateTime(request.submittedAt)))
+        }
+        KeyValueCard(items = details)
+
+        RequestSectionHeader("Historial")
+        RequestHistoryTimeline(items = timelineOf(request, state.viewerId))
+    }
+}
+
+/**
+ * Bottom bar with the action the viewer can take on the request: resubmit it or cancel it.
+ *
+ * @param state screen state.
+ * @param onResubmit called when "Reenviar solicitud" is tapped.
+ * @param onCancel called when "Cancelar solicitud" is tapped.
+ */
+@Composable
+private fun DetailActions(
+    state: RequestDetailUiState,
+    onResubmit: () -> Unit,
+    onCancel: () -> Unit
+) {
+    FlowboardBottomActionBar {
+        if (state.canResubmit) {
+            Button(
+                onClick = onResubmit,
                 enabled = !state.isResubmitting && !state.isUploading,
-                shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .height(44.dp)
+                    .weight(1f)
+                    .height(52.dp)
             ) {
                 if (state.isResubmitting) {
                     CircularProgressIndicator(
@@ -197,18 +228,17 @@ private fun DetailContent(
                     )
                 } else {
                     Icon(RequestIcons.Sync, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Text("Reenviar solicitud", modifier = Modifier.padding(start = 8.dp))
+                    Text("Reenviar solicitud", modifier = Modifier.padding(start = Spacing.s))
                 }
             }
-            state.canCancel -> OutlinedButton(
-                onClick = viewModel::showCancelDialog,
-                shape = RoundedCornerShape(8.dp),
+        } else if (state.canCancel) {
+            OutlinedButton(
+                onClick = onCancel,
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .height(44.dp)
+                    .weight(1f)
+                    .height(52.dp)
             ) {
                 Text("Cancelar solicitud")
             }
@@ -216,12 +246,13 @@ private fun DetailContent(
     }
 }
 
+/** Card with the type, status, period and approver of the request. */
 @Composable
 private fun SummaryCard(request: Request) {
     RequestCard {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(request.requestTypeName, fontSize = 20.sp, modifier = Modifier.weight(1f))
@@ -241,6 +272,7 @@ private fun SummaryCard(request: Request) {
 }
 
 
+/** Comment left by the approver when the request was returned or rejected; shows nothing otherwise. */
 @Composable
 private fun ResolutionComment(request: Request) {
     val entry = when (request.status) {

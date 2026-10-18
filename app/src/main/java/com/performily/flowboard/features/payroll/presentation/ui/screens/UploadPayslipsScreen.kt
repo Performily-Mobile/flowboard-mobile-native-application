@@ -7,13 +7,12 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -35,7 +34,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.FlowboardBottomActionBar
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.payroll.presentation.state.UploadPayslipsUiState
 import com.performily.flowboard.features.payroll.presentation.ui.components.DuplicatePayslipDialog
 import com.performily.flowboard.features.payroll.presentation.ui.components.PayrollErrorBanner
@@ -79,17 +80,16 @@ fun UploadPayslipsScreen(
         topBar = { PayrollTopAppBar(title = "Boletas y pagos", onBack = onBack) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
-            Button(
-                onClick = viewModel::onPublishClick,
-                enabled = state.canPublish,
-                shape = RoundedCornerShape(8.dp),
-                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 16.dp)
-            ) {
-                Text(if (state.isPublishing) "Publicando..." else publishPayslipsLabel(state.underReviewCount))
+            FlowboardBottomActionBar {
+                Button(
+                    onClick = viewModel::onPublishClick,
+                    enabled = state.canPublish,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp)
+                ) {
+                    Text(if (state.isPublishing) "Publicando..." else publishPayslipsLabel(state.underReviewCount))
+                }
             }
         }
     ) { paddingValues ->
@@ -97,8 +97,13 @@ fun UploadPayslipsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            contentPadding = PaddingValues(
+                start = Spacing.screenHorizontal,
+                end = Spacing.screenHorizontal,
+                top = Spacing.s,
+                bottom = Spacing.xl
+            ),
+            verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
         ) {
             item {
                 PeriodSelectField(
@@ -193,10 +198,9 @@ private fun LazyListScope.payslipsSection(
             item {
                 Text(
                     text = uploadedPayslipsLabel(state.entries.size),
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = Spacing.m)
                 )
             }
             items(state.entries, key = { it.payslip.id }) { entry ->
@@ -215,6 +219,14 @@ private fun LazyListScope.payslipsSection(
     }
 }
 
+/**
+ * Centered message for the error and empty states of the payroll lists.
+ *
+ * @param title main line.
+ * @param message explanation below the title.
+ * @param actionLabel text of the action button, or null to hide it.
+ * @param onAction called when the action button is tapped.
+ */
 @Composable
 internal fun MessageState(
     title: String,
@@ -225,9 +237,9 @@ internal fun MessageState(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 32.dp, start = 16.dp, end = 16.dp),
+            .padding(top = Spacing.xxl, start = Spacing.screenHorizontal, end = Spacing.screenHorizontal),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(Spacing.m)
     ) {
         Text(text = title, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
         Text(

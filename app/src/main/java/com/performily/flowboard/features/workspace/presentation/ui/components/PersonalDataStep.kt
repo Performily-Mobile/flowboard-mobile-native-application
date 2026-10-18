@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.workspace.domain.valueobject.IdentityDocumentType
 import com.performily.flowboard.features.workspace.presentation.state.RegisterEmployeeUiState
 import com.performily.flowboard.features.workspace.presentation.state.RegisterField
@@ -29,7 +30,7 @@ fun PersonalDataStep(
     onPhoneChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
         FormTextField(
             label = "Nombres",
             value = state.firstName,
@@ -42,7 +43,7 @@ fun PersonalDataStep(
             onValueChange = onLastNameChange,
             error = state.errorOf(RegisterField.LAST_NAME)
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
             SelectField(
                 label = "Tipo",
                 options = IdentityDocumentType.entries,

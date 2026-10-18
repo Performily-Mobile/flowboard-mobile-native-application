@@ -1,11 +1,11 @@
 package com.performily.flowboard.features.dashboard.presentation.ui.navigation
 
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.performily.flowboard.core.navigation.PanelRoute
 import com.performily.flowboard.core.navigation.PendingFeatureRoute
+import com.performily.flowboard.core.navigation.navigateToTab
 import com.performily.flowboard.core.navigation.RequestsRoute
 import com.performily.flowboard.features.attendance.presentation.ui.navigation.AttendanceAreaReportRoute
 import com.performily.flowboard.features.benefits.presentation.ui.navigation.VacationBalancesRoute
@@ -30,14 +30,5 @@ fun NavGraphBuilder.dashboardNavGraph(navController: NavController) {
             onRequestClick = { requestId -> navController.navigate(ReviewRequestRoute(requestId)) },
             onNotificationsClick = { navController.navigate(PendingFeatureRoute("Notificaciones")) }
         )
-    }
-}
-
-/** Switches tab like the bottom bar does: without stacking screens and keeping each tab's state. */
-private fun NavController.navigateToTab(route: Any) {
-    navigate(route) {
-        popUpTo(graph.findStartDestination().id) { saveState = true }
-        launchSingleTop = true
-        restoreState = true
     }
 }

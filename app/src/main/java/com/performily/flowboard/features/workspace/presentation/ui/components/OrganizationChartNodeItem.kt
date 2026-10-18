@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -16,14 +15,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.performily.flowboard.core.designsystem.theme.Divider
 import com.performily.flowboard.core.domain.EmployeeId
-import com.performily.flowboard.core.designsystem.theme.Outline
+import com.performily.flowboard.core.designsystem.theme.OutlineVariant
 import com.performily.flowboard.core.designsystem.theme.PendingContainer
 import com.performily.flowboard.core.designsystem.theme.PendingOutline
 import com.performily.flowboard.features.workspace.domain.valueobject.OrganizationChartNode
 
+/**
+ * Node of the organization chart: the employee card followed by its direct reports, indented
+ * behind a vertical guide line.
+ *
+ * @param node node to draw, with its subordinates.
+ * @param modifier modifier applied to the node.
+ * @param highlightedEmployeeId employee to highlight as the current user.
+ */
 @Composable
 fun OrganizationChartNodeItem(
     node: OrganizationChartNode,
@@ -36,8 +43,8 @@ fun OrganizationChartNodeItem(
             initials = node.initials,
             title = if (isHighlighted) "${node.fullName} (tú)" else node.fullName,
             subtitle = node.positionTitle,
-            containerColor = if (isHighlighted) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface,
-            borderColor = if (isHighlighted) MaterialTheme.colorScheme.primary else Divider
+            containerColor = if (isHighlighted) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+            borderColor = if (isHighlighted) MaterialTheme.colorScheme.primary else null
         )
         if (node.subordinates.isNotEmpty()) {
             Column(
@@ -45,7 +52,7 @@ fun OrganizationChartNodeItem(
                     .fillMaxWidth()
                     .drawBehind {
                         drawLine(
-                            color = Outline,
+                            color = OutlineVariant,
                             start = Offset(1.dp.toPx(), 0f),
                             end = Offset(1.dp.toPx(), size.height),
                             strokeWidth = 2.dp.toPx()
@@ -60,6 +67,12 @@ fun OrganizationChartNodeItem(
     }
 }
 
+/**
+ * Card of an employee whose direct manager was terminated and who waits for a new one.
+ *
+ * @param node node of the employee.
+ * @param modifier modifier applied to the card.
+ */
 @Composable
 fun PendingNodeCard(node: OrganizationChartNode, modifier: Modifier = Modifier) {
     NodeCard(
@@ -72,33 +85,41 @@ fun PendingNodeCard(node: OrganizationChartNode, modifier: Modifier = Modifier) 
     )
 }
 
+/** Tonal card with avatar, name and position of one employee of the chart. */
 @Composable
 private fun NodeCard(
     initials: String,
     title: String,
     subtitle: String,
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.surface,
-    borderColor: Color = Divider
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    borderColor: Color? = null
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         color = containerColor,
-        border = BorderStroke(1.dp, borderColor)
+        border = borderColor?.let { BorderStroke(1.dp, it) }
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             EmployeeAvatar(initials = initials, size = 32.dp)
             Column {
-                Text(text = title, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

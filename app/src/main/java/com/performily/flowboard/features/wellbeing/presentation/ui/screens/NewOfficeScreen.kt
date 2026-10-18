@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -36,11 +35,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.FlowboardBottomActionBar
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.wellbeing.presentation.state.OfficeAreaOptions
 import com.performily.flowboard.features.wellbeing.presentation.viewmodel.NewOfficeViewModel
 
-/** MA-71 · Nuevo espacio (pantalla completa, sin barra inferior). */
+/**
+ * New space form (MA-71), full screen without the app bottom navigation.
+ *
+ * The create button sits in a bottom action bar that stays above the system navigation bar and
+ * the keyboard.
+ *
+ * @param onClose closes the form.
+ * @param onCreated called with the id of the created space.
+ * @param viewModel view model of the screen.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewOfficeScreen(
@@ -67,31 +77,32 @@ fun NewOfficeScreen(
             )
         },
         bottomBar = {
-            Column(modifier = Modifier.padding(16.dp)) {
-                state.errorMessage?.let { message ->
-                    Text(
-                        text = message,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
-                Button(
-                    onClick = viewModel::onSubmit,
-                    enabled = state.canSubmit,
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                ) {
-                    if (state.isSubmitting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            strokeWidth = 2.dp
+            FlowboardBottomActionBar {
+                Column(modifier = Modifier.weight(1f)) {
+                    state.errorMessage?.let { message ->
+                        Text(
+                            text = message,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(bottom = Spacing.s)
                         )
-                    } else {
-                        Text("Crear espacio")
+                    }
+                    Button(
+                        onClick = viewModel::onSubmit,
+                        enabled = state.canSubmit,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                    ) {
+                        if (state.isSubmitting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("Crear espacio")
+                        }
                     }
                 }
             }
@@ -102,8 +113,8 @@ fun NewOfficeScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = Spacing.screenHorizontal, vertical = Spacing.l),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l)
         ) {
             FormField(
                 label = "Nombre del espacio",
@@ -119,7 +130,7 @@ fun NewOfficeScreen(
                 onValueChange = viewModel::onAddressChange,
                 error = state.addressError
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 FormField(
                     label = "Piso",
                     value = state.floor,
@@ -143,6 +154,16 @@ fun NewOfficeScreen(
     }
 }
 
+/**
+ * Single-line text field of the form with its validation error.
+ *
+ * @param label label of the field.
+ * @param value current text.
+ * @param onValueChange called on every change.
+ * @param modifier modifier applied to the field.
+ * @param error validation error, if any.
+ * @param placeholder hint shown while the field is empty.
+ */
 @Composable
 private fun FormField(
     label: String,
@@ -164,7 +185,12 @@ private fun FormField(
     )
 }
 
-/** Desplegable "Área" con las opciones del prototipo. */
+/**
+ * "Área" dropdown with the options of the prototype.
+ *
+ * @param selected area currently selected, if any.
+ * @param onSelect called with the chosen area.
+ */
 @Composable
 private fun AreaField(selected: String?, onSelect: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }

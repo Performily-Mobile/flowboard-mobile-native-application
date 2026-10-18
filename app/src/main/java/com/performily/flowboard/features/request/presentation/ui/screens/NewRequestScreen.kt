@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -38,8 +37,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.FlowboardBottomActionBar
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Divider
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.request.domain.entity.RequestType
 import com.performily.flowboard.features.request.presentation.state.NewRequestStep
 import com.performily.flowboard.features.request.presentation.state.NewRequestUiState
@@ -62,6 +63,16 @@ import com.performily.flowboard.features.request.presentation.ui.components.reme
 import com.performily.flowboard.features.request.presentation.viewmodel.NewRequestViewModel
 
 
+/**
+ * Three-step form to create a request: type, detail and confirmation.
+ *
+ * The main action of each step sits in a bottom bar that stays above the system navigation bar
+ * and the keyboard.
+ *
+ * @param onClose called when the form is closed from the first step.
+ * @param onSubmitted called with the result message once the request is sent.
+ * @param viewModel new request view model.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewRequestScreen(
@@ -94,6 +105,17 @@ fun NewRequestScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
+        },
+        bottomBar = {
+            if (!state.isLoading && state.types.isNotEmpty()) {
+                NewRequestActions(
+                    state = state,
+                    onContinue = viewModel::continueToDetail,
+                    onReview = viewModel::continueToConfirmation,
+                    onSubmit = viewModel::submit,
+                    onEdit = { viewModel.goBack() }
+                )
+            }
         }
     ) { paddingValues ->
         val contentModifier = Modifier
@@ -108,42 +130,105 @@ fun NewRequestScreen(
                 onAction = viewModel::load,
                 modifier = contentModifier
             )
-            else -> Column(modifier = contentModifier.padding(horizontal = 16.dp)) {
+            else -> Column(modifier = contentModifier.padding(horizontal = Spacing.screenHorizontal)) {
                 StepHeader(
                     step = state.step.number,
                     total = NewRequestStep.entries.size,
                     label = state.step.label,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 12.dp)
+                    modifier = Modifier.padding(top = Spacing.s, bottom = Spacing.l)
                 )
                 when (state.step) {
-                    NewRequestStep.TYPE -> TypeStep(
-                        state = state,
-                        onTypeSelected = viewModel::onTypeSelected,
-                        onContinue = viewModel::continueToDetail
-                    )
+                    NewRequestStep.TYPE -> TypeStep(state = state, onTypeSelected = viewModel::onTypeSelected)
                     NewRequestStep.DETAIL -> DetailStep(state = state, viewModel = viewModel)
-                    NewRequestStep.CONFIRMATION -> ConfirmationStep(
-                        state = state,
-                        onSubmit = viewModel::submit,
-                        onEdit = { viewModel.goBack() }
-                    )
+                    NewRequestStep.CONFIRMATION -> ConfirmationStep(state = state)
                 }
             }
         }
     }
 }
 
+/**
+ * Bottom bar with the main action of the current step.
+ *
+ * @param state form state.
+ * @param onContinue called when "Continuar" is tapped in the first step.
+ * @param onReview called when "Revisar solicitud" is tapped in the detail step.
+ * @param onSubmit called when "Enviar solicitud" is tapped in the confirmation step.
+ * @param onEdit called when "Editar" is tapped in the confirmation step.
+ */
+@Composable
+private fun NewRequestActions(
+    state: NewRequestUiState,
+    onContinue: () -> Unit,
+    onReview: () -> Unit,
+    onSubmit: () -> Unit,
+    onEdit: () -> Unit
+) {
+    if (state.step != NewRequestStep.TYPE && state.selectedType == null) return
+    FlowboardBottomActionBar {
+        when (state.step) {
+            NewRequestStep.TYPE -> Button(
+                onClick = onContinue,
+                enabled = state.selectedType != null,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp)
+            ) {
+                Text("Continuar")
+            }
+            NewRequestStep.DETAIL -> Button(
+                onClick = onReview,
+                enabled = state.canReview,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(52.dp)
+            ) {
+                Text("Revisar solicitud")
+            }
+            NewRequestStep.CONFIRMATION -> {
+                OutlinedButton(
+                    onClick = onEdit,
+                    enabled = !state.isSubmitting,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp)
+                ) {
+                    Text("Editar")
+                }
+                Button(
+                    onClick = onSubmit,
+                    enabled = !state.isSubmitting,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp)
+                ) {
+                    if (state.isSubmitting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Enviar solicitud")
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** First step: list of the active request types to choose from. */
 @Composable
 private fun ColumnScope.TypeStep(
     state: NewRequestUiState,
-    onTypeSelected: (RequestType) -> Unit,
-    onContinue: () -> Unit
+    onTypeSelected: (RequestType) -> Unit
 ) {
     Column(
         modifier = Modifier
             .weight(1f)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = Spacing.l),
+        verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
     ) {
         Text("¿Qué quieres solicitar?", fontSize = 20.sp)
         state.types.forEach { type ->
@@ -153,7 +238,7 @@ private fun ColumnScope.TypeStep(
                 containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.White,
                 border = BorderStroke(1.dp, Divider)
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(selected = selected, onClick = { onTypeSelected(type) }, modifier = Modifier.size(24.dp))
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Text(type.name, style = MaterialTheme.typography.bodyLarge)
@@ -167,9 +252,9 @@ private fun ColumnScope.TypeStep(
             }
         }
     }
-    PrimaryButton(text = "Continuar", enabled = state.selectedType != null, onClick = onContinue)
 }
 
+/** Second step: period, dynamic fields, attachments and approver of the request. */
 @Composable
 private fun ColumnScope.DetailStep(state: NewRequestUiState, viewModel: NewRequestViewModel) {
     val type = state.selectedType ?: return
@@ -180,8 +265,9 @@ private fun ColumnScope.DetailStep(state: NewRequestUiState, viewModel: NewReque
     Column(
         modifier = Modifier
             .weight(1f)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = Spacing.l),
+        verticalArrangement = Arrangement.spacedBy(Spacing.l)
     ) {
         if (state.exceedsBalance && availability != null) {
             RequestBanner(
@@ -194,7 +280,7 @@ private fun ColumnScope.DetailStep(state: NewRequestUiState, viewModel: NewReque
         }
 
         if (state.canUseHours) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.l)) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text("Por horas", style = MaterialTheme.typography.bodyLarge)
                     Text(
@@ -215,7 +301,7 @@ private fun ColumnScope.DetailStep(state: NewRequestUiState, viewModel: NewReque
                 isError = state.periodError != null && state.startDate == null,
                 modifier = Modifier.fillMaxWidth()
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 RequestTimeField(
                     label = "Hora de inicio",
                     value = state.startTime,
@@ -230,7 +316,7 @@ private fun ColumnScope.DetailStep(state: NewRequestUiState, viewModel: NewReque
                 )
             }
         } else {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 RequestDateField(
                     label = "Fecha de inicio",
                     value = state.startDate,
@@ -284,13 +370,13 @@ private fun ColumnScope.DetailStep(state: NewRequestUiState, viewModel: NewReque
 
         ApproverCard(state = state)
     }
-    PrimaryButton(text = "Revisar solicitud", enabled = state.canReview, onClick = viewModel::continueToConfirmation)
 }
 
+/** Card that tells who will receive the request. */
 @Composable
 private fun ApproverCard(state: NewRequestUiState) {
     RequestCard {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically) {
             RequestAvatar(name = state.approverName)
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
@@ -312,12 +398,9 @@ private fun ApproverCard(state: NewRequestUiState) {
     }
 }
 
+/** Third step: summary of the request before sending it. */
 @Composable
-private fun ColumnScope.ConfirmationStep(
-    state: NewRequestUiState,
-    onSubmit: () -> Unit,
-    onEdit: () -> Unit
-) {
+private fun ColumnScope.ConfirmationStep(state: NewRequestUiState) {
     val type = state.selectedType ?: return
     val period = state.period
     val availability = state.availability
@@ -347,8 +430,9 @@ private fun ColumnScope.ConfirmationStep(
     Column(
         modifier = Modifier
             .weight(1f)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = Spacing.l),
+        verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
     ) {
         Text("Revisa tu solicitud", fontSize = 20.sp)
         KeyValueCard(items = items)
@@ -361,53 +445,5 @@ private fun ColumnScope.ConfirmationStep(
         state.errorMessage?.let { error ->
             Text(error, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
         }
-    }
-    Column(
-        modifier = Modifier.padding(bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Button(
-            onClick = onSubmit,
-            enabled = !state.isSubmitting,
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(44.dp)
-        ) {
-            if (state.isSubmitting) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(18.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Text("Enviar solicitud")
-            }
-        }
-        OutlinedButton(
-            onClick = onEdit,
-            enabled = !state.isSubmitting,
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(44.dp)
-        ) {
-            Text("Editar")
-        }
-    }
-}
-
-@Composable
-private fun PrimaryButton(text: String, enabled: Boolean, onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        shape = RoundedCornerShape(8.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp)
-            .height(44.dp)
-    ) {
-        Text(text)
     }
 }

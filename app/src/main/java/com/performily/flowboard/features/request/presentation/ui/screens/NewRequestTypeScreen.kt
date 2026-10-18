@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -33,8 +32,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.FlowboardBottomActionBar
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Divider
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.request.domain.entity.NewRequestField
 import com.performily.flowboard.features.request.domain.valueobject.BalanceDeduction
 import com.performily.flowboard.features.request.presentation.ui.components.AddFieldSheet
@@ -46,6 +47,13 @@ import com.performily.flowboard.features.request.presentation.ui.components.Requ
 import com.performily.flowboard.features.request.presentation.viewmodel.NewRequestTypeViewModel
 
 
+/**
+ * Form for HR to create a request type: name, description, attachment rule, balance deduction and fields.
+ *
+ * @param onClose called when the form is closed.
+ * @param onCreated called with the result message once the type is saved.
+ * @param viewModel new request type view model.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewRequestTypeScreen(
@@ -68,48 +76,66 @@ fun NewRequestTypeScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
+        },
+        bottomBar = {
+            FlowboardBottomActionBar {
+                Button(
+                    onClick = viewModel::save,
+                    enabled = state.canSave,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp)
+                ) {
+                    if (state.isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Guardar tipo")
+                    }
+                }
+            }
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = Spacing.screenHorizontal)
+                .padding(top = Spacing.s, bottom = Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l)
         ) {
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(top = 8.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = state.name,
-                    onValueChange = viewModel::onNameChange,
-                    label = { Text("Nombre") },
-                    isError = state.nameError != null,
-                    supportingText = state.nameError?.let { { Text(it) } },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = state.description,
-                    onValueChange = viewModel::onDescriptionChange,
-                    label = { Text("Descripción") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text("Requiere documento adjunto", style = MaterialTheme.typography.bodyLarge)
-                        Text(
-                            text = "El colaborador no podrá enviar sin sustento",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Switch(checked = state.requiresAttachment, onCheckedChange = viewModel::onRequiresAttachmentChange)
+            OutlinedTextField(
+                value = state.name,
+                onValueChange = viewModel::onNameChange,
+                label = { Text("Nombre") },
+                isError = state.nameError != null,
+                supportingText = state.nameError?.let { { Text(it) } },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = state.description,
+                onValueChange = viewModel::onDescriptionChange,
+                label = { Text("Descripción") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.l)) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Requiere documento adjunto", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        text = "El colaborador no podrá enviar sin sustento",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
+                Switch(checked = state.requiresAttachment, onCheckedChange = viewModel::onRequiresAttachmentChange)
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
                 Text(
                     text = "Descuenta saldo",
                     style = MaterialTheme.typography.bodySmall,
@@ -121,32 +147,13 @@ fun NewRequestTypeScreen(
                     optionLabel = { it.label },
                     onSelect = viewModel::onBalanceDeductionChange
                 )
-                RequestSectionHeader("Campos del formulario") {
-                    TextButton(onClick = viewModel::showFieldSheet) { Text("+ Agregar campo") }
-                }
-                FieldsCard(fields = state.fields, onRemove = viewModel::removeField)
-                state.errorMessage?.let { error ->
-                    Text(error, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
-                }
             }
-            Button(
-                onClick = viewModel::save,
-                enabled = state.canSave,
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
-                    .height(44.dp)
-            ) {
-                if (state.isSaving) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Text("Guardar tipo")
-                }
+            RequestSectionHeader("Campos del formulario") {
+                TextButton(onClick = viewModel::showFieldSheet) { Text("+ Agregar campo") }
+            }
+            FieldsCard(fields = state.fields, onRemove = viewModel::removeField)
+            state.errorMessage?.let { error ->
+                Text(error, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
             }
         }
     }
@@ -167,6 +174,7 @@ fun NewRequestTypeScreen(
 }
 
 
+/** Card with the fields added to the form, or a hint when there are none. */
 @Composable
 private fun FieldsCard(fields: List<NewRequestField>, onRemove: (NewRequestField) -> Unit) {
     if (fields.isEmpty()) {

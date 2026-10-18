@@ -14,8 +14,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -28,7 +26,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.CollapsingHeaderLayout
+import com.performily.flowboard.core.designsystem.component.FlowboardTabs
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.benefits.domain.entity.BenefitAssignment
 import com.performily.flowboard.features.benefits.domain.entity.EmployeeBenefits
 import com.performily.flowboard.features.benefits.domain.valueobject.AssignmentStatus
@@ -54,7 +55,10 @@ private const val RECENT_DELIVERED = 2
 /**
  * My benefits screen (MA-58, MA-59).
  *
- * Lists current and delivered benefits.
+ * Lists current and delivered benefits. The tabs slide away while the list scrolls down.
+ *
+ * @param onBack navigates back.
+ * @param viewModel view model of the screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,55 +81,83 @@ fun MyBenefitsScreen(
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            TabRow(selectedTabIndex = state.selectedTab, containerColor = MaterialTheme.colorScheme.surface) {
-                listOf("Vigentes (${state.currentCount})", "Entregados (${state.deliveredCount})")
-                    .forEachIndexed { index, title ->
-                        Tab(
-                            selected = state.selectedTab == index,
-                            onClick = { viewModel.onTabSelected(index) },
-                            text = { Text(title) }
+        val benefits = state.benefits
+        val errorMessage = state.errorMessage
+        CollapsingHeaderLayout(
+            modifier = Modifier.padding(paddingValues),
+            showHeaderKey = listOf(
+                state.selectedTab,
+                benefits?.current?.size,
+                benefits?.delivered?.size,
+                errorMessage != null
+            ),
+            header = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.screenHorizontal)
+                        .padding(top = 4.dp, bottom = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.m)
+                ) {
+                    FlowboardTabs(
+                        labels = listOf("Vigentes (${state.currentCount})", "Entregados (${state.deliveredCount})"),
+                        selectedIndex = state.selectedTab,
+                        onSelect = { viewModel.onTabSelected(it) }
+                    )
+                    if (benefits != null && errorMessage != null) {
+                        BenefitsBanner(
+                            message = errorMessage,
+                            icon = FlowboardIcons.Warning,
+                            containerColor = BenefitsColors.WarningBanner,
+                            contentColor = BenefitsColors.OnWarningBanner,
+                            actionLabel = "Reintentar",
+                            onAction = viewModel::load
                         )
                     }
+                }
             }
-            val benefits = state.benefits
-            val errorMessage = state.errorMessage
-            if (benefits != null && errorMessage != null) {
-                BenefitsBanner(
-                    message = errorMessage,
-                    icon = FlowboardIcons.Warning,
-                    containerColor = BenefitsColors.WarningBanner,
-                    contentColor = BenefitsColors.OnWarningBanner,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    actionLabel = "Reintentar",
-                    onAction = viewModel::load
-                )
-            }
+        ) { contentPadding ->
+            val stateModifier = Modifier.padding(top = contentPadding.calculateTopPadding())
             when {
-                state.isLoading -> BenefitsLoading()
+                state.isLoading -> BenefitsLoading(modifier = stateModifier)
                 benefits == null -> BenefitsMessageState(
                     title = "No se pudieron cargar tus beneficios",
                     message = state.errorMessage ?: "Inténtalo nuevamente.",
+                    modifier = stateModifier,
                     actionLabel = "Reintentar",
                     onAction = viewModel::load
                 )
-                state.selectedTab == 0 -> CurrentTab(benefits)
-                else -> DeliveredTab(benefits.delivered)
+                state.selectedTab == 0 -> CurrentTab(benefits, contentPadding)
+                else -> DeliveredTab(benefits.delivered, contentPadding)
             }
         }
     }
 }
 
+/**
+ * List padding that leaves room for the collapsing header.
+ *
+ * @param contentPadding padding given by the collapsing header layout.
+ */
+private fun listPadding(contentPadding: PaddingValues): PaddingValues = PaddingValues(
+    top = contentPadding.calculateTopPadding() + 8.dp,
+    bottom = Spacing.xl,
+    start = Spacing.screenHorizontal,
+    end = Spacing.screenHorizontal
+)
+
+/**
+ * "Vigentes" tab: current benefits followed by the latest delivered ones.
+ *
+ * @param benefits benefits of the employee.
+ * @param contentPadding padding given by the collapsing header layout.
+ */
 @Composable
-private fun CurrentTab(benefits: EmployeeBenefits) {
+private fun CurrentTab(benefits: EmployeeBenefits, contentPadding: PaddingValues) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        contentPadding = listPadding(contentPadding),
+        verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
     ) {
         if (benefits.current.isEmpty()) {
             item {
@@ -139,24 +171,31 @@ private fun CurrentTab(benefits: EmployeeBenefits) {
 
         val recent = benefits.delivered.take(RECENT_DELIVERED)
         if (recent.isNotEmpty()) {
-            item { SectionHeader("Entregados recientemente") }
+            item { SectionHeader("Entregados recientemente", modifier = Modifier.padding(top = Spacing.m)) }
             items(recent, key = { "recent-${it.id}" }) { assignment -> DeliveredRow(assignment) }
         }
     }
 }
 
+/**
+ * "Entregados" tab: every delivered benefit.
+ *
+ * @param delivered delivered benefits.
+ * @param contentPadding padding given by the collapsing header layout.
+ */
 @Composable
-private fun DeliveredTab(delivered: List<BenefitAssignment>) {
+private fun DeliveredTab(delivered: List<BenefitAssignment>, contentPadding: PaddingValues) {
     if (delivered.isEmpty()) {
         BenefitsMessageState(
             title = "Aún no tienes beneficios entregados",
-            message = "Cuando RR.HH. registre la entrega de un beneficio, lo verás aquí."
+            message = "Cuando RR.HH. registre la entrega de un beneficio, lo verás aquí.",
+            modifier = Modifier.padding(top = contentPadding.calculateTopPadding())
         )
         return
     }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
+        contentPadding = listPadding(contentPadding)
     ) {
         items(delivered, key = { it.id }) { assignment -> DeliveredRow(assignment) }
     }
@@ -168,7 +207,7 @@ private fun DeliveredTab(delivered: List<BenefitAssignment>) {
 @Composable
 private fun CurrentBenefitCard(assignment: BenefitAssignment) {
     BenefitCard {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.l), verticalAlignment = Alignment.CenterVertically) {
             IconCircle(icon = FlowboardIcons.Gift)
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(assignment.benefitTypeName, style = MaterialTheme.typography.bodyLarge)

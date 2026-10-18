@@ -25,6 +25,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.CollapsingHeaderLayout
+import com.performily.flowboard.core.designsystem.component.rememberCollapsingHeaderState
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.payroll.domain.entity.PayrollArea
 import com.performily.flowboard.features.payroll.domain.entity.PayrollPeriod
 import com.performily.flowboard.features.payroll.domain.valueobject.PaymentStatus
@@ -41,7 +44,15 @@ import com.performily.flowboard.features.payroll.presentation.ui.components.paym
 import com.performily.flowboard.features.payroll.presentation.ui.components.toDisplay
 import com.performily.flowboard.features.payroll.presentation.viewmodel.PaymentStatusViewModel
 
-/** MA-69 · Estado de pagos (RR.HH.). */
+/**
+ * Payment status screen for HR (MA-69).
+ *
+ * The period, area and status filters slide away while the list scrolls down.
+ *
+ * @param initialPayrollPeriodId payroll period selected when the screen opens, or null for the latest one.
+ * @param onBack called when the user navigates back.
+ * @param viewModel view model that holds the state of the screen.
+ */
 @Composable
 fun PaymentStatusScreen(
     initialPayrollPeriodId: Long?,
@@ -50,6 +61,7 @@ fun PaymentStatusScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val headerState = rememberCollapsingHeaderState()
 
     LaunchedEffect(Unit) {
         viewModel.start(initialPayrollPeriodId)
@@ -66,30 +78,34 @@ fun PaymentStatusScreen(
         topBar = { PayrollTopAppBar(title = "Estado de pagos", onBack = onBack) },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            item {
+        CollapsingHeaderLayout(
+            modifier = Modifier.padding(paddingValues),
+            state = headerState,
+            showHeaderKey = listOf(state.isLoading, state.errorMessage != null, state.selectedPeriod == null, state.entries.size),
+            header = {
                 PaymentFilters(
                     state = state,
                     onPeriodSelected = viewModel::onPeriodSelected,
                     onAreaSelected = viewModel::onAreaSelected,
-                    onStatusSelected = viewModel::onStatusSelected
+                    onStatusSelected = viewModel::onStatusSelected,
+                    modifier = Modifier
+                        .padding(horizontal = Spacing.screenHorizontal)
+                        .padding(top = 4.dp, bottom = 12.dp)
                 )
             }
-
+        ) { contentPadding ->
+            val stateModifier = Modifier
+                .fillMaxSize()
+                .padding(top = contentPadding.calculateTopPadding())
             when {
-                state.isLoading && state.entries.isEmpty() -> item {
-                    Box(modifier = Modifier.fillMaxWidth().padding(top = 32.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+                state.isLoading && state.entries.isEmpty() -> Box(
+                    modifier = stateModifier.padding(top = Spacing.xxl),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    CircularProgressIndicator()
                 }
 
-                state.errorMessage != null -> item {
+                state.errorMessage != null -> Box(stateModifier) {
                     MessageState(
                         title = "No se pudo cargar el estado de pagos",
                         message = state.errorMessage.orEmpty(),
@@ -98,7 +114,7 @@ fun PaymentStatusScreen(
                     )
                 }
 
-                state.selectedPeriod == null -> item {
+                state.selectedPeriod == null -> Box(stateModifier) {
                     MessageState(
                         title = "No hay períodos de planilla",
                         message = "Todavía no se registró ningún período de planilla.",
@@ -107,11 +123,20 @@ fun PaymentStatusScreen(
                     )
                 }
 
-                else -> {
+                else -> LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        top = contentPadding.calculateTopPadding() + 4.dp,
+                        bottom = Spacing.xl,
+                        start = Spacing.screenHorizontal,
+                        end = Spacing.screenHorizontal
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
+                ) {
                     item {
                         Text(
                             text = paymentReportCountLabel(state.entries.size, state.selectedStatus),
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -141,18 +166,30 @@ fun PaymentStatusScreen(
     }
 }
 
-/** Filtros de MA-69: período, área y estado de pago. */
+/**
+ * Filters of MA-69: payroll period, area and payment status.
+ *
+ * The area menu starts with "Todas las áreas", which removes the area filter while keeping the
+ * arrow of the design.
+ *
+ * @param state current screen state.
+ * @param onPeriodSelected called with the period the user picks.
+ * @param onAreaSelected called with the area the user picks, or null for every area.
+ * @param onStatusSelected called with the status the user picks, or null to remove the filter.
+ * @param modifier modifier applied to the filter row.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PaymentFilters(
     state: PaymentStatusUiState,
     onPeriodSelected: (PayrollPeriod) -> Unit,
     onAreaSelected: (PayrollArea?) -> Unit,
-    onStatusSelected: (PaymentStatus?) -> Unit
+    onStatusSelected: (PaymentStatus?) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxWidth()
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
+        modifier = modifier.fillMaxWidth()
     ) {
         PayrollFilterChip(
             label = state.selectedPeriod?.period?.label ?: "Período",
@@ -164,7 +201,6 @@ private fun PaymentFilters(
         PayrollFilterChip(
             label = state.selectedArea?.let { "Área: ${it.name}" } ?: "Área",
             selected = state.selectedArea != null,
-            // "Todas las áreas" quita el filtro sin perder la flecha del diseño.
             options = listOf<PayrollArea?>(null) + state.areas,
             optionLabel = { it?.name ?: "Todas las áreas" },
             onSelect = onAreaSelected

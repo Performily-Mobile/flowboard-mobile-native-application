@@ -1,7 +1,6 @@
 package com.performily.flowboard.features.dashboard.presentation.ui.screens
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,6 +43,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Divider
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.dashboard.domain.entity.HrDashboard
 import com.performily.flowboard.features.dashboard.presentation.ui.components.AreaAttendanceRow
 import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardAccent
@@ -137,8 +136,13 @@ fun HrDashboardScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    contentPadding = PaddingValues(
+                        start = Spacing.screenHorizontal,
+                        end = Spacing.screenHorizontal,
+                        top = Spacing.s,
+                        bottom = Spacing.xl
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sectionGap)
                 ) {
                     state.errorMessage?.let { message ->
                         item { ErrorBanner(message = message, onRetry = viewModel::refresh) }
@@ -169,14 +173,14 @@ fun HrDashboardScreen(
 private fun PendingBanner(count: Int, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
         color = DashboardAccent.AMBER.container,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            modifier = Modifier.padding(horizontal = Spacing.l, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
             Icon(
                 imageVector = FlowboardIcons.Article,
@@ -209,12 +213,12 @@ private fun MetricsGrid(
     onLatenessClick: () -> Unit,
     onExpiringVacationsClick: () -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
             DashboardMetricCard(
                 label = "Colaboradores activos",
@@ -241,7 +245,7 @@ private fun MetricsGrid(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
             val lateness = dashboard?.monthlyLateness
             DashboardMetricCard(
@@ -327,12 +331,12 @@ private fun SectionCard(
     content: @Composable () -> Unit
 ) {
     Surface(
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, Divider),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 12.dp)) {
+        Column(modifier = Modifier.padding(start = Spacing.l, end = Spacing.s, top = Spacing.s, bottom = Spacing.m)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -346,7 +350,7 @@ private fun SectionCard(
                 )
                 TextButton(onClick = onAction) { Text(action) }
             }
-            Column(modifier = Modifier.padding(end = 8.dp)) {
+            Column(modifier = Modifier.padding(end = Spacing.s)) {
                 content()
             }
         }
@@ -360,7 +364,7 @@ private fun SectionMessage(text: String) {
         text = text,
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(vertical = 8.dp)
+        modifier = Modifier.padding(vertical = Spacing.s)
     )
 }
 
@@ -368,12 +372,12 @@ private fun SectionMessage(text: String) {
 @Composable
 private fun ErrorBanner(message: String, onRetry: () -> Unit) {
     Surface(
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.errorContainer,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+            modifier = Modifier.padding(start = Spacing.l, end = Spacing.s, top = Spacing.s, bottom = Spacing.s),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(

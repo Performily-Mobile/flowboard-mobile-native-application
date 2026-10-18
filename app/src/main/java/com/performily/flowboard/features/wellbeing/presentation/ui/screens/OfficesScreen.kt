@@ -19,13 +19,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.wellbeing.presentation.ui.components.BannerTone
 import com.performily.flowboard.features.wellbeing.presentation.ui.components.OfficeCard
 import com.performily.flowboard.features.wellbeing.presentation.ui.components.StatusBanner
@@ -46,6 +46,7 @@ internal const val WELLBEING_REFRESH_MILLIS = 30_000L
  * @param onBack called when the user leaves the screen
  * @param onOfficeClick called with the id of the tapped office
  * @param onNewOfficeClick called when the user wants to register an office
+ * @param viewModel view model of the screen
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -113,8 +114,13 @@ fun OfficesScreen(
 
             else -> LazyColumn(
                 modifier = contentModifier,
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                contentPadding = PaddingValues(
+                    start = Spacing.screenHorizontal,
+                    end = Spacing.screenHorizontal,
+                    top = Spacing.s,
+                    bottom = Spacing.fabClearance
+                ),
+                verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
             ) {
                 if (state.errorMessage != null) {
                     item {
@@ -123,13 +129,6 @@ fun OfficesScreen(
                             tone = BannerTone.WARNING
                         )
                     }
-                }
-                item {
-                    Text(
-                        text = "Estado ambiental de cada espacio de trabajo",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
                 items(state.offices, key = { it.office.id }) { status ->
                     OfficeCard(status = status, onClick = { onOfficeClick(status.office.id) })

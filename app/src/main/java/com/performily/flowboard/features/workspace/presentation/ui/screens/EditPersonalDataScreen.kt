@@ -5,10 +5,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,13 +29,22 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.FlowboardBottomActionBar
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.workspace.presentation.state.PersonalDataField
 import com.performily.flowboard.features.workspace.presentation.ui.components.DatePickerField
 import com.performily.flowboard.features.workspace.presentation.ui.components.FormTextField
 import com.performily.flowboard.features.workspace.presentation.ui.components.SectionTitle
 import com.performily.flowboard.features.workspace.presentation.viewmodel.EditPersonalDataViewModel
 
+/**
+ * Form to edit the personal data and address of an employee; the identity document is read-only.
+ *
+ * @param employeeId id of the employee to edit.
+ * @param onClose called by the close button and after a successful save.
+ * @param viewModel view model of the screen.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditPersonalDataScreen(
@@ -67,12 +75,13 @@ fun EditPersonalDataScreen(
             )
         },
         bottomBar = {
-            Box(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            FlowboardBottomActionBar {
                 Button(
                     onClick = viewModel::onSave,
                     enabled = !state.isSaving && !state.isLoading,
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(52.dp)
                 ) {
                     Text(if (state.isSaving) "Guardando..." else "Guardar cambios")
                 }
@@ -93,10 +102,10 @@ fun EditPersonalDataScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = Spacing.screenHorizontal)
+                .padding(top = 8.dp, bottom = Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
             OutlinedTextField(
                 value = state.identityDocumentLabel,

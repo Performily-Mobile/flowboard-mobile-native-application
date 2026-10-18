@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -33,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.benefits.domain.entity.SyncedVacationBalance
 import com.performily.flowboard.features.benefits.domain.entity.VacationBalance
 import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitCard
@@ -51,6 +51,10 @@ import com.performily.flowboard.features.benefits.presentation.viewmodel.MyVacat
  *
  * Without connection it shows the saved data with the notice
  * "Sin conexión. Mostrando datos sincronizados el …".
+ *
+ * @param onBack navigates back.
+ * @param onRequestVacation opens the vacation request form.
+ * @param viewModel view model of the screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,6 +102,15 @@ fun MyVacationBalanceScreen(
     }
 }
 
+/**
+ * Notice (offline or error), balance card and list of movements.
+ *
+ * @param synced balance with its synchronization data.
+ * @param errorMessage error of the last refresh, if any.
+ * @param onRetry reloads the balance.
+ * @param onRequestVacation opens the vacation request form.
+ * @param modifier modifier applied to the list.
+ */
 @Composable
 private fun BalanceContent(
     synced: SyncedVacationBalance,
@@ -109,8 +122,13 @@ private fun BalanceContent(
     val balance = synced.balance
     LazyColumn(
         modifier = modifier,
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        contentPadding = PaddingValues(
+            start = Spacing.screenHorizontal,
+            end = Spacing.screenHorizontal,
+            top = Spacing.s,
+            bottom = Spacing.xl
+        ),
+        verticalArrangement = Arrangement.spacedBy(Spacing.s)
     ) {
         if (synced.fromCache) {
             item {
@@ -137,7 +155,7 @@ private fun BalanceContent(
             }
         }
         item { BalanceCard(balance = balance, onRequestVacation = onRequestVacation) }
-        item { SectionHeader("Movimientos") }
+        item { SectionHeader("Movimientos", modifier = Modifier.padding(top = Spacing.l)) }
         if (balance.movements.isEmpty()) {
             item {
                 Text(
@@ -198,10 +216,10 @@ private fun BalanceCard(balance: VacationBalance, onRequestVacation: () -> Unit)
         }
         Button(
             onClick = onRequestVacation,
-            shape = RoundedCornerShape(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(44.dp)
+                .padding(top = Spacing.xs)
+                .height(48.dp)
         ) {
             Icon(FlowboardIcons.Add, contentDescription = null, modifier = Modifier.size(18.dp))
             Text("Solicitar vacaciones", modifier = Modifier.padding(start = 8.dp))

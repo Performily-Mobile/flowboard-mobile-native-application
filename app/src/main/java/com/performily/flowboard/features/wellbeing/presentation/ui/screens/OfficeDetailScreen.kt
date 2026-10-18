@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -39,7 +38,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.performily.flowboard.core.designsystem.component.FlowboardBottomActionBar
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.wellbeing.domain.entity.Device
 import com.performily.flowboard.features.wellbeing.domain.entity.OfficeStatus
 import com.performily.flowboard.features.wellbeing.domain.valueobject.HealthIndicator
@@ -66,6 +67,7 @@ import kotlinx.coroutines.delay
  * @param onBack called when the user leaves the screen
  * @param onThresholdsClick called with the office id and name to open the thresholds screen
  * @param onHistoryClick called with the office id and name to open the history screen
+ * @param viewModel view model of the screen
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -119,26 +121,19 @@ fun OfficeDetailScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (status != null) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                FlowboardBottomActionBar {
                     FilledTonalButton(
                         onClick = { onThresholdsClick(status.office.id, status.office.name) },
-                        shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp)
-                    ) { Text("Configurar umbrales") }
+                            .height(52.dp)
+                    ) { Text("Configurar umbrales", maxLines = 1, overflow = TextOverflow.Ellipsis) }
                     OutlinedButton(
                         onClick = { onHistoryClick(status.office.id, status.office.name) },
-                        shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp)
-                    ) { Text("Ver histórico") }
+                            .height(52.dp)
+                    ) { Text("Ver histórico", maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 }
             }
         }
@@ -199,6 +194,7 @@ fun OfficeDetailScreen(
  * @param isStale true when the last refresh failed and the data shown may be outdated
  * @param onLinkClick called when the user wants to link a device
  * @param onDeviceClick called with the tapped device, to unlink it
+ * @param modifier modifier applied to the body
  */
 @Composable
 private fun OfficeDetailContent(
@@ -211,13 +207,16 @@ private fun OfficeDetailContent(
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = Spacing.screenHorizontal)
+            .padding(top = Spacing.xs, bottom = Spacing.xl),
+        verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
     ) {
         Text(
             text = listOfNotNull(status.office.area, status.office.location.summary).joinToString(" · "),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
         )
 
         if (isStale) {
@@ -234,7 +233,7 @@ private fun OfficeDetailContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp),
+                .padding(top = Spacing.m),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("Dispositivos", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
@@ -300,7 +299,14 @@ private fun bannerFor(status: OfficeStatus): Pair<String, BannerTone>? {
         BannerTone.DANGER
 }
 
-/** Confirmation dialog shown before unlinking a device. */
+/**
+ * Confirmation dialog shown before unlinking a device.
+ *
+ * @param device device to unlink
+ * @param state screen state, used for the office name and the unlinking progress
+ * @param onConfirm unlinks the device
+ * @param onDismiss closes the dialog
+ */
 @Composable
 private fun UnlinkDeviceDialog(
     device: Device,
@@ -318,7 +324,7 @@ private fun UnlinkDeviceDialog(
             )
         },
         confirmButton = {
-            Button(onClick = onConfirm, enabled = !state.isUnlinking, shape = RoundedCornerShape(8.dp)) {
+            Button(onClick = onConfirm, enabled = !state.isUnlinking) {
                 Text("Desvincular")
             }
         },

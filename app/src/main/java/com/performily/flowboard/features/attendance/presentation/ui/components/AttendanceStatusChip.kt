@@ -2,7 +2,7 @@ package com.performily.flowboard.features.attendance.presentation.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,6 +15,12 @@ import com.performily.flowboard.core.designsystem.theme.SuspendedContainer
 import com.performily.flowboard.features.attendance.domain.valueobject.AttendanceStatus
 import com.performily.flowboard.features.attendance.domain.valueobject.label
 
+/**
+ * Pill that shows the status of an attendance record.
+ *
+ * @param status status to show.
+ * @param modifier modifier applied to the pill.
+ */
 @Composable
 fun AttendanceStatusChip(
     status: AttendanceStatus,
@@ -31,8 +37,9 @@ fun AttendanceStatusChip(
     Text(
         text = status.label(),
         style = MaterialTheme.typography.labelMedium,
+        maxLines = 1,
         modifier = modifier
-            .background(background, RoundedCornerShape(12.dp))
+            .background(background, CircleShape)
             .padding(horizontal = 12.dp, vertical = 5.dp)
     )
 }

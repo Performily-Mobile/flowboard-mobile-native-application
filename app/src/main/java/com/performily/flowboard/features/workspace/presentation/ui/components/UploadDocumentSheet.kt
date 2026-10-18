@@ -8,8 +8,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -19,14 +21,27 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.workspace.domain.valueobject.DocumentType
 import com.performily.flowboard.features.workspace.domain.valueobject.DocumentUpload
 import com.performily.flowboard.features.workspace.presentation.state.SelectedFile
 import com.performily.flowboard.features.workspace.presentation.state.UploadDocumentForm
 import java.util.Locale
 
+/**
+ * Bottom sheet to add a document (PDF, JPG or PNG) to an employee record.
+ *
+ * @param form current values and errors of the form.
+ * @param isSaving true while the file is being uploaded.
+ * @param errorMessage error returned by the last upload, if any.
+ * @param onDocumentTypeChange called with the selected document type.
+ * @param onFileSelected called with the file picked by the user.
+ * @param onSave called when the user confirms.
+ * @param onDismiss called when the sheet is closed or cancelled.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UploadDocumentSheet(
@@ -47,11 +62,12 @@ fun UploadDocumentSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = Spacing.screenHorizontal)
+                .padding(bottom = Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
-            Text("Subir documento", style = MaterialTheme.typography.titleLarge)
+            SheetHeader(title = "Subir documento")
             SelectField(
                 label = "Tipo de documento",
                 options = DocumentType.entries,
@@ -64,12 +80,15 @@ fun UploadDocumentSheet(
             )
             OutlinedButton(
                 onClick = { picker.launch(DocumentUpload.ALLOWED_CONTENT_TYPES.toTypedArray()) },
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
             ) {
                 Icon(FlowboardIcons.AttachFile, contentDescription = null)
                 Text(
                     text = form.file?.name ?: "Seleccionar archivo",
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }
@@ -97,7 +116,7 @@ fun UploadDocumentSheet(
     }
 }
 
-/** Lee nombre, tipo y tamaño del archivo elegido en el selector del sistema. */
+/** Reads the name, type and size of the file picked in the system file picker. */
 private fun Context.describeFile(uri: Uri): SelectedFile? {
     val contentType = contentResolver.getType(uri) ?: "application/octet-stream"
     var name: String? = null
@@ -119,6 +138,7 @@ private fun Context.describeFile(uri: Uri): SelectedFile? {
     )
 }
 
+/** Short format name of a MIME type. */
 private fun String.toFormatLabel(): String = when (this) {
     "application/pdf" -> "PDF"
     "image/jpeg" -> "JPG"
@@ -126,6 +146,7 @@ private fun String.toFormatLabel(): String = when (this) {
     else -> this
 }
 
+/** Human readable size of a number of bytes. */
 private fun Long.toSizeLabel(): String {
     val kb = this / 1024.0
     return if (kb < 1024) {

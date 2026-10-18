@@ -15,9 +15,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -29,7 +26,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.FlowboardTabs
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.workspace.presentation.state.OrganizationChartMode
 import com.performily.flowboard.features.workspace.presentation.ui.components.AreaDropdown
 import com.performily.flowboard.features.workspace.presentation.ui.components.OrganizationChartNodeItem
@@ -37,6 +36,14 @@ import com.performily.flowboard.features.workspace.presentation.ui.components.Pe
 import com.performily.flowboard.features.workspace.presentation.ui.components.SectionTitle
 import com.performily.flowboard.features.workspace.presentation.viewmodel.OrganizationChartViewModel
 
+/**
+ * Organization chart of the whole company or of one area.
+ *
+ * @param onBack called by the back button.
+ * @param areaId area to show first, or null for the whole organization.
+ * @param highlightedEmployeeId employee to highlight, usually the current user.
+ * @param viewModel view model of the screen.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrganizationChartScreen(
@@ -50,10 +57,7 @@ fun OrganizationChartScreen(
     LaunchedEffect(Unit) {
         viewModel.initialize(areaId, highlightedEmployeeId)
     }
-    val modes = listOf(
-        OrganizationChartMode.WHOLE_ORGANIZATION to "Toda la organización",
-        OrganizationChartMode.BY_AREA to "Por área"
-    )
+    val modes = listOf(OrganizationChartMode.WHOLE_ORGANIZATION, OrganizationChartMode.BY_AREA)
 
     Scaffold(
         topBar = {
@@ -73,20 +77,18 @@ fun OrganizationChartScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = Spacing.screenHorizontal)
+                .padding(top = 8.dp, bottom = Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
         ) {
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                modes.forEachIndexed { index, (mode, label) ->
-                    SegmentedButton(
-                        selected = state.mode == mode,
-                        onClick = { viewModel.onModeChange(mode) },
-                        shape = SegmentedButtonDefaults.itemShape(index = index, count = modes.size)
-                    ) {
-                        Text(label)
-                    }
+            FlowboardTabs(
+                options = modes,
+                selected = state.mode,
+                onSelect = { viewModel.onModeChange(it) },
+                label = { mode ->
+                    if (mode == OrganizationChartMode.WHOLE_ORGANIZATION) "Toda la organización" else "Por área"
                 }
-            }
+            )
 
             if (state.mode == OrganizationChartMode.BY_AREA) {
                 AreaDropdown(

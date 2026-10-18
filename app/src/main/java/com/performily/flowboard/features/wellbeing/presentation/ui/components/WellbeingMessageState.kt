@@ -15,7 +15,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.performily.flowboard.core.designsystem.theme.Spacing
 
+/** Centered progress indicator shown while a screen loads. */
 @Composable
 fun WellbeingLoading(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -23,7 +25,7 @@ fun WellbeingLoading(modifier: Modifier = Modifier) {
     }
 }
 
-/** Mensaje centrado para errores o listas vacías, con una acción opcional. */
+/** Centered message for errors or empty lists, with an optional action. */
 @Composable
 fun WellbeingMessageState(
     title: String,
@@ -35,7 +37,7 @@ fun WellbeingMessageState(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 48.dp, start = 16.dp, end = 16.dp),
+            .padding(top = 56.dp, start = Spacing.screenHorizontal, end = Spacing.screenHorizontal),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {

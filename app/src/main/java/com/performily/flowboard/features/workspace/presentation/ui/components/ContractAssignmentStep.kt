@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -16,12 +15,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.core.domain.EmployeeId
 import com.performily.flowboard.features.workspace.domain.valueobject.ContractType
 import com.performily.flowboard.features.workspace.presentation.state.RegisterEmployeeUiState
 import com.performily.flowboard.features.workspace.presentation.state.RegisterField
 import java.time.LocalDate
 
+/**
+ * Second step of the employee registration: contract, area, position and direct manager.
+ *
+ * @param state state of the registration form.
+ * @param onContractTypeChange called with the selected contract type.
+ * @param onHireDateChange called with the hire date.
+ * @param onContractEndDateChange called with the contract end date (fixed-term contracts only).
+ * @param onAreaChange called with the id of the selected area.
+ * @param onPositionChange called with the id of the selected position.
+ * @param onDirectManagerChange called with the selected manager, or null for none.
+ * @param modifier modifier applied to the step.
+ */
 @Composable
 fun ContractAssignmentStep(
     state: RegisterEmployeeUiState,
@@ -33,7 +45,7 @@ fun ContractAssignmentStep(
     onDirectManagerChange: (EmployeeId?) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
         SelectField(
             label = "Tipo de contrato",
             options = ContractType.entries,
@@ -89,14 +101,20 @@ fun ContractAssignmentStep(
     }
 }
 
+/**
+ * Tonal banner with an info icon for a short note of a form.
+ *
+ * @param text note shown.
+ * @param modifier modifier applied to the banner.
+ */
 @Composable
 fun InfoBanner(text: String, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(12.dp))
-            .padding(12.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+            .background(MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.shapes.medium)
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(

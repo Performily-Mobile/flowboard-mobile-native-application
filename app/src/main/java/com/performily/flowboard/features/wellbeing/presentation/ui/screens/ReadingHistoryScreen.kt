@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.wellbeing.domain.entity.ReadingHistory
 import com.performily.flowboard.features.wellbeing.presentation.state.summary
 import com.performily.flowboard.features.wellbeing.presentation.ui.components.BannerTone
@@ -39,7 +40,14 @@ import com.performily.flowboard.features.wellbeing.presentation.ui.components.St
 import com.performily.flowboard.features.wellbeing.presentation.ui.components.WellbeingMessageState
 import com.performily.flowboard.features.wellbeing.presentation.viewmodel.ReadingHistoryViewModel
 
-/** MA-75 · Histórico: promedio diario, máximo, mínimo y promedio del período. */
+/**
+ * Reading history of a space (MA-75): daily average, maximum, minimum and average of the period.
+ *
+ * @param officeId office whose history is shown.
+ * @param officeName name shown in the top bar.
+ * @param onBack navigates back.
+ * @param viewModel view model of the screen.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReadingHistoryScreen(
@@ -83,8 +91,9 @@ fun ReadingHistoryScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = Spacing.screenHorizontal)
+                .padding(top = Spacing.xs, bottom = Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l)
         ) {
             MetricSelector(selected = state.selectedMetric, onSelect = viewModel::onMetricSelected)
             DateRangeField(from = state.from, to = state.to, onRangeChange = viewModel::onRangeChange)
@@ -119,9 +128,14 @@ fun ReadingHistoryScreen(
     }
 }
 
+/**
+ * Chart, summary cards and summary text of a loaded history.
+ *
+ * @param history history to show.
+ */
 @Composable
 private fun HistoryContent(history: ReadingHistory) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.l)) {
         if (history.isPersistentProblem) {
             StatusBanner(message = history.summary(), tone = BannerTone.DANGER)
         }

@@ -1,5 +1,7 @@
 package com.performily.flowboard.features.benefits.presentation.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,7 +12,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -23,7 +24,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.CollapsingHeaderLayout
+import com.performily.flowboard.core.designsystem.component.FlowboardSearchField
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitListRow
 import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitsBanner
 import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitsColors
@@ -36,7 +40,12 @@ import com.performily.flowboard.features.benefits.presentation.viewmodel.Vacatio
 /**
  * Vacation balances screen.
  *
- * Lists the balances of active employees; tapping one opens its detail (MA-63).
+ * Lists the balances of active employees; tapping one opens its detail (MA-63). The search box
+ * slides away while the list scrolls down.
+ *
+ * @param onBack navigates back.
+ * @param onEmployeeClick opens the balance detail of the tapped employee.
+ * @param viewModel view model of the screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,62 +82,72 @@ fun VacationBalancesScreen(
                 onAction = viewModel::load,
                 modifier = contentModifier
             )
-            else -> LazyColumn(
-                modifier = contentModifier,
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
-            ) {
-                if (errorMessage != null && state.balances.isNotEmpty()) {
-                    item {
-                        BenefitsBanner(
-                            message = errorMessage,
-                            icon = FlowboardIcons.Warning,
-                            containerColor = BenefitsColors.WarningBanner,
-                            contentColor = BenefitsColors.OnWarningBanner,
-                            modifier = Modifier.padding(bottom = 8.dp),
-                            actionLabel = "Reintentar",
-                            onAction = viewModel::load
-                        )
-                    }
-                }
-                item {
-                    OutlinedTextField(
-                        value = state.query,
-                        onValueChange = viewModel::onQueryChange,
-                        placeholder = { Text("Buscar por nombre o área") },
-                        leadingIcon = { Icon(FlowboardIcons.Search, contentDescription = null) },
-                        singleLine = true,
+            else -> CollapsingHeaderLayout(
+                modifier = Modifier.padding(paddingValues),
+                showHeaderKey = listOf(state.filtered.size, errorMessage != null),
+                header = {
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 8.dp)
-                    )
-                }
-                if (state.filtered.isEmpty()) {
-                    item {
-                        BenefitsMessageState(
-                            title = "Sin resultados",
-                            message = if (state.balances.isEmpty()) "Aún no hay saldos de vacaciones." else "Prueba con otro nombre."
+                            .padding(horizontal = Spacing.screenHorizontal)
+                            .padding(top = 4.dp, bottom = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.m)
+                    ) {
+                        FlowboardSearchField(
+                            query = state.query,
+                            onQueryChange = viewModel::onQueryChange,
+                            placeholder = "Buscar por nombre o área"
                         )
-                    }
-                }
-                items(state.filtered, key = { it.employeeId }) { balance ->
-                    val name = balance.employeeName ?: "Colaborador #${balance.employeeId}"
-                    BenefitListRow(
-                        title = name,
-                        subtitle = listOfNotNull(
-                            balance.areaName,
-                            "Usados ${BenefitsFormatters.number(balance.usedDays)} de ${BenefitsFormatters.number(balance.accruedDays)}"
-                        ).joinToString(" · "),
-                        onClick = { onEmployeeClick(balance.employeeId, name) },
-                        leading = { InitialsAvatar(name = name) },
-                        trailing = {
-                            Text(
-                                text = "${BenefitsFormatters.number(balance.availableDays)} d",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary
+                        if (errorMessage != null && state.balances.isNotEmpty()) {
+                            BenefitsBanner(
+                                message = errorMessage,
+                                icon = FlowboardIcons.Warning,
+                                containerColor = BenefitsColors.WarningBanner,
+                                contentColor = BenefitsColors.OnWarningBanner,
+                                actionLabel = "Reintentar",
+                                onAction = viewModel::load
                             )
                         }
+                    }
+                }
+            ) { contentPadding ->
+                if (state.filtered.isEmpty()) {
+                    BenefitsMessageState(
+                        title = "Sin resultados",
+                        message = if (state.balances.isEmpty()) "Aún no hay saldos de vacaciones." else "Prueba con otro nombre.",
+                        modifier = Modifier.padding(top = contentPadding.calculateTopPadding())
                     )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            top = contentPadding.calculateTopPadding() + 8.dp,
+                            bottom = Spacing.xl,
+                            start = Spacing.screenHorizontal,
+                            end = Spacing.screenHorizontal
+                        )
+                    ) {
+                        items(state.filtered, key = { it.employeeId }) { balance ->
+                            val name = balance.employeeName ?: "Colaborador #${balance.employeeId}"
+                            BenefitListRow(
+                                title = name,
+                                subtitle = listOfNotNull(
+                                    balance.areaName,
+                                    "Usados ${BenefitsFormatters.number(balance.usedDays)} de ${BenefitsFormatters.number(balance.accruedDays)}"
+                                ).joinToString(" · "),
+                                onClick = { onEmployeeClick(balance.employeeId, name) },
+                                leading = { InitialsAvatar(name = name) },
+                                trailing = {
+                                    Text(
+                                        text = "${BenefitsFormatters.number(balance.availableDays)} d",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }

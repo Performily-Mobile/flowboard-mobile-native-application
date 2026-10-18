@@ -10,7 +10,14 @@ import androidx.compose.ui.text.style.TextAlign
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.DialogContainer
 
-/** MA-68 · El colaborador ya tiene una boleta en el período: reemplazarla o cancelar. */
+/**
+ * Dialog shown when the employee already has a payslip in the period (MA-68): replace it or cancel.
+ *
+ * @param employeeName name of the employee.
+ * @param periodLabel label of the payroll period.
+ * @param onReplace called when the user replaces the payslip.
+ * @param onCancel called when the user keeps the current payslip.
+ */
 @Composable
 fun DuplicatePayslipDialog(
     employeeName: String,

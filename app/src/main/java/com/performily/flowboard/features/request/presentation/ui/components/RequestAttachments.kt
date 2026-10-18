@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,19 +21,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Outline
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.core.domain.FileReference
 import com.performily.flowboard.features.request.domain.valueobject.AttachmentUpload
 
 
+/** File chosen with the system document picker, described before it is uploaded. */
 data class PickedFile(
     val uri: String,
     val name: String,
@@ -42,6 +45,12 @@ data class PickedFile(
     val sizeInBytes: Long
 )
 
+/**
+ * Remembers a launcher of the system document picker limited to the allowed attachment types.
+ *
+ * @param onPicked called with the chosen file.
+ * @return function that opens the picker.
+ */
 @Composable
 fun rememberAttachmentPicker(onPicked: (PickedFile) -> Unit): () -> Unit {
     val context = LocalContext.current
@@ -51,6 +60,15 @@ fun rememberAttachmentPicker(onPicked: (PickedFile) -> Unit): () -> Unit {
     return { launcher.launch(AttachmentUpload.ALLOWED_CONTENT_TYPES.toTypedArray()) }
 }
 
+/**
+ * Dashed drop zone that opens the document picker to attach a supporting file.
+ *
+ * @param required true when the request type requires an attachment.
+ * @param isUploading true while a file is being uploaded.
+ * @param onClick called when the zone is tapped.
+ * @param modifier modifier applied to the zone.
+ * @param error validation message, or null when there is none.
+ */
 @Composable
 fun AttachmentZone(
     required: Boolean,
@@ -60,21 +78,23 @@ fun AttachmentZone(
     error: String? = null
 ) {
     val borderColor = if (error != null) MaterialTheme.colorScheme.error else Outline
+    val shape = MaterialTheme.shapes.medium
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(RequestColors.AttachmentZone, RoundedCornerShape(12.dp))
+                .background(RequestColors.AttachmentZone, shape)
                 .drawBehind {
-                    drawRoundRect(
+                    drawOutline(
+                        outline = shape.createOutline(size, layoutDirection, this),
                         color = borderColor,
-                        style = Stroke(width = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 8f), 0f)),
-                        cornerRadius = CornerRadius(12.dp.toPx())
+                        style = Stroke(width = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 8f), 0f))
                     )
                 }
+                .clip(shape)
                 .clickable(enabled = !isUploading, onClick = onClick)
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(Spacing.l),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (isUploading) {
@@ -101,6 +121,13 @@ fun AttachmentZone(
     }
 }
 
+/**
+ * Card of an attached file, with an optional button to remove it.
+ *
+ * @param file attached file.
+ * @param modifier modifier applied to the card.
+ * @param onRemove called when the remove button is tapped, or null to hide the button.
+ */
 @Composable
 fun AttachmentRow(
     file: FileReference,
@@ -108,14 +135,20 @@ fun AttachmentRow(
     onRemove: (() -> Unit)? = null
 ) {
     RequestCard(modifier = modifier) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically) {
             RequestIconCircle(
                 icon = RequestIcons.Description,
                 containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(text = file.fileName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                Text(
+                    text = file.fileName,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 Text(
                     text = RequestFormatters.fileDetail(file),
                     style = MaterialTheme.typography.bodySmall,

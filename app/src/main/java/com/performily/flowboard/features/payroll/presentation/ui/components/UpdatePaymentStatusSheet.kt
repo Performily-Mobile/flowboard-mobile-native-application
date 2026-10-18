@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,10 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SelectableDates
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -35,8 +31,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.performily.flowboard.core.designsystem.component.FlowboardTabs
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.features.payroll.domain.valueobject.PaymentDetails
 import com.performily.flowboard.features.payroll.domain.valueobject.PaymentStatus
@@ -46,12 +42,20 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-/** Opciones del segmented button, en el orden de MA-69. */
+/** Options of the status selector, in the order of MA-69. */
 private val PAYMENT_CHOICES = listOf(PaymentStatus.PAID, PaymentStatus.OBSERVED)
 
 /**
- * MA-69 · Hoja "Actualizar estado de pago".
- * Pagado pide la fecha de depósito (la exige el backend); Observado pide el motivo.
+ * Bottom sheet "Actualizar estado de pago" (MA-69).
+ *
+ * "Pagado" asks for the deposit date (required by the backend) and "Observado" asks for the reason.
+ *
+ * @param sheet state of the sheet.
+ * @param onChoiceChange called with the status the user picks.
+ * @param onPaidOnChange called with the deposit date the user picks.
+ * @param onReasonChange called with the reason typed by the user.
+ * @param onSave called when the user saves the new status.
+ * @param onDismiss called when the user closes the sheet.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,50 +89,20 @@ fun UpdatePaymentStatusSheet(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                PAYMENT_CHOICES.forEachIndexed { index, choice ->
-                    SegmentedButton(
-                        selected = sheet.choice == choice,
-                        onClick = { onChoiceChange(choice) },
-                        shape = SegmentedButtonDefaults.itemShape(index = index, count = PAYMENT_CHOICES.size),
-                        colors = SegmentedButtonDefaults.colors(
-                            activeContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            activeContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            inactiveContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                            inactiveContentColor = MaterialTheme.colorScheme.onSurface,
-                            activeBorderColor = MaterialTheme.colorScheme.outline,
-                            inactiveBorderColor = MaterialTheme.colorScheme.outline
-                        ),
-                        icon = {
-                            SegmentedButtonDefaults.Icon(
-                                active = sheet.choice == choice,
-                                activeContent = {
-                                    Icon(
-                                        imageVector = FlowboardIcons.Check,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(SegmentedButtonDefaults.IconSize)
-                                    )
-                                }
-                            )
-                        }
-                    ) {
-                        Text(
-                            text = choice.label(),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
+            FlowboardTabs(
+                labels = PAYMENT_CHOICES.map { it.label() },
+                selectedIndex = PAYMENT_CHOICES.indexOf(sheet.choice),
+                onSelect = { index -> onChoiceChange(PAYMENT_CHOICES[index]) },
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
 
             when (sheet.choice) {
                 PaymentStatus.OBSERVED -> OutlinedTextField(
                     value = sheet.reason,
                     onValueChange = { if (it.length <= PaymentDetails.REASON_MAX_LENGTH) onReasonChange(it) },
                     label = { Text("Motivo de la observación") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(96.dp)
+                    minLines = 3,
+                    modifier = Modifier.fillMaxWidth()
                 )
                 PaymentStatus.PAID -> PaidOnField(value = sheet.paidOn, onValueChange = onPaidOnChange)
                 else -> Unit
@@ -147,7 +121,6 @@ fun UpdatePaymentStatusSheet(
                 Button(
                     onClick = onSave,
                     enabled = sheet.canSave,
-                    shape = RoundedCornerShape(8.dp),
                     contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
                 ) { Text(if (sheet.isSaving) "Guardando..." else "Guardar") }
             }
@@ -155,6 +128,7 @@ fun UpdatePaymentStatusSheet(
     }
 }
 
+/** Small drag handle shown at the top of the sheet. */
 @Composable
 private fun SheetHandle() {
     Box(
@@ -167,7 +141,12 @@ private fun SheetHandle() {
 
 private val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
-/** Fecha de depósito (no puede ser futura). */
+/**
+ * Deposit date field; future dates cannot be picked.
+ *
+ * @param value date currently selected, or null.
+ * @param onValueChange called with the date the user picks.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PaidOnField(value: LocalDate?, onValueChange: (LocalDate) -> Unit) {

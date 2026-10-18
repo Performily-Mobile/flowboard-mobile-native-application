@@ -1,5 +1,6 @@
 package com.performily.flowboard.features.request.presentation.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -17,15 +18,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.request.presentation.ui.components.RequestListRow
 import com.performily.flowboard.features.request.presentation.ui.components.RequestLoading
 import com.performily.flowboard.features.request.presentation.ui.components.RequestMessageState
 import com.performily.flowboard.features.request.presentation.viewmodel.ResolvedRequestsViewModel
 
+/**
+ * List of the requests the viewer has already approved or rejected.
+ *
+ * @param onBack called when the back button is tapped.
+ * @param onRequestClick called with the identifier of the tapped request.
+ * @param viewModel resolved requests view model.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResolvedRequestsScreen(
@@ -67,7 +75,13 @@ fun ResolvedRequestsScreen(
             )
             else -> LazyColumn(
                 modifier = contentModifier,
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                contentPadding = PaddingValues(
+                    start = Spacing.screenHorizontal,
+                    end = Spacing.screenHorizontal,
+                    top = Spacing.s,
+                    bottom = Spacing.xl
+                ),
+                verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
             ) {
                 items(state.requests, key = { it.id }) { request ->
                     RequestListRow(request = request, onClick = { onRequestClick(request.id) })

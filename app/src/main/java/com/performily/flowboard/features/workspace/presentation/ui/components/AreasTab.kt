@@ -21,16 +21,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.ActiveContainer
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.core.designsystem.theme.SurfaceContainerHigh
 import com.performily.flowboard.features.workspace.domain.entity.Area
 
+/**
+ * List of the areas of the organization.
+ *
+ * @param areas areas to show.
+ * @param onDeactivateClick called when the user asks to deactivate an active area.
+ * @param modifier modifier applied to the list.
+ * @param contentPadding padding of the list content; the screen adds the room for its collapsing header.
+ */
 @Composable
 fun AreasTab(
     areas: List<Area>,
     onDeactivateClick: (Area) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(
+        start = Spacing.screenHorizontal,
+        end = Spacing.screenHorizontal,
+        top = 8.dp,
+        bottom = Spacing.fabClearance
+    )
 ) {
-    LazyColumn(modifier = modifier, contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 88.dp)) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = contentPadding,
+        verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
+    ) {
         items(areas, key = { it.id }) { area ->
             OrganizationListItem(
                 icon = FlowboardIcons.AccountTree,
@@ -55,6 +74,7 @@ fun AreasTab(
     }
 }
 
+/** Overflow menu of an active area with the deactivate action. */
 @Composable
 private fun AreaMenu(onDeactivateClick: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }

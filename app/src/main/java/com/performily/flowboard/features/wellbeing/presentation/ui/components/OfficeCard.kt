@@ -7,21 +7,27 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.wellbeing.domain.entity.MetricStatus
 import com.performily.flowboard.features.wellbeing.domain.entity.OfficeStatus
 
 /**
- * MA-70 · Tarjeta de un espacio con su indicador general y las tres métricas.
- * Si no hay lecturas recientes muestra "Sin dato" y cuándo fue la última lectura.
+ * Card of a space (MA-70) with its overall indicator and the three metrics.
+ *
+ * Without recent readings it shows "Sin dato" and when the last reading was taken.
+ *
+ * @param status status of the space.
+ * @param onClick opens the space detail.
+ * @param modifier modifier applied to the card.
  */
 @Composable
 fun OfficeCard(
@@ -29,7 +35,11 @@ fun OfficeCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    OutlinedPanel(modifier = modifier.clickable(onClick = onClick)) {
+    OutlinedPanel(
+        modifier = modifier
+            .clip(MaterialTheme.shapes.medium)
+            .clickable(onClick = onClick)
+    ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -45,7 +55,9 @@ fun OfficeCard(
                 Text(
                     text = status.office.location.summary,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             IndicatorChip(
@@ -57,7 +69,7 @@ fun OfficeCard(
         if (status.upToDate) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(Spacing.s)
             ) {
                 status.metrics.forEach { metric ->
                     MetricTile(metric = metric, modifier = Modifier.weight(1f))
@@ -73,12 +85,13 @@ fun OfficeCard(
     }
 }
 
+/** Small tile with the short name, value and indicator of one metric. */
 @Composable
 private fun MetricTile(metric: MetricStatus, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(12.dp))
-            .padding(horizontal = 10.dp, vertical = 8.dp),
+            .background(MaterialTheme.colorScheme.surfaceContainer, MaterialTheme.shapes.extraSmall)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
@@ -104,6 +117,7 @@ private fun MetricTile(metric: MetricStatus, modifier: Modifier = Modifier) {
     }
 }
 
+/** Notice shown instead of the metrics when the data of the space is outdated. */
 private fun staleText(status: OfficeStatus): String {
     val lastReading = status.lastReadingAt ?: return "Todavía no hay lecturas registradas en este espacio."
     return "La última lectura fue ${WellbeingFormatters.dayAndTime(lastReading)}. La información no está actualizada."

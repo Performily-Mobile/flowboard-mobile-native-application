@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -64,7 +63,7 @@ fun LinkDeviceSheet(
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text("Vincular dispositivo", style = MaterialTheme.typography.titleLarge)
             Text(
@@ -125,14 +124,15 @@ fun LinkDeviceSheet(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
             ) {
                 TextButton(onClick = onDismiss) { Text("Cancelar") }
                 Button(
                     onClick = onLink,
-                    enabled = !isLinking && code.isNotBlank(),
-                    shape = RoundedCornerShape(8.dp)
+                    enabled = !isLinking && code.isNotBlank()
                 ) {
                     if (isLinking) {
                         CircularProgressIndicator(

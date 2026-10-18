@@ -19,7 +19,15 @@ import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.features.payroll.domain.entity.PayrollPeriod
 
-/** Campo "Periodo" con la lista de períodos de planilla (MA-67). */
+/**
+ * "Periodo" field that opens the list of payroll periods (MA-67).
+ *
+ * @param periods payroll periods to choose from.
+ * @param selected period currently selected, or null.
+ * @param onSelect called with the period the user picks.
+ * @param modifier modifier applied to the field.
+ * @param enabled false to block the field, for example during an upload.
+ */
 @Composable
 fun PeriodSelectField(
     periods: List<PayrollPeriod>,

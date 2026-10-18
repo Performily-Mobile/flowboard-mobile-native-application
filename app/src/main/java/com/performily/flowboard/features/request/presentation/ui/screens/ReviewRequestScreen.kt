@@ -2,13 +2,13 @@ package com.performily.flowboard.features.request.presentation.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -34,7 +34,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.FlowboardBottomActionBar
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.request.domain.entity.Request
 import com.performily.flowboard.features.request.presentation.state.ReviewRequestUiState
 import com.performily.flowboard.features.request.presentation.ui.components.AttachmentRow
@@ -54,6 +56,14 @@ import com.performily.flowboard.features.request.presentation.ui.components.time
 import com.performily.flowboard.features.request.presentation.viewmodel.ReviewRequestViewModel
 
 
+/**
+ * Detail of a request for its approver, with the return, reject and approve actions in a bottom bar.
+ *
+ * @param requestId identifier of the request.
+ * @param onBack called when the back button is tapped.
+ * @param onResolved called with the result message once the request is resolved.
+ * @param viewModel review request view model.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReviewRequestScreen(
@@ -90,7 +100,17 @@ fun ReviewRequestScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        bottomBar = {
+            if (!state.isLoading && state.request != null && state.canResolve) {
+                ReviewActions(
+                    isProcessing = state.isProcessing,
+                    onReturn = viewModel::showReturnSheet,
+                    onReject = viewModel::showRejectDialog,
+                    onApprove = viewModel::approve
+                )
+            }
+        }
     ) { paddingValues ->
         val contentModifier = Modifier
             .fillMaxSize()
@@ -108,9 +128,6 @@ fun ReviewRequestScreen(
             else -> ReviewContent(
                 state = state,
                 request = request,
-                onReturn = viewModel::showReturnSheet,
-                onReject = viewModel::showRejectDialog,
-                onApprove = viewModel::approve,
                 modifier = contentModifier
             )
         }
@@ -141,76 +158,91 @@ fun ReviewRequestScreen(
     }
 }
 
+/** Scrollable detail of the request: requester, data, attachments and, once resolved, its history. */
 @Composable
 private fun ReviewContent(
     state: ReviewRequestUiState,
     request: Request,
-    onReturn: () -> Unit,
-    onReject: () -> Unit,
-    onApprove: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.padding(horizontal = 16.dp)) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(top = 8.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            RequesterCard(request)
-            KeyValueCard(items = detailItems(state, request))
-            request.attachments.forEach { file -> AttachmentRow(file = file) }
-            Text(
-                text = "Enviada el ${RequestFormatters.dateTime(request.submittedAt)}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            if (!state.canResolve) {
-                RequestSectionHeader("Historial")
-                RequestHistoryTimeline(items = timelineOf(request, state.viewerId))
-            }
-        }
-
-        if (state.canResolve) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(onClick = onReturn, enabled = !state.isProcessing) { Text("Devolver") }
-                Row(
-                    modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedButton(onClick = onReject, enabled = !state.isProcessing, shape = RoundedCornerShape(8.dp)) {
-                        Text("Rechazar")
-                    }
-                    Button(onClick = onApprove, enabled = !state.isProcessing, shape = RoundedCornerShape(8.dp)) {
-                        if (state.isProcessing) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text("Aprobar")
-                        }
-                    }
-                }
-            }
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = Spacing.screenHorizontal)
+            .padding(top = Spacing.s, bottom = Spacing.xl),
+        verticalArrangement = Arrangement.spacedBy(Spacing.m)
+    ) {
+        RequesterCard(request)
+        KeyValueCard(items = detailItems(state, request))
+        request.attachments.forEach { file -> AttachmentRow(file = file) }
+        Text(
+            text = "Enviada el ${RequestFormatters.dateTime(request.submittedAt)}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        if (!state.canResolve) {
+            RequestSectionHeader("Historial")
+            RequestHistoryTimeline(items = timelineOf(request, state.viewerId))
         }
     }
 }
 
 
+/**
+ * Bottom bar with the decisions an approver can take.
+ *
+ * @param isProcessing true while a decision is being saved.
+ * @param onReturn called when "Devolver" is tapped.
+ * @param onReject called when "Rechazar" is tapped.
+ * @param onApprove called when "Aprobar" is tapped.
+ */
+@Composable
+private fun ReviewActions(
+    isProcessing: Boolean,
+    onReturn: () -> Unit,
+    onReject: () -> Unit,
+    onApprove: () -> Unit
+) {
+    FlowboardBottomActionBar {
+        TextButton(onClick = onReturn, enabled = !isProcessing, modifier = Modifier.height(52.dp)) {
+            Text("Devolver")
+        }
+        OutlinedButton(
+            onClick = onReject,
+            enabled = !isProcessing,
+            contentPadding = PaddingValues(horizontal = Spacing.m),
+            modifier = Modifier
+                .weight(1f)
+                .height(52.dp)
+        ) {
+            Text("Rechazar")
+        }
+        Button(
+            onClick = onApprove,
+            enabled = !isProcessing,
+            contentPadding = PaddingValues(horizontal = Spacing.m),
+            modifier = Modifier
+                .weight(1f)
+                .height(52.dp)
+        ) {
+            if (isProcessing) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text("Aprobar")
+            }
+        }
+    }
+}
+
+/** Card with the requester's avatar, name, job and the request status. */
 @Composable
 private fun RequesterCard(request: Request) {
     RequestCard {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically) {
             RequestAvatar(name = request.requesterName, size = 48.dp)
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
@@ -228,6 +260,7 @@ private fun RequesterCard(request: Request) {
 }
 
 
+/** Builds the label and value rows shown in the detail card of the request. */
 private fun detailItems(state: ReviewRequestUiState, request: Request): List<KeyValue> = buildList {
     add(KeyValue("Tipo", request.requestTypeName))
     add(KeyValue("Periodo", RequestFormatters.longPeriod(request.period)))

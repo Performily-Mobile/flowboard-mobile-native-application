@@ -9,20 +9,29 @@ import com.performily.flowboard.features.payroll.presentation.ui.screens.Payment
 import com.performily.flowboard.features.payroll.presentation.ui.screens.UploadPayslipsScreen
 import kotlinx.serialization.Serializable
 
+/** Route of the payroll graph. */
 @Serializable
 data object PayrollNavGraphRoute
 
-/** MA-67 / MA-68 · Boletas y pagos (RR.HH.). */
+/** Payslips and payments screen for HR (MA-67, MA-68). */
 @Serializable
 data object UploadPayslipsRoute
 
-/** MA-69 · Estado de pagos (RR.HH.). Abre con el período que estaba elegido en MA-67. */
+/**
+ * Payment status screen for HR (MA-69).
+ *
+ * @param payrollPeriodId payroll period that was selected in MA-67, or null.
+ */
 @Serializable
 data class PaymentStatusRoute(val payrollPeriodId: Long? = null)
 
-/*
- * PENDIENTE (vista del colaborador): ProtectedPayslipsRoute (MA-64), MyPayslipsRoute (MA-65)
- * y PayslipViewerRoute (MA-66) se agregan a este mismo grafo.
+/**
+ * Registers the payroll screens for HR: payslip upload and payment status.
+ *
+ * The employee screens (ProtectedPayslipsRoute MA-64, MyPayslipsRoute MA-65 and
+ * PayslipViewerRoute MA-66) are still pending and will be added to this same graph.
+ *
+ * @param navController controller used to move between the screens.
  */
 fun NavGraphBuilder.payrollNavGraph(navController: NavController) {
 

@@ -1,6 +1,7 @@
 package com.performily.flowboard.features.attendance.presentation.ui.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -15,6 +16,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 
+/**
+ * Read-only field that opens a menu to pick one option, such as the area.
+ *
+ * @param label label of the field.
+ * @param selectedLabel text shown for the current option.
+ * @param options options of the menu.
+ * @param optionLabel text shown for each option.
+ * @param onSelected called with the option the user picks.
+ * @param modifier modifier applied to the field.
+ */
 @Composable
 fun <T> AttendanceFilterDropdown(
     label: String,
@@ -26,16 +37,17 @@ fun <T> AttendanceFilterDropdown(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    androidx.compose.foundation.layout.Box(modifier = modifier) {
+    Box(modifier = modifier) {
         OutlinedTextField(
             value = selectedLabel,
             onValueChange = {},
             readOnly = true,
+            singleLine = true,
             label = { Text(label) },
             trailingIcon = { Icon(FlowboardIcons.ArrowDropDown, contentDescription = null) },
             modifier = Modifier.fillMaxWidth()
         )
-        androidx.compose.foundation.layout.Box(
+        Box(
             modifier = Modifier
                 .matchParentSize()
                 .clickable { expanded = true }

@@ -55,7 +55,7 @@ fun PayslipUploadZone(
         if (files.isNotEmpty()) onFilesSelected(files)
     }
     val outline = MaterialTheme.colorScheme.outline
-    val shape = RoundedCornerShape(12.dp)
+    val shape = RoundedCornerShape(ZONE_CORNER_RADIUS)
 
     Column(
         modifier = modifier
@@ -70,11 +70,11 @@ fun PayslipUploadZone(
                         width = strokeWidth,
                         pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 4.dp.toPx()))
                     ),
-                    cornerRadius = CornerRadius(12.dp.toPx() - strokeWidth / 2)
+                    cornerRadius = CornerRadius(ZONE_CORNER_RADIUS.toPx() - strokeWidth / 2)
                 )
             }
             .clickable(enabled = enabled) { picker.launch(arrayOf("*/*")) }
-            .padding(16.dp),
+            .padding(horizontal = 20.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -101,6 +101,12 @@ fun PayslipUploadZone(
         )
     }
 }
+
+/**
+ * Corner radius of the upload card; it matches the medium shape of the theme and is also used to
+ * draw the dashed outline.
+ */
+private val ZONE_CORNER_RADIUS = 20.dp
 
 /**
  * Describes a file picked in the system document picker.

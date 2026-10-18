@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -31,7 +30,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.FlowboardBottomActionBar
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.benefits.domain.valueobject.BenefitUnit
 import com.performily.flowboard.features.benefits.presentation.state.AssignBenefitUiState
 import com.performily.flowboard.features.benefits.presentation.state.AssignTargetMode
@@ -47,7 +48,12 @@ import com.performily.flowboard.features.benefits.presentation.viewmodel.AssignB
 /**
  * Assign benefit screen (MA-61).
  *
- * Full-screen form without the bottom bar.
+ * Full-screen form without the app bottom navigation; the submit button sits in a bottom action
+ * bar that stays above the system navigation bar and the keyboard.
+ *
+ * @param onClose closes the form.
+ * @param onAssigned called with the result message once the benefit is assigned.
+ * @param viewModel view model of the screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,31 +80,32 @@ fun AssignBenefitScreen(
         },
         bottomBar = {
             if (!state.isLoading && state.loadError == null) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    state.errorMessage?.let { message ->
-                        Text(
-                            text = message,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                    }
-                    Button(
-                        onClick = viewModel::onSubmit,
-                        enabled = state.canSubmit,
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                    ) {
-                        if (state.isSubmitting) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                strokeWidth = 2.dp
+                FlowboardBottomActionBar {
+                    Column(modifier = Modifier.weight(1f)) {
+                        state.errorMessage?.let { message ->
+                            Text(
+                                text = message,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(bottom = Spacing.s)
                             )
-                        } else {
-                            Text(state.submitLabel)
+                        }
+                        Button(
+                            onClick = viewModel::onSubmit,
+                            enabled = state.canSubmit,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                        ) {
+                            if (state.isSubmitting) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text(state.submitLabel)
+                            }
                         }
                     }
                 }
@@ -127,13 +134,20 @@ fun AssignBenefitScreen(
     }
 }
 
+/**
+ * Fields of the assignment: benefit type, target (employee or area), quantity and period.
+ *
+ * @param state screen state.
+ * @param viewModel view model that receives the changes.
+ * @param modifier modifier applied to the form.
+ */
 @Composable
 private fun AssignForm(state: AssignBenefitUiState, viewModel: AssignBenefitViewModel, modifier: Modifier) {
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = Spacing.screenHorizontal, vertical = Spacing.l),
+        verticalArrangement = Arrangement.spacedBy(Spacing.l)
     ) {
         BenefitsSelectField(
             label = "Tipo de beneficio",
@@ -144,13 +158,15 @@ private fun AssignForm(state: AssignBenefitUiState, viewModel: AssignBenefitView
             modifier = Modifier.fillMaxWidth()
         )
 
-        Text("Asignar a", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        BenefitsSegmented(
-            options = AssignTargetMode.entries,
-            selected = state.mode,
-            optionLabel = { it.label },
-            onSelect = viewModel::onModeSelected
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
+            Text("Asignar a", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            BenefitsSegmented(
+                options = AssignTargetMode.entries,
+                selected = state.mode,
+                optionLabel = { it.label },
+                onSelect = viewModel::onModeSelected
+            )
+        }
 
         if (state.mode == AssignTargetMode.AREA) {
             BenefitsSelectField(
@@ -194,7 +210,7 @@ private fun AssignForm(state: AssignBenefitUiState, viewModel: AssignBenefitView
             modifier = Modifier.fillMaxWidth()
         )
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {
             BenefitsDateField(
                 label = "Desde",
                 value = state.startDate,

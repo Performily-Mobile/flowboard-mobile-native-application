@@ -26,6 +26,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -34,29 +35,33 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.performily.flowboard.core.designsystem.theme.Divider
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.core.designsystem.theme.OnAvatarContainer
 import com.performily.flowboard.core.designsystem.theme.OnSurface
 import com.performily.flowboard.features.request.domain.valueobject.RequestStatus
 
 
+/** Pill with the label of a request status, tinted by the status. */
 @Composable
 fun RequestStatusChip(status: RequestStatus, modifier: Modifier = Modifier) {
     RequestChip(text = status.label, containerColor = RequestColors.status(status), modifier = modifier)
 }
 
 
+/** Small pill-shaped label with a tinted background. */
 @Composable
 fun RequestChip(text: String, containerColor: Color, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .background(containerColor, RoundedCornerShape(12.dp))
+            .background(containerColor, CircleShape)
             .padding(horizontal = 12.dp, vertical = 4.dp)
     ) {
-        Text(text = text, style = MaterialTheme.typography.labelMedium, color = OnSurface)
+        Text(text = text, style = MaterialTheme.typography.labelMedium, color = OnSurface, maxLines = 1)
     }
 }
 
 
+/** Circle with the initials of a person. */
 @Composable
 fun RequestAvatar(name: String, modifier: Modifier = Modifier, size: Dp = 40.dp) {
     Box(
@@ -75,6 +80,7 @@ fun RequestAvatar(name: String, modifier: Modifier = Modifier, size: Dp = 40.dp)
 }
 
 
+/** Icon drawn on a tinted circle. */
 @Composable
 fun RequestIconCircle(
     icon: ImageVector,
@@ -93,20 +99,32 @@ fun RequestIconCircle(
 }
 
 
+/**
+ * Card used by every list and panel of the request feature.
+ *
+ * @param modifier modifier applied to the card.
+ * @param onClick called when the card is tapped, or null for a static card.
+ * @param containerColor background color of the card.
+ * @param border border of the card, or null for none.
+ * @param spacing vertical gap between the children.
+ * @param content children laid out in a column.
+ */
 @Composable
 fun RequestCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     containerColor: Color = Color.White,
     border: BorderStroke? = BorderStroke(1.dp, Divider),
-    spacing: Dp = 6.dp,
+    spacing: Dp = 8.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val shape = MaterialTheme.shapes.medium
     Surface(
         modifier = modifier
             .fillMaxWidth()
+            .clip(shape)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        shape = RoundedCornerShape(12.dp),
+        shape = shape,
         color = containerColor,
         border = border
     ) {
@@ -119,8 +137,10 @@ fun RequestCard(
 }
 
 
+/** Label and value shown as one row of a [KeyValueCard]. */
 data class KeyValue(val key: String, val value: String)
 
+/** Card that lists label and value pairs separated by dividers; shows nothing when [items] is empty. */
 @Composable
 fun KeyValueCard(items: List<KeyValue>, modifier: Modifier = Modifier) {
     if (items.isEmpty()) return
@@ -144,6 +164,7 @@ fun KeyValueCard(items: List<KeyValue>, modifier: Modifier = Modifier) {
     }
 }
 
+/** Tinted banner with an icon, a message and an optional text action. */
 @Composable
 fun RequestBanner(
     message: String,
@@ -157,8 +178,8 @@ fun RequestBanner(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(containerColor, RoundedCornerShape(12.dp))
-            .padding(12.dp),
+            .background(containerColor, MaterialTheme.shapes.medium)
+            .padding(horizontal = Spacing.l, vertical = Spacing.m),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -178,6 +199,7 @@ fun RequestBanner(
 }
 
 
+/** Step label and segmented progress bar of a multi-step form. */
 @Composable
 fun StepHeader(step: Int, total: Int, label: String, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -203,6 +225,7 @@ fun StepHeader(step: Int, total: Int, label: String, modifier: Modifier = Modifi
 }
 
 
+/** Title of a block with an optional action on the right. */
 @Composable
 fun RequestSectionHeader(text: String, modifier: Modifier = Modifier, action: (@Composable () -> Unit)? = null) {
     Row(
@@ -217,6 +240,7 @@ fun RequestSectionHeader(text: String, modifier: Modifier = Modifier, action: (@
     }
 }
 
+/** Centered progress indicator that fills the available space. */
 @Composable
 fun RequestLoading(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -224,6 +248,7 @@ fun RequestLoading(modifier: Modifier = Modifier) {
     }
 }
 
+/** Empty or error state with an optional icon and action button. */
 @Composable
 fun RequestMessageState(
     title: String,
@@ -236,7 +261,7 @@ fun RequestMessageState(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 32.dp, start = 16.dp, end = 16.dp),
+            .padding(top = Spacing.xxl, start = Spacing.screenHorizontal, end = Spacing.screenHorizontal),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -258,7 +283,7 @@ fun RequestMessageState(
             textAlign = TextAlign.Center
         )
         if (actionLabel != null) {
-            OutlinedButton(onClick = onAction, shape = RoundedCornerShape(8.dp)) { Text(actionLabel) }
+            OutlinedButton(onClick = onAction) { Text(actionLabel) }
         }
     }
 }

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -24,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.benefits.domain.entity.BenefitType
 import com.performily.flowboard.features.benefits.domain.valueobject.AdjustmentOperation
 import com.performily.flowboard.features.benefits.domain.valueobject.BenefitUnit
@@ -255,6 +255,7 @@ fun AdjustBalanceSheet(
     }
 }
 
+/** Cancel and confirm buttons at the end of a sheet; the confirm button shows a spinner while saving. */
 @Composable
 private fun DialogActions(
     confirmLabel: String,
@@ -264,11 +265,13 @@ private fun DialogActions(
     onCancel: () -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s, Alignment.End)
     ) {
         TextButton(onClick = onCancel, enabled = !isLoading) { Text("Cancelar") }
-        Button(onClick = onConfirm, enabled = enabled, shape = RoundedCornerShape(8.dp)) {
+        Button(onClick = onConfirm, enabled = enabled) {
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(18.dp),

@@ -13,7 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.core.domain.EmployeeId
 import com.performily.flowboard.features.workspace.domain.entity.Area
 import com.performily.flowboard.features.workspace.domain.entity.Employee
@@ -21,6 +21,23 @@ import com.performily.flowboard.features.workspace.domain.entity.Position
 import com.performily.flowboard.features.workspace.presentation.state.ReassignJobForm
 import java.time.LocalDate
 
+/**
+ * Bottom sheet to move an employee to another area, position or direct manager.
+ *
+ * @param employeeName name shown under the title.
+ * @param form current values and errors of the form.
+ * @param areas areas to choose from.
+ * @param positions positions of the selected area.
+ * @param managerCandidates employees that can be the new direct manager.
+ * @param isSaving true while the change is being saved.
+ * @param errorMessage error returned by the last save, if any.
+ * @param onAreaChange called with the id of the selected area.
+ * @param onPositionChange called with the id of the selected position.
+ * @param onManagerChange called with the selected manager, or null for none.
+ * @param onDateChange called with the effective date.
+ * @param onSave called when the user confirms.
+ * @param onDismiss called when the sheet is closed or cancelled.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReassignJobSheet(
@@ -46,16 +63,11 @@ fun ReassignJobSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = Spacing.screenHorizontal)
+                .padding(bottom = Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m)
         ) {
-            Text("Reasignar puesto", style = MaterialTheme.typography.titleLarge)
-            Text(
-                text = employeeName,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            SheetHeader(title = "Reasignar puesto", subtitle = employeeName)
             AreaDropdown(
                 areas = areas,
                 selectedAreaId = form.areaId,

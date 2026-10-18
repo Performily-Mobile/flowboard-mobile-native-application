@@ -3,7 +3,7 @@ package com.performily.flowboard.features.workspace.presentation.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,7 +50,7 @@ fun LabelChip(
 ) {
     Box(
         modifier = modifier
-            .background(containerColor, RoundedCornerShape(12.dp))
+            .background(containerColor, CircleShape)
             .padding(horizontal = 12.dp, vertical = 4.dp)
     ) {
         Text(text = text, style = MaterialTheme.typography.labelMedium, color = OnSurface)

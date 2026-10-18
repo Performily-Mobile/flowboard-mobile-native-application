@@ -1,5 +1,6 @@
 package com.performily.flowboard.features.request.presentation.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -23,10 +24,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.request.presentation.ui.components.DeleteRequestTypeDialog
 import com.performily.flowboard.features.request.presentation.ui.components.RequestLoading
 import com.performily.flowboard.features.request.presentation.ui.components.RequestMessageState
@@ -34,6 +35,15 @@ import com.performily.flowboard.features.request.presentation.ui.components.Requ
 import com.performily.flowboard.features.request.presentation.viewmodel.RequestTypesViewModel
 
 
+/**
+ * Catalog of request types for HR, where types can be created, activated, deactivated or deleted.
+ *
+ * @param onBack called when the back button is tapped.
+ * @param onNewType called when "Nuevo tipo" is tapped.
+ * @param resultMessage message left by a previous screen, shown in a snackbar.
+ * @param onResultMessageConsumed called once [resultMessage] has been handled.
+ * @param viewModel request types view model.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RequestTypesScreen(
@@ -109,7 +119,13 @@ fun RequestTypesScreen(
             )
             else -> LazyColumn(
                 modifier = contentModifier,
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp)
+                contentPadding = PaddingValues(
+                    start = Spacing.screenHorizontal,
+                    end = Spacing.screenHorizontal,
+                    top = Spacing.s,
+                    bottom = Spacing.fabClearance
+                ),
+                verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
             ) {
                 items(state.types, key = { it.id }) { type ->
                     RequestTypeRow(

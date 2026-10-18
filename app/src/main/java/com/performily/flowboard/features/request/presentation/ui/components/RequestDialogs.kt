@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -22,8 +21,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.request.domain.valueobject.FieldDataType
 
+/** Confirmation dialog shown before the viewer cancels one of their requests. */
 @Composable
 fun CancelRequestDialog(
     message: String,
@@ -48,6 +49,7 @@ fun CancelRequestDialog(
 }
 
 
+/** Dialog that asks for the reason before rejecting a request. */
 @Composable
 fun RejectRequestDialog(
     requesterName: String,
@@ -63,7 +65,7 @@ fun RejectRequestDialog(
         containerColor = RequestColors.Dialog,
         title = { Text("Rechazar solicitud") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.l)) {
                 Text(
                     text = "$requesterName verá el motivo en el detalle de su solicitud y recibirá una notificación.",
                     style = MaterialTheme.typography.bodyMedium,
@@ -92,6 +94,7 @@ fun RejectRequestDialog(
 }
 
 
+/** Bottom sheet that asks for a comment before returning a request to its requester for review. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReturnForReviewSheet(
@@ -111,9 +114,9 @@ fun ReturnForReviewSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = Spacing.xl)
+                .padding(bottom = Spacing.xxl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l)
         ) {
             Text("Devolver a revisión", style = MaterialTheme.typography.titleLarge)
             Text(
@@ -140,6 +143,7 @@ fun ReturnForReviewSheet(
     }
 }
 
+/** Confirmation dialog shown before deleting a request type. */
 @Composable
 fun DeleteRequestTypeDialog(
     typeName: String,
@@ -163,6 +167,7 @@ fun DeleteRequestTypeDialog(
     )
 }
 
+/** Bottom sheet to add a field to the form of a new request type. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddFieldSheet(
@@ -184,9 +189,9 @@ fun AddFieldSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = Spacing.xl)
+                .padding(bottom = Spacing.xxl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l)
         ) {
             Text("Agregar campo", style = MaterialTheme.typography.titleLarge)
             OutlinedTextField(
@@ -206,7 +211,7 @@ fun AddFieldSheet(
                 onSelect = onDataTypeChange,
                 modifier = Modifier.fillMaxWidth()
             )
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.l)) {
                 Text("Obligatorio", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                 Switch(checked = required, onCheckedChange = onRequiredChange)
             }
@@ -215,6 +220,7 @@ fun AddFieldSheet(
     }
 }
 
+/** Cancel and confirm buttons at the end of a bottom sheet. */
 @Composable
 private fun SheetActions(
     confirmLabel: String,
@@ -224,10 +230,10 @@ private fun SheetActions(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s, Alignment.End)
     ) {
         TextButton(onClick = onCancel, enabled = !isLoading) { Text("Cancelar") }
-        Button(onClick = onConfirm, enabled = !isLoading, shape = RoundedCornerShape(8.dp)) {
+        Button(onClick = onConfirm, enabled = !isLoading) {
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(18.dp),
@@ -241,6 +247,7 @@ private fun SheetActions(
     }
 }
 
+/** Small progress indicator shown inside a dialog button while it works. */
 @Composable
 private fun LoadingDot() {
     CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)

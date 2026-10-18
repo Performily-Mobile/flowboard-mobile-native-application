@@ -1,6 +1,5 @@
 package com.performily.flowboard.features.benefits.presentation.ui.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -29,24 +27,26 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.theme.Divider
 import com.performily.flowboard.core.designsystem.theme.OnAvatarContainer
 import com.performily.flowboard.core.designsystem.theme.OnSurface
+import com.performily.flowboard.core.designsystem.theme.Spacing
 
-/** Chip de estado: Asignado, Entregado, Activo, Inactivo. */
+/** Pill-shaped status chip: Asignado, Entregado, Activo, Inactivo. */
 @Composable
 fun BenefitChip(text: String, containerColor: Color, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .background(containerColor, RoundedCornerShape(12.dp))
+            .background(containerColor, CircleShape)
             .padding(horizontal = 12.dp, vertical = 4.dp)
     ) {
         Text(text = text, style = MaterialTheme.typography.labelMedium, color = OnSurface)
     }
 }
 
-/** Círculo de 40 dp con un ícono, como el regalo o el +/− de los movimientos. */
+/** 40 dp circle with an icon, such as the gift or the +/- of balance movements. */
 @Composable
 fun IconCircle(icon: ImageVector, modifier: Modifier = Modifier) {
     Box(
@@ -64,7 +64,7 @@ fun IconCircle(icon: ImageVector, modifier: Modifier = Modifier) {
     }
 }
 
-/** Avatar con las iniciales del colaborador (MA-62). */
+/** Avatar with the employee's initials (MA-62). */
 @Composable
 fun InitialsAvatar(name: String, modifier: Modifier = Modifier) {
     Box(
@@ -82,7 +82,7 @@ fun InitialsAvatar(name: String, modifier: Modifier = Modifier) {
     }
 }
 
-/** Fila de lista con divisor inferior: ícono o avatar, título, detalle y algo a la derecha. */
+/** List row with a bottom divider: icon or avatar, title, detail and an optional trailing element. */
 @Composable
 fun BenefitListRow(
     title: String,
@@ -97,26 +97,33 @@ fun BenefitListRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
-                .padding(vertical = 12.dp),
+                .padding(vertical = 14.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             leading()
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(text = title, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
             trailing()
         }
-        HorizontalDivider(color = Divider)
+        HorizontalDivider(color = Divider.copy(alpha = 0.7f))
     }
 }
 
-/** Tarjeta blanca con borde suave (MA-57, MA-58, MA-63). */
+/** Borderless tonal card with the theme card shape (MA-57, MA-58, MA-63). */
 @Composable
 fun BenefitCard(
     modifier: Modifier = Modifier,
@@ -127,19 +134,18 @@ fun BenefitCard(
         modifier = modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        shape = RoundedCornerShape(12.dp),
-        color = Color.White,
-        border = BorderStroke(1.dp, Divider)
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(Spacing.m),
             content = content
         )
     }
 }
 
-/** Aviso con ícono y una acción opcional: sin conexión (MA-57) o advertencia (MA-61). */
+/** Banner with an icon and an optional action: offline notice (MA-57) or warning (MA-61). */
 @Composable
 fun BenefitsBanner(
     message: String,
@@ -153,8 +159,8 @@ fun BenefitsBanner(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(containerColor, RoundedCornerShape(12.dp))
-            .padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+            .background(containerColor, MaterialTheme.shapes.medium)
+            .padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -175,7 +181,7 @@ fun BenefitsBanner(
     }
 }
 
-/** Título de sección: "Movimientos", "Entregados recientemente". */
+/** Section title: "Movimientos", "Entregados recientemente". */
 @Composable
 fun SectionHeader(text: String, modifier: Modifier = Modifier) {
     Text(
@@ -186,6 +192,7 @@ fun SectionHeader(text: String, modifier: Modifier = Modifier) {
     )
 }
 
+/** Centered progress indicator shown while a screen loads. */
 @Composable
 fun BenefitsLoading(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -193,7 +200,7 @@ fun BenefitsLoading(modifier: Modifier = Modifier) {
     }
 }
 
-/** Mensaje centrado para errores o listas vacías, con una acción opcional. */
+/** Centered message for errors or empty lists, with an optional action. */
 @Composable
 fun BenefitsMessageState(
     title: String,
@@ -205,7 +212,7 @@ fun BenefitsMessageState(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 48.dp, start = 16.dp, end = 16.dp),
+            .padding(top = 56.dp, start = Spacing.screenHorizontal, end = Spacing.screenHorizontal),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {

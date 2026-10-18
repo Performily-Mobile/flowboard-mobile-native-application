@@ -25,9 +25,16 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.workspace.presentation.ui.components.DocumentsTab
 import com.performily.flowboard.features.workspace.presentation.viewmodel.MyRecordViewModel
 
+/**
+ * Documents of the signed-in employee, filtered by category.
+ *
+ * @param onBack called by the back button.
+ * @param viewModel view model of the screen.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyRecordScreen(
@@ -61,9 +68,9 @@ fun MyRecordScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(24.dp),
+                    .padding(Spacing.xl),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(Spacing.m)
             ) {
                 Text(state.errorMessage.orEmpty())
                 OutlinedButton(onClick = viewModel::load) { Text("Reintentar") }
@@ -77,7 +84,8 @@ fun MyRecordScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = Spacing.screenHorizontal)
+                    .padding(top = 8.dp, bottom = Spacing.xl)
             )
         }
     }

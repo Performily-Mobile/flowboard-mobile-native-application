@@ -11,11 +11,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.workspace.presentation.state.TerminationForm
 import java.time.LocalDate
 
-/** Motivos de cese que ofrece el formulario (el backend recibe el texto). */
+/** Termination reasons offered by the form; the backend receives the text itself. */
 val TerminationReasons = listOf(
     "Renuncia voluntaria",
     "Término de contrato",
@@ -24,6 +24,18 @@ val TerminationReasons = listOf(
     "Jubilación"
 )
 
+/**
+ * Dialog to register the termination of an employee.
+ *
+ * @param employeeName name of the employee.
+ * @param form current values and errors of the form.
+ * @param isSaving true while the termination is being saved.
+ * @param errorMessage error returned by the last save, if any.
+ * @param onReasonChange called with the selected reason.
+ * @param onDateChange called with the termination date.
+ * @param onConfirm called when the user confirms.
+ * @param onDismiss called when the dialog is closed or cancelled.
+ */
 @Composable
 fun TerminateEmployeeSheet(
     employeeName: String,
@@ -39,7 +51,7 @@ fun TerminateEmployeeSheet(
         onDismissRequest = onDismiss,
         title = { Text("Registrar cese") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 Text(
                     text = "$employeeName pasará a estado Cesado y su acceso a Flowboard se inhabilitará de inmediato.",
                     style = MaterialTheme.typography.bodyMedium,

@@ -15,10 +15,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SelectableDates
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -33,8 +30,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
+import com.performily.flowboard.core.designsystem.component.FlowboardTabs
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.request.domain.entity.RequestField
 import com.performily.flowboard.features.request.domain.valueobject.FieldDataType
 import java.time.Instant
@@ -43,6 +41,7 @@ import java.time.LocalTime
 import java.time.ZoneOffset
 
 
+/** Read-only text field that opens a menu to pick one of [options]. */
 @Composable
 fun <T> RequestSelectField(
     label: String,
@@ -92,6 +91,7 @@ fun <T> RequestSelectField(
 }
 
 
+/** Read-only text field that opens a date picker; dates before [minDate] cannot be picked. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RequestDateField(
@@ -153,6 +153,7 @@ fun RequestDateField(
 }
 
 
+/** Read-only text field that opens a 24-hour time picker. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RequestTimeField(
@@ -207,7 +208,15 @@ fun RequestTimeField(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Single-choice selector of the request feature, drawn with the shared pill tabs.
+ *
+ * @param options options to show, in order.
+ * @param selected option currently selected.
+ * @param optionLabel text shown for each option.
+ * @param onSelect called with the option the user taps.
+ * @param modifier modifier applied to the selector.
+ */
 @Composable
 fun <T> RequestSegmented(
     options: List<T>,
@@ -216,20 +225,25 @@ fun <T> RequestSegmented(
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth()) {
-        options.forEachIndexed { index, option ->
-            SegmentedButton(
-                selected = option == selected,
-                onClick = { onSelect(option) },
-                shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size)
-            ) {
-                Text(optionLabel(option), maxLines = 1)
-            }
-        }
-    }
+    FlowboardTabs(
+        options = options,
+        selected = selected,
+        onSelect = onSelect,
+        label = optionLabel,
+        modifier = modifier
+    )
 }
 
 
+/**
+ * Input for one dynamic field of a request type, chosen by the field's data type.
+ *
+ * @param field field definition.
+ * @param value current value as text.
+ * @param onValueChange called with the new value as text.
+ * @param modifier modifier applied to the input.
+ * @param error validation message, or null when the value is valid.
+ */
 @Composable
 fun DynamicFieldInput(
     field: RequestField,
@@ -258,7 +272,7 @@ fun DynamicFieldInput(
         )
         FieldDataType.BOOLEAN -> Row(
             modifier = modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.l),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))

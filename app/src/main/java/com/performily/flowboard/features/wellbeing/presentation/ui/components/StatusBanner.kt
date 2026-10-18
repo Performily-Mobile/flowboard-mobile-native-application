@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -16,9 +15,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 
+/** Tone of a [StatusBanner]: a dangerous condition or outdated information. */
 enum class BannerTone { DANGER, WARNING }
 
-/** Aviso destacado: condición peligrosa (MA-72) o información no actualizada (MA-81, MA-74). */
+/**
+ * Highlighted notice: dangerous condition (MA-72) or outdated information (MA-81, MA-74).
+ *
+ * @param message text of the notice.
+ * @param tone tone that sets the colors.
+ * @param modifier modifier applied to the banner.
+ */
 @Composable
 fun StatusBanner(
     message: String,
@@ -30,8 +36,8 @@ fun StatusBanner(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(container, RoundedCornerShape(12.dp))
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .background(container, MaterialTheme.shapes.medium)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

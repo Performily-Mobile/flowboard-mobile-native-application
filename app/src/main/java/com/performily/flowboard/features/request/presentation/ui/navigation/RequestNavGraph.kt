@@ -46,7 +46,7 @@ private const val REQUEST_RESULT_KEY = "request_result"
 
 fun NavGraphBuilder.requestNavGraph(navController: NavController) {
 
-    /** Vuelve a la pantalla anterior dejándole un mensaje para su snackbar. */
+    /** Goes back to the previous screen and leaves it a message for its snackbar. */
     fun popWithResult(message: String) {
         navController.previousBackStackEntry?.savedStateHandle?.set(REQUEST_RESULT_KEY, message)
         navController.popBackStack()

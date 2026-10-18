@@ -35,12 +35,17 @@ data class JustifyAttendanceRoute(
     val workDate: String
 )
 
+/**
+ * Registers the Attendance tab: records, report by area, hours report and justification.
+ *
+ * @param navController controller used to move between the screens.
+ */
 fun NavGraphBuilder.attendanceNavGraph(navController: NavController) {
     navigation<AttendanceRoute>(startDestination = AttendanceHomeRoute) {
         composable<AttendanceHomeRoute> {
             AttendanceHomeScreen(
-                onAreaReport = { navController.navigate(AttendanceAreaReportRoute) },
-                onHoursReport = { navController.navigate(AttendanceHoursRoute) },
+                onAreaReport = { navController.switchAttendanceSection(AttendanceAreaReportRoute) },
+                onHoursReport = { navController.switchAttendanceSection(AttendanceHoursRoute) },
                 onJustify = { attendanceRecordId, workDate ->
                     navController.navigate(JustifyAttendanceRoute(attendanceRecordId, workDate.toString()))
                 }
@@ -52,13 +57,8 @@ fun NavGraphBuilder.attendanceNavGraph(navController: NavController) {
                 onEmployeeClick = { employeeId, employeeName ->
                     navController.navigate(AttendanceEmployeeRoute(employeeId, employeeName))
                 },
-                onRecords = {
-                    navController.navigate(AttendanceHomeRoute) {
-                        popUpTo(AttendanceHomeRoute) { inclusive = false }
-                        launchSingleTop = true
-                    }
-                },
-                onHoursReport = { navController.navigate(AttendanceHoursRoute) }
+                onRecords = { navController.switchAttendanceSection(AttendanceHomeRoute) },
+                onHoursReport = { navController.switchAttendanceSection(AttendanceHoursRoute) }
             )
         }
 
@@ -73,13 +73,8 @@ fun NavGraphBuilder.attendanceNavGraph(navController: NavController) {
 
         composable<AttendanceHoursRoute> {
             AttendanceHoursScreen(
-                onRecords = {
-                    navController.navigate(AttendanceHomeRoute) {
-                        popUpTo(AttendanceHomeRoute) { inclusive = false }
-                        launchSingleTop = true
-                    }
-                },
-                onAreaReport = { navController.navigate(AttendanceAreaReportRoute) }
+                onRecords = { navController.switchAttendanceSection(AttendanceHomeRoute) },
+                onAreaReport = { navController.switchAttendanceSection(AttendanceAreaReportRoute) }
             )
         }
 
@@ -91,5 +86,20 @@ fun NavGraphBuilder.attendanceNavGraph(navController: NavController) {
                 onClose = { navController.popBackStack() }
             )
         }
+    }
+}
+
+/**
+ * Switches between the sections of the Attendance tab (records, report by area, hours).
+ *
+ * The sections replace each other instead of piling up, so the stack holds a single section
+ * and "back" leaves the tab instead of walking through every section visited.
+ *
+ * @param route route of the section to show.
+ */
+private fun NavController.switchAttendanceSection(route: Any) {
+    navigate(route) {
+        popUpTo<AttendanceRoute> { inclusive = false }
+        launchSingleTop = true
     }
 }

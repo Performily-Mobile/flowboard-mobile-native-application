@@ -1,17 +1,18 @@
 package com.performily.flowboard.features.request.presentation.ui.screens
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,10 +33,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.CollapsingHeaderLayout
+import com.performily.flowboard.core.designsystem.component.rememberCollapsingHeaderState
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.request.domain.entity.Request
 import com.performily.flowboard.features.request.domain.entity.RequestType
 import com.performily.flowboard.features.request.presentation.state.AllRequestsFilter
@@ -56,6 +61,20 @@ import com.performily.flowboard.features.request.presentation.ui.components.Requ
 import com.performily.flowboard.features.request.presentation.viewmodel.RequestsViewModel
 
 
+/**
+ * Requests screen with the viewer's own requests, the requests to approve, the HR inbox and all requests.
+ *
+ * The tabs and the filters of the selected tab live in a header that slides away while the list
+ * scrolls down and comes back when it scrolls up.
+ *
+ * @param onNewRequest called when "Nueva solicitud" is tapped.
+ * @param onMyRequestClick called with the identifier of one of the viewer's requests.
+ * @param onReviewClick called with the identifier of a request to review.
+ * @param onResolvedClick called when the resolved requests are asked for.
+ * @param resultMessage message left by a previous screen, shown in a snackbar.
+ * @param onResultMessageConsumed called once [resultMessage] has been handled.
+ * @param viewModel requests view model.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RequestsScreen(
@@ -69,6 +88,7 @@ fun RequestsScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val headerState = rememberCollapsingHeaderState()
 
     LaunchedEffect(Unit) { viewModel.load() }
 
@@ -97,48 +117,107 @@ fun RequestsScreen(
         floatingActionButton = {
             if (state.selectedTab == RequestsTab.MINE) {
                 ExtendedFloatingActionButton(
-                    onClick = onNewRequest,
-                    icon = { Icon(FlowboardIcons.Add, contentDescription = null) },
                     text = { Text("Nueva solicitud") },
+                    icon = { Icon(FlowboardIcons.Add, contentDescription = null) },
+                    onClick = onNewRequest,
+                    expanded = headerState.isHeaderVisible,
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            RequestSegmented(
-                options = state.tabs,
-                selected = state.selectedTab,
-                optionLabel = state::tabLabel,
-                onSelect = viewModel::onTabSelected,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
+        CollapsingHeaderLayout(
+            modifier = Modifier.padding(paddingValues),
+            state = headerState,
+            showHeaderKey = listOf(
+                state.selectedTab,
+                state.visibleMyRequests.size,
+                state.visiblePending.size,
+                state.visibleAll.size,
+                state.isLoadingMine || state.isLoadingPending || state.isLoadingAll,
+                state.mineError != null || state.pendingError != null || state.allError != null
+            ),
+            header = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp, bottom = Spacing.m),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.m)
+                ) {
+                    RequestSegmented(
+                        options = state.tabs,
+                        selected = state.selectedTab,
+                        optionLabel = state::tabLabel,
+                        onSelect = viewModel::onTabSelected,
+                        modifier = Modifier.padding(horizontal = Spacing.screenHorizontal, vertical = 4.dp)
+                    )
+                    when (state.selectedTab) {
+                        RequestsTab.MINE -> ChipRow {
+                            MyRequestsFilter.entries.forEach { filter ->
+                                SelectableChip(
+                                    label = filter.label,
+                                    selected = state.myFilter == filter,
+                                    onClick = { viewModel.onMyFilterSelected(filter) }
+                                )
+                            }
+                        }
+                        RequestsTab.TO_APPROVE -> ChipRow {
+                            DropdownChip(
+                                label = "Tipo: ${state.typeFilter?.name ?: "todos"}",
+                                selected = state.typeFilter != null,
+                                options = listOf<RequestType?>(null) + state.requestTypes,
+                                optionLabel = { it?.name ?: "Todos" },
+                                onSelect = viewModel::onTypeFilterSelected
+                            )
+                            DropdownChip(
+                                label = state.sort.label,
+                                selected = state.pending.isNotEmpty(),
+                                options = ApprovalSort.entries,
+                                optionLabel = { it.label },
+                                onSelect = viewModel::onSortSelected
+                            )
+                        }
+                        RequestsTab.HR_INBOX -> RequestBanner(
+                            message = "Aquí llegan las solicitudes de colaboradores que no tienen jefe directo asignado.",
+                            icon = FlowboardIcons.Info,
+                            containerColor = RequestColors.InfoBanner,
+                            contentColor = RequestColors.OnInfoBanner,
+                            modifier = Modifier.padding(horizontal = Spacing.screenHorizontal)
+                        )
+                        RequestsTab.ALL -> ChipRow {
+                            AllRequestsFilter.entries.forEach { filter ->
+                                SelectableChip(
+                                    label = filter.label,
+                                    selected = state.allFilter == filter,
+                                    onClick = { viewModel.onAllFilterSelected(filter) }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        ) { contentPadding ->
             when (state.selectedTab) {
-                RequestsTab.MINE -> MyRequestsTab(
+                RequestsTab.MINE -> MyRequestsList(
                     state = state,
-                    onFilterSelected = viewModel::onMyFilterSelected,
+                    contentPadding = contentPadding,
                     onRequestClick = onMyRequestClick,
                     onRetry = viewModel::load
                 )
-                RequestsTab.TO_APPROVE, RequestsTab.HR_INBOX -> PendingTab(
+                RequestsTab.TO_APPROVE, RequestsTab.HR_INBOX -> PendingList(
                     state = state,
                     isHrInbox = state.selectedTab == RequestsTab.HR_INBOX,
-                    onTypeSelected = viewModel::onTypeFilterSelected,
-                    onSortSelected = viewModel::onSortSelected,
+                    contentPadding = contentPadding,
                     onRequestClick = onReviewClick,
                     onApprove = viewModel::approve,
                     onReject = viewModel::showRejectDialog,
                     onResolvedClick = onResolvedClick,
                     onRetry = viewModel::load
                 )
-                RequestsTab.ALL -> AllRequestsTab(
+                RequestsTab.ALL -> AllRequestsList(
                     state = state,
-                    onFilterSelected = viewModel::onAllFilterSelected,
+                    contentPadding = contentPadding,
                     onRequestClick = onReviewClick,
                     onRetry = viewModel::load
                 )
@@ -160,191 +239,196 @@ fun RequestsScreen(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+/**
+ * List of the viewer's own requests, with its loading, error and empty states.
+ *
+ * @param state screen state.
+ * @param contentPadding padding that leaves room for the collapsing header.
+ * @param onRequestClick called with the identifier of the tapped request.
+ * @param onRetry called when "Reintentar" is tapped.
+ */
 @Composable
-private fun MyRequestsTab(
+private fun MyRequestsList(
     state: RequestsUiState,
-    onFilterSelected: (MyRequestsFilter) -> Unit,
+    contentPadding: PaddingValues,
     onRequestClick: (Long) -> Unit,
     onRetry: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        FlowRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+    val stateModifier = Modifier.padding(top = contentPadding.calculateTopPadding())
+    when {
+        state.isLoadingMine -> RequestLoading(modifier = stateModifier)
+        state.mineError != null && state.myRequests.isEmpty() -> RequestMessageState(
+            title = "No se pudieron cargar tus solicitudes",
+            message = state.mineError,
+            actionLabel = "Reintentar",
+            onAction = onRetry,
+            modifier = stateModifier
+        )
+        state.visibleMyRequests.isEmpty() -> RequestMessageState(
+            title = if (state.myRequests.isEmpty()) "Aún no tienes solicitudes" else "No hay solicitudes con este estado",
+            message = if (state.myRequests.isEmpty()) {
+                "Pide vacaciones, permisos o licencias con el botón \"Nueva solicitud\"."
+            } else {
+                "Prueba con otro filtro."
+            },
+            modifier = stateModifier
+        )
+        else -> LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = listPadding(contentPadding, bottom = Spacing.fabClearance),
+            verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
         ) {
-            MyRequestsFilter.entries.forEach { filter ->
-                SelectableChip(
-                    label = filter.label,
-                    selected = state.myFilter == filter,
-                    onClick = { onFilterSelected(filter) }
-                )
-            }
-        }
-        when {
-            state.isLoadingMine -> RequestLoading()
-            state.mineError != null && state.myRequests.isEmpty() -> RequestMessageState(
-                title = "No se pudieron cargar tus solicitudes",
-                message = state.mineError,
-                actionLabel = "Reintentar",
-                onAction = onRetry
-            )
-            state.visibleMyRequests.isEmpty() -> RequestMessageState(
-                title = if (state.myRequests.isEmpty()) "Aún no tienes solicitudes" else "No hay solicitudes con este estado",
-                message = if (state.myRequests.isEmpty()) {
-                    "Pide vacaciones, permisos o licencias con el botón \"Nueva solicitud\"."
-                } else {
-                    "Prueba con otro filtro."
-                }
-            )
-            else -> LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 96.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                items(state.visibleMyRequests, key = { it.id }) { request ->
-                    MyRequestCard(request = request, onClick = { onRequestClick(request.id) })
-                }
+            items(state.visibleMyRequests, key = { it.id }) { request ->
+                MyRequestCard(request = request, onClick = { onRequestClick(request.id) })
             }
         }
     }
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+/**
+ * List of the requests waiting for the viewer's decision (as boss or as HR), with its states.
+ *
+ * @param state screen state.
+ * @param isHrInbox true for the HR inbox, false for the boss's approvals.
+ * @param contentPadding padding that leaves room for the collapsing header.
+ * @param onRequestClick called with the identifier of the tapped request.
+ * @param onApprove called when a request is approved from its card.
+ * @param onReject called when a request is rejected from its card.
+ * @param onResolvedClick called when "Ver solicitudes resueltas" is tapped.
+ * @param onRetry called when "Reintentar" is tapped.
+ */
 @Composable
-private fun PendingTab(
+private fun PendingList(
     state: RequestsUiState,
     isHrInbox: Boolean,
-    onTypeSelected: (RequestType?) -> Unit,
-    onSortSelected: (ApprovalSort) -> Unit,
+    contentPadding: PaddingValues,
     onRequestClick: (Long) -> Unit,
     onApprove: (Request) -> Unit,
     onReject: (Request) -> Unit,
     onResolvedClick: () -> Unit,
     onRetry: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        if (isHrInbox) {
-            RequestBanner(
-                message = "Aquí llegan las solicitudes de colaboradores que no tienen jefe directo asignado.",
-                icon = FlowboardIcons.Info,
-                containerColor = RequestColors.InfoBanner,
-                contentColor = RequestColors.OnInfoBanner,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-            )
-        } else {
-            FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                DropdownChip(
-                    label = "Tipo: ${state.typeFilter?.name ?: "todos"}",
-                    selected = state.typeFilter != null,
-                    options = listOf<RequestType?>(null) + state.requestTypes,
-                    optionLabel = { it?.name ?: "Todos" },
-                    onSelect = onTypeSelected
+    val stateModifier = Modifier.padding(top = contentPadding.calculateTopPadding())
+    when {
+        state.isLoadingPending -> RequestLoading(modifier = stateModifier)
+        state.pendingError != null && state.pending.isEmpty() -> RequestMessageState(
+            title = "No se pudo cargar la bandeja",
+            message = state.pendingError,
+            actionLabel = "Reintentar",
+            onAction = onRetry,
+            modifier = stateModifier
+        )
+        state.pending.isEmpty() -> RequestMessageState(
+            title = "No tienes solicitudes por atender",
+            message = if (isHrInbox) {
+                "Cuando un colaborador sin jefe directo envíe una solicitud, aparecerá aquí."
+            } else {
+                "Todo lo que llegó está resuelto. Cuando alguien de tu equipo envíe una solicitud, aparecerá aquí y recibirás una notificación."
+            },
+            icon = FlowboardIcons.Check,
+            actionLabel = if (isHrInbox) null else "Ver solicitudes resueltas",
+            onAction = onResolvedClick,
+            modifier = stateModifier
+        )
+        else -> LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = listPadding(contentPadding, bottom = Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
+        ) {
+            items(state.visiblePending, key = { it.id }) { request ->
+                ApprovalCard(
+                    request = request,
+                    isProcessing = state.processingRequestId == request.id,
+                    onClick = { onRequestClick(request.id) },
+                    onReject = { onReject(request) },
+                    onApprove = { onApprove(request) }
                 )
-                DropdownChip(
-                    label = state.sort.label,
-                    selected = state.pending.isNotEmpty(),
-                    options = ApprovalSort.entries,
-                    optionLabel = { it.label },
-                    onSelect = onSortSelected
-                )
-            }
-        }
-        when {
-            state.isLoadingPending -> RequestLoading()
-            state.pendingError != null && state.pending.isEmpty() -> RequestMessageState(
-                title = "No se pudo cargar la bandeja",
-                message = state.pendingError,
-                actionLabel = "Reintentar",
-                onAction = onRetry
-            )
-            state.pending.isEmpty() -> RequestMessageState(
-                title = "No tienes solicitudes por atender",
-                message = if (isHrInbox) {
-                    "Cuando un colaborador sin jefe directo envíe una solicitud, aparecerá aquí."
-                } else {
-                    "Todo lo que llegó está resuelto. Cuando alguien de tu equipo envíe una solicitud, aparecerá aquí y recibirás una notificación."
-                },
-                icon = FlowboardIcons.Check,
-                actionLabel = if (isHrInbox) null else "Ver solicitudes resueltas",
-                onAction = onResolvedClick
-            )
-            else -> LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                items(state.visiblePending, key = { it.id }) { request ->
-                    ApprovalCard(
-                        request = request,
-                        isProcessing = state.processingRequestId == request.id,
-                        onClick = { onRequestClick(request.id) },
-                        onReject = { onReject(request) },
-                        onApprove = { onApprove(request) }
-                    )
-                }
             }
         }
     }
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+/**
+ * List of the requests of every employee, with its loading, error and empty states.
+ *
+ * @param state screen state.
+ * @param contentPadding padding that leaves room for the collapsing header.
+ * @param onRequestClick called with the identifier of the tapped request.
+ * @param onRetry called when "Reintentar" is tapped.
+ */
 @Composable
-private fun AllRequestsTab(
+private fun AllRequestsList(
     state: RequestsUiState,
-    onFilterSelected: (AllRequestsFilter) -> Unit,
+    contentPadding: PaddingValues,
     onRequestClick: (Long) -> Unit,
     onRetry: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        FlowRow(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+    val stateModifier = Modifier.padding(top = contentPadding.calculateTopPadding())
+    when {
+        state.isLoadingAll -> RequestLoading(modifier = stateModifier)
+        state.allError != null && state.allRequests.isEmpty() -> RequestMessageState(
+            title = "No se pudieron cargar las solicitudes",
+            message = state.allError,
+            actionLabel = "Reintentar",
+            onAction = onRetry,
+            modifier = stateModifier
+        )
+        state.visibleAll.isEmpty() -> RequestMessageState(
+            title = "No hay solicitudes con este estado",
+            message = "Prueba con otro filtro.",
+            modifier = stateModifier
+        )
+        else -> LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = listPadding(contentPadding, bottom = Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
         ) {
-            AllRequestsFilter.entries.forEach { filter ->
-                SelectableChip(
-                    label = filter.label,
-                    selected = state.allFilter == filter,
-                    onClick = { onFilterSelected(filter) }
-                )
-            }
-        }
-        when {
-            state.isLoadingAll -> RequestLoading()
-            state.allError != null && state.allRequests.isEmpty() -> RequestMessageState(
-                title = "No se pudieron cargar las solicitudes",
-                message = state.allError,
-                actionLabel = "Reintentar",
-                onAction = onRetry
-            )
-            state.visibleAll.isEmpty() -> RequestMessageState(
-                title = "No hay solicitudes con este estado",
-                message = "Prueba con otro filtro."
-            )
-            else -> LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp)
-            ) {
-                items(state.visibleAll, key = { it.id }) { request ->
-                    RequestListRow(request = request, onClick = { onRequestClick(request.id) })
-                }
+            items(state.visibleAll, key = { it.id }) { request ->
+                RequestListRow(request = request, onClick = { onRequestClick(request.id) })
             }
         }
     }
 }
 
 
+/**
+ * Content padding of a list placed below the collapsing header.
+ *
+ * @param headerPadding padding given by the collapsing header layout.
+ * @param bottom space left after the last item.
+ * @return padding with the screen margins, the header height and the bottom space.
+ */
+private fun listPadding(headerPadding: PaddingValues, bottom: Dp): PaddingValues =
+    PaddingValues(
+        top = headerPadding.calculateTopPadding() + 8.dp,
+        bottom = bottom,
+        start = Spacing.screenHorizontal,
+        end = Spacing.screenHorizontal
+    )
+
+
+/**
+ * Single-line row of filter chips that scrolls sideways when the chips do not fit.
+ *
+ * @param content chips of the row.
+ */
+@Composable
+private fun ChipRow(content: @Composable () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = Spacing.screenHorizontal),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+    ) {
+        content()
+    }
+}
+
+
+/** Filter chip with a check icon while selected. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SelectableChip(label: String, selected: Boolean, onClick: () -> Unit) {
@@ -361,6 +445,7 @@ private fun SelectableChip(label: String, selected: Boolean, onClick: () -> Unit
 }
 
 
+/** Filter chip that opens a menu to pick one of [options]. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun <T> DropdownChip(

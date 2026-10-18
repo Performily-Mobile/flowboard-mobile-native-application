@@ -10,10 +10,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SelectableDates
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -23,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.performily.flowboard.core.designsystem.component.FlowboardTabs
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import java.time.Instant
 import java.time.LocalDate
@@ -156,11 +154,16 @@ fun BenefitsDateField(
 }
 
 /**
- * Segmented button with two or more options.
+ * Pill selector with two or more options, built on [FlowboardTabs].
  *
  * Used for "Colaborador / Área completa" and "Agregar / Descontar días".
+ *
+ * @param options options to show, in order.
+ * @param selected option currently selected.
+ * @param optionLabel text shown for each option.
+ * @param onSelect called with the option the user taps.
+ * @param modifier modifier applied to the selector.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> BenefitsSegmented(
     options: List<T>,
@@ -169,17 +172,13 @@ fun <T> BenefitsSegmented(
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth()) {
-        options.forEachIndexed { index, option ->
-            SegmentedButton(
-                selected = option == selected,
-                onClick = { onSelect(option) },
-                shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size)
-            ) {
-                Text(optionLabel(option))
-            }
-        }
-    }
+    FlowboardTabs(
+        options = options,
+        selected = selected,
+        onSelect = onSelect,
+        label = optionLabel,
+        modifier = modifier
+    )
 }
 
 private fun LocalDate.toEpochMillis(): Long = atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()

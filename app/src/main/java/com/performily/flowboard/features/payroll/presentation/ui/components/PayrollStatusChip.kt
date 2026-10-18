@@ -3,7 +3,7 @@ package com.performily.flowboard.features.payroll.presentation.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,7 +17,12 @@ import com.performily.flowboard.core.designsystem.theme.OnSurface
 import com.performily.flowboard.features.payroll.domain.valueobject.PaymentStatus
 import com.performily.flowboard.features.payroll.domain.valueobject.PublicationStatus
 
-/** Chip de estado de pago: Pendiente, Pagado u Observado (MA-65, MA-69). */
+/**
+ * Pill with the payment status of a payslip: Pendiente, Pagado or Observado (MA-65, MA-69).
+ *
+ * @param status payment status to show.
+ * @param modifier modifier applied to the pill.
+ */
 @Composable
 fun PaymentStatusChip(status: PaymentStatus, modifier: Modifier = Modifier) {
     val container = when (status) {
@@ -28,7 +33,12 @@ fun PaymentStatusChip(status: PaymentStatus, modifier: Modifier = Modifier) {
     PayrollChip(text = status.label(), containerColor = container, modifier = modifier)
 }
 
-/** Chip de publicación: "Por publicar" o "Publicada" (MA-67). */
+/**
+ * Pill with the publication status of a payslip: "Por publicar" or "Publicada" (MA-67).
+ *
+ * @param status publication status to show.
+ * @param modifier modifier applied to the pill.
+ */
 @Composable
 fun PublicationStatusChip(status: PublicationStatus, modifier: Modifier = Modifier) {
     val container = when (status) {
@@ -38,13 +48,14 @@ fun PublicationStatusChip(status: PublicationStatus, modifier: Modifier = Modifi
     PayrollChip(text = status.label(), containerColor = container, modifier = modifier)
 }
 
+/** Pill shared by the payroll status chips. */
 @Composable
 private fun PayrollChip(text: String, containerColor: Color, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .background(containerColor, RoundedCornerShape(12.dp))
+            .background(containerColor, CircleShape)
             .padding(horizontal = 12.dp, vertical = 4.dp)
     ) {
-        Text(text = text, style = MaterialTheme.typography.labelMedium, color = OnSurface)
+        Text(text = text, style = MaterialTheme.typography.labelMedium, color = OnSurface, maxLines = 1)
     }
 }

@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.theme.AwaitingContainer
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.dashboard.domain.entity.RequestToAttend
 import com.performily.flowboard.features.workspace.presentation.ui.components.EmployeeAvatar
 
@@ -38,7 +39,7 @@ internal fun RequestToAttendItem(
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(vertical = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.m),
         verticalAlignment = Alignment.CenterVertically
     ) {
         EmployeeAvatar(initials = DashboardFormatters.initials(request.requesterName))
@@ -61,7 +62,7 @@ internal fun RequestToAttendItem(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        Surface(shape = RoundedCornerShape(8.dp), color = AwaitingContainer) {
+        Surface(shape = CircleShape, color = AwaitingContainer) {
             Text(
                 text = "Pendiente",
                 style = MaterialTheme.typography.labelMedium,
