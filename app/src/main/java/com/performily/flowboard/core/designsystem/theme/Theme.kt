@@ -40,6 +40,12 @@ private val DarkColorScheme = darkColorScheme(
     outline = OutlineDark
 )
 
+/**
+ * Theme of the app: colors, typography and shapes.
+ *
+ * @param darkTheme whether the dark color scheme is used.
+ * @param content content that receives the theme.
+ */
 @Composable
 fun FlowboardTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -48,6 +54,7 @@ fun FlowboardTheme(
     MaterialTheme(
         colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
         typography = Typography,
+        shapes = FlowboardShapes,
         content = content
     )
 }

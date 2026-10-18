@@ -10,8 +10,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.performily.flowboard.core.session.UserRole
@@ -73,7 +71,7 @@ fun FlowboardApp(viewModel: AppShellViewModel = hiltViewModel()) {
                 FlowboardBottomBar(
                     destinations = destinations,
                     currentDestination = currentDestination,
-                    onSelect = { navController.navigateToTopLevel(it) }
+                    onSelect = { navController.navigateToTab(it.route) }
                 )
             }
         }
@@ -85,23 +83,5 @@ fun FlowboardApp(viewModel: AppShellViewModel = hiltViewModel()) {
                 .padding(paddingValues)
                 .consumeWindowInsets(paddingValues)
         )
-    }
-}
-
-/**
- * Switches tab without stacking screens and keeping the state of each tab.
- *
- * The tab that is the start destination of the app (the dashboard for HR, the home for employees)
- * is reached by popping back to it, which always works because it sits at the bottom of the stack.
- * The other tabs are reached with a single-top navigation.
- */
-private fun NavHostController.navigateToTopLevel(destination: TopLevelDestination) {
-    val isStartTab = graph.findStartDestination().hasRoute(destination.route::class)
-    if (isStartTab && popBackStack(destination.route, inclusive = false, saveState = true)) return
-
-    navigate(destination.route) {
-        popUpTo(graph.findStartDestination().id) { saveState = true }
-        launchSingleTop = true
-        restoreState = true
     }
 }

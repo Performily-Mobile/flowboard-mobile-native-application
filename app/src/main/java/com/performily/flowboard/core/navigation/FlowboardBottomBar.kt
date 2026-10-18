@@ -9,10 +9,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 
+/**
+ * Bottom navigation bar of the app shell, with one item per top-level destination of the role.
+ *
+ * The selected item shows the pill indicator of Material 3 and a semibold label.
+ *
+ * @param destinations destinations shown, in order.
+ * @param currentDestination destination currently displayed, used to highlight its tab.
+ * @param onSelect called with the destination the user taps.
+ * @param modifier modifier applied to the bar.
+ */
 @Composable
 fun FlowboardBottomBar(
     destinations: List<TopLevelDestination>,
@@ -22,7 +34,8 @@ fun FlowboardBottomBar(
 ) {
     NavigationBar(
         modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        tonalElevation = 0.dp
     ) {
         destinations.forEach { destination ->
             val selected = currentDestination.isIn(destination)
@@ -33,8 +46,10 @@ fun FlowboardBottomBar(
                 label = {
                     Text(
                         text = destination.label,
-                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                        maxLines = 1
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
@@ -49,6 +64,7 @@ fun FlowboardBottomBar(
     }
 }
 
+/** True when this destination, or one of its parents, belongs to the given tab. */
 private fun NavDestination?.isIn(destination: TopLevelDestination): Boolean =
     this?.hierarchy?.any { navDestination ->
         destination.matches.any { routeClass -> navDestination.hasRoute(routeClass) }

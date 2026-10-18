@@ -1,10 +1,13 @@
 package com.performily.flowboard.core.navigation
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -19,10 +22,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 
 /**
- * Pantalla TEMPORAL para secciones de otros bounded contexts que aún no están integradas.
- * Se deja de usar cuando cada módulo registra su propio NavGraph en AppNavHost.
+ * Temporary screen for sections of other bounded contexts that are not integrated yet.
+ *
+ * It stops being used once each module registers its own NavGraph in AppNavHost.
+ *
+ * @param title title shown in the top bar.
+ * @param onBack navigates back, or null to hide the back button.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,19 +57,27 @@ fun PendingFeatureScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(32.dp),
+                .padding(horizontal = Spacing.xxl, vertical = Spacing.xl),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
+            verticalArrangement = Arrangement.spacedBy(Spacing.l, Alignment.CenterVertically)
         ) {
-            Icon(
-                imageVector = FlowboardIcons.Info,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(40.dp)
-            )
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = FlowboardIcons.Info,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
             Text(
                 text = "Esta sección todavía no está integrada en la app.",
                 style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
         }
