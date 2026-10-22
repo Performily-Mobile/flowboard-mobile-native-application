@@ -14,14 +14,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -43,6 +40,7 @@ import com.performily.flowboard.features.workspace.presentation.ui.components.St
 import com.performily.flowboard.features.workspace.presentation.ui.components.label
 import com.performily.flowboard.features.workspace.presentation.ui.components.toDisplay
 import com.performily.flowboard.features.workspace.presentation.viewmodel.MyProfileViewModel
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 /**
  * Profile of the signed-in employee with shortcuts to the record and the organization chart.
@@ -64,14 +62,9 @@ fun MyProfileScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Mi perfil") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(FlowboardIcons.ArrowBack, contentDescription = "Volver")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+            FlowboardTopBar(
+                title = "Mi perfil",
+                onBack = onBack
             )
         }
     ) { paddingValues ->

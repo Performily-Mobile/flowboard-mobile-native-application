@@ -26,8 +26,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,6 +50,7 @@ import com.performily.flowboard.features.workspace.presentation.ui.components.Em
 import com.performily.flowboard.features.workspace.presentation.ui.components.label
 import com.performily.flowboard.features.workspace.presentation.viewmodel.EmployeesViewModel
 import com.performily.flowboard.features.workspace.domain.valueobject.EmploymentStatus
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 /**
  * List of employees with a search box and filters that slide away while scrolling down.
@@ -81,8 +80,8 @@ fun EmployeesScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Colaboradores") },
+            FlowboardTopBar(
+                title = "Colaboradores",
                 actions = {
                     Box {
                         IconButton(onClick = { menuExpanded = true }) {
@@ -105,8 +104,7 @@ fun EmployeesScreen(
                             )
                         }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+                }
             )
         },
         floatingActionButton = {

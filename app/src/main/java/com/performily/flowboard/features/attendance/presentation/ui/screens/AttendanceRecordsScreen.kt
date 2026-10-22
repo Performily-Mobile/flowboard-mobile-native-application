@@ -33,10 +33,10 @@ import com.performily.flowboard.features.attendance.domain.valueobject.label
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceDatePickerField
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceEmptyState
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceFilterDropdown
-import com.performily.flowboard.features.attendance.presentation.ui.components.AttendancePageHeader
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceRecordItem
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceSectionTabs
 import com.performily.flowboard.features.attendance.presentation.viewmodel.AttendanceAreaViewModel
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 /**
  * HR section "Registros": attendance records of the staff, filtered by period, area and status.
@@ -58,7 +58,9 @@ fun AttendanceRecordsScreen(
     val filteredRecords = if (state.statusFilter == "TODOS") records else records.filter { it.status.name == state.statusFilter }
     val headerState = rememberCollapsingHeaderState()
 
-    Scaffold { paddingValues ->
+    Scaffold(
+        topBar = { FlowboardTopBar(title = "Asistencia") }
+    ) { paddingValues ->
         CollapsingHeaderLayout(
             modifier = Modifier.padding(paddingValues),
             state = headerState,
@@ -71,7 +73,6 @@ fun AttendanceRecordsScreen(
                         .padding(top = 4.dp, bottom = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(Spacing.s)
                 ) {
-                    AttendancePageHeader(subtitle = "Consulta los registros de asistencia del personal y sus marcaciones.")
                     AttendanceSectionTabs(
                         selectedIndex = 0,
                         onSelected = { index ->

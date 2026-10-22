@@ -9,12 +9,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,6 +30,7 @@ import com.performily.flowboard.features.wellbeing.presentation.ui.components.We
 import com.performily.flowboard.features.wellbeing.presentation.ui.components.WellbeingMessageState
 import com.performily.flowboard.features.wellbeing.presentation.viewmodel.OfficesViewModel
 import kotlinx.coroutines.delay
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 /** How often the indicators are refreshed while the screen is visible. */
 internal const val WELLBEING_REFRESH_MILLIS = 30_000L
@@ -70,14 +68,9 @@ fun OfficesScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Espacios") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(FlowboardIcons.ArrowBack, contentDescription = "Volver")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+            FlowboardTopBar(
+                title = "Espacios",
+                onBack = onBack
             )
         },
         floatingActionButton = {

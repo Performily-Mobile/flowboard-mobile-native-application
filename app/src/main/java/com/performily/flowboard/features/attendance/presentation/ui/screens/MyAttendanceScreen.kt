@@ -22,8 +22,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -46,6 +44,7 @@ import com.performily.flowboard.features.attendance.presentation.viewmodel.MyAtt
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 /** Note about how punches are consolidated, shown once on the screen. */
 private const val PUNCH_NOTE = "Las marcaciones se registran en el servidor y se consolidan según la jornada del puesto."
@@ -72,9 +71,8 @@ fun MyAttendanceScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Mi asistencia") },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+            FlowboardTopBar(
+                title = "Mi asistencia"
             )
         }
     ) { paddingValues ->

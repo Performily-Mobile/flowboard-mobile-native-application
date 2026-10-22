@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.workspace.presentation.state.AreaForm
+import com.performily.flowboard.core.designsystem.component.FlowboardSheetHeader
 
 /**
  * Bottom sheet to create a new area.
@@ -81,19 +82,7 @@ fun CreateAreaSheet(
  */
 @Composable
 fun SheetHeader(title: String, subtitle: String? = null) {
-    Column(
-        modifier = Modifier.padding(bottom = Spacing.xs),
-        verticalArrangement = Arrangement.spacedBy(Spacing.xs)
-    ) {
-        Text(title, style = MaterialTheme.typography.titleLarge)
-        subtitle?.let {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
+    FlowboardSheetHeader(title = title, subtitle = subtitle)
 }
 
 /**

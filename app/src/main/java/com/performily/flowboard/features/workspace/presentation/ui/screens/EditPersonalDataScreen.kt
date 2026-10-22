@@ -12,14 +12,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,13 +26,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.FlowboardBottomActionBar
-import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.workspace.presentation.state.PersonalDataField
 import com.performily.flowboard.features.workspace.presentation.ui.components.DatePickerField
 import com.performily.flowboard.features.workspace.presentation.ui.components.FormTextField
 import com.performily.flowboard.features.workspace.presentation.ui.components.SectionTitle
 import com.performily.flowboard.features.workspace.presentation.viewmodel.EditPersonalDataViewModel
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 /**
  * Form to edit the personal data and address of an employee; the identity document is read-only.
@@ -64,14 +60,9 @@ fun EditPersonalDataScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Editar datos personales") },
-                navigationIcon = {
-                    IconButton(onClick = onClose) {
-                        Icon(FlowboardIcons.Close, contentDescription = "Cerrar")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+            FlowboardTopBar(
+                title = "Editar datos personales",
+                onClose = onClose
             )
         },
         bottomBar = {

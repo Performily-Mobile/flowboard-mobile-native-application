@@ -26,8 +26,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -54,6 +52,7 @@ import com.performily.flowboard.features.dashboard.presentation.ui.components.Re
 import com.performily.flowboard.features.dashboard.presentation.viewmodel.HrDashboardViewModel
 import java.time.LocalDateTime
 import kotlinx.coroutines.delay
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 /**
  * HR dashboard screen (MA-18).
@@ -96,17 +95,9 @@ fun HrDashboardScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text("Panel", fontWeight = FontWeight.SemiBold)
-                        Text(
-                            text = DashboardFormatters.subtitle(dashboard?.userFirstName, dashboard?.loadedAt, now),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
+            FlowboardTopBar(
+                title = "Panel",
+                subtitle = DashboardFormatters.subtitle(dashboard?.userFirstName, dashboard?.loadedAt, now),
                 actions = {
                     IconButton(onClick = onNotificationsClick) {
                         BadgedBox(
@@ -117,8 +108,7 @@ fun HrDashboardScreen(
                             Icon(DashboardIcons.Notifications, contentDescription = "Notificaciones")
                         }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+                }
             )
         }
     ) { paddingValues ->

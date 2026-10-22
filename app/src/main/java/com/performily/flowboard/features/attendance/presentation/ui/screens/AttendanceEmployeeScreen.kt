@@ -12,32 +12,27 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.CollapsingHeaderLayout
 import com.performily.flowboard.core.designsystem.component.rememberCollapsingHeaderState
-import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceDatePickerField
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceEmptyState
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceRecordItem
 import com.performily.flowboard.features.attendance.presentation.viewmodel.EmployeeAttendanceViewModel
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 /**
  * Attendance records of one employee, opened from the report by area.
@@ -65,21 +60,10 @@ fun AttendanceEmployeeScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            state.employeeName.ifBlank { "Colaborador" },
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text("Asistencia", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(FlowboardIcons.ArrowBack, contentDescription = "Volver") }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+            FlowboardTopBar(
+                title = "Asistencia",
+                subtitle = state.employeeName.ifBlank { "Colaborador" },
+                onBack = onBack
             )
         }
     ) { paddingValues ->

@@ -33,9 +33,9 @@ import com.performily.flowboard.features.attendance.presentation.ui.components.A
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceEmptyState
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceFilterDropdown
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceMetricCard
-import com.performily.flowboard.features.attendance.presentation.ui.components.AttendancePageHeader
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceSectionTabs
 import com.performily.flowboard.features.attendance.presentation.viewmodel.AttendanceHoursViewModel
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 /**
  * HR section "Horas y sobretiempo": effective hours and overtime of each employee of an area.
@@ -56,7 +56,9 @@ fun AttendanceHoursScreen(
     val report = state.report
     val headerState = rememberCollapsingHeaderState()
 
-    Scaffold { paddingValues ->
+    Scaffold(
+        topBar = { FlowboardTopBar(title = "Asistencia") }
+    ) { paddingValues ->
         CollapsingHeaderLayout(
             modifier = Modifier.padding(paddingValues),
             state = headerState,
@@ -69,7 +71,6 @@ fun AttendanceHoursScreen(
                         .padding(top = 4.dp, bottom = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(Spacing.s)
                 ) {
-                    AttendancePageHeader(subtitle = "Consulta las horas efectivas y el sobretiempo acumulado por colaborador.")
                     AttendanceSectionTabs(
                         selectedIndex = 2,
                         onSelected = { index ->

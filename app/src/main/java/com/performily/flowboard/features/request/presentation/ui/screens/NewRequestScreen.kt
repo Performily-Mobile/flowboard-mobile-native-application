@@ -16,16 +16,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -61,6 +57,7 @@ import com.performily.flowboard.features.request.presentation.ui.components.Requ
 import com.performily.flowboard.features.request.presentation.ui.components.StepHeader
 import com.performily.flowboard.features.request.presentation.ui.components.rememberAttachmentPicker
 import com.performily.flowboard.features.request.presentation.viewmodel.NewRequestViewModel
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 
 /**
@@ -92,18 +89,10 @@ fun NewRequestScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Nueva solicitud") },
-                navigationIcon = {
-                    if (state.step == NewRequestStep.TYPE) {
-                        IconButton(onClick = onClose) { Icon(FlowboardIcons.Close, contentDescription = "Cerrar") }
-                    } else {
-                        IconButton(onClick = { viewModel.goBack() }) {
-                            Icon(FlowboardIcons.ArrowBack, contentDescription = "Volver")
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+            FlowboardTopBar(
+                title = "Nueva solicitud",
+                onClose = if (state.step == NewRequestStep.TYPE) onClose else null,
+                onBack = if (state.step == NewRequestStep.TYPE) null else ({ viewModel.goBack() })
             )
         },
         bottomBar = {

@@ -13,13 +13,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -45,6 +42,7 @@ import com.performily.flowboard.features.benefits.presentation.ui.components.Ben
 import com.performily.flowboard.features.benefits.presentation.ui.components.SectionHeader
 import com.performily.flowboard.features.benefits.presentation.ui.components.VacationMovementRow
 import com.performily.flowboard.features.benefits.presentation.viewmodel.MyVacationBalanceViewModel
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 /**
  * My vacation balance screen (MA-57).
@@ -69,12 +67,9 @@ fun MyVacationBalanceScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Saldo de vacaciones") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(FlowboardIcons.ArrowBack, contentDescription = "Volver") }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+            FlowboardTopBar(
+                title = "Saldo de vacaciones",
+                onBack = onBack
             )
         }
     ) { paddingValues ->

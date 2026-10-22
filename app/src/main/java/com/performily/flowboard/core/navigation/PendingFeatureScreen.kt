@@ -10,12 +10,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Spacing
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 /**
  * Temporary screen for sections of other bounded contexts that are not integrated yet.
@@ -40,16 +38,9 @@ fun PendingFeatureScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(title) },
-                navigationIcon = {
-                    onBack?.let {
-                        IconButton(onClick = it) {
-                            Icon(FlowboardIcons.ArrowBack, contentDescription = "Volver")
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+            FlowboardTopBar(
+                title = title,
+                onBack = onBack
             )
         }
     ) { paddingValues ->

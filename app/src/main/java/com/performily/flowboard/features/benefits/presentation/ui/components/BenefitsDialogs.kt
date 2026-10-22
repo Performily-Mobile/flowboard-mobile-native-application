@@ -58,7 +58,7 @@ fun CreateBenefitTypeSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("Nuevo tipo de beneficio", style = MaterialTheme.typography.headlineSmall)
+            Text("Nuevo tipo de beneficio", style = MaterialTheme.typography.titleLarge)
             OutlinedTextField(
                 value = form.name,
                 onValueChange = onNameChange,
@@ -210,7 +210,7 @@ fun AdjustBalanceSheet(
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("Ajustar saldo", style = MaterialTheme.typography.headlineSmall)
+            Text("Ajustar saldo", style = MaterialTheme.typography.titleLarge)
             Text(
                 text = "El ajuste quedará en el historial con tu nombre y el motivo.",
                 style = MaterialTheme.typography.bodyMedium,

@@ -15,7 +15,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -23,8 +22,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,6 +52,7 @@ import com.performily.flowboard.features.wellbeing.presentation.ui.components.We
 import com.performily.flowboard.features.wellbeing.presentation.ui.components.WellbeingMessageState
 import com.performily.flowboard.features.wellbeing.presentation.viewmodel.OfficeDetailViewModel
 import kotlinx.coroutines.delay
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 /**
  * MA-72 - Indicators of an office, and MA-81 - no readings.
@@ -102,20 +100,9 @@ fun OfficeDetailScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = status?.office?.name ?: "Indicadores",
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(FlowboardIcons.ArrowBack, contentDescription = "Volver")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+            FlowboardTopBar(
+                title = status?.office?.name ?: "Indicadores",
+                onBack = onBack
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },

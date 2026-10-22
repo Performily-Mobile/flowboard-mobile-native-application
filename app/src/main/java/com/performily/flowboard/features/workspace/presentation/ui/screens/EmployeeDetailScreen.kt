@@ -21,8 +21,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -53,6 +51,7 @@ import com.performily.flowboard.features.workspace.presentation.ui.components.Te
 import com.performily.flowboard.features.workspace.presentation.ui.components.TerminationBlockedDialog
 import com.performily.flowboard.features.workspace.presentation.ui.components.UploadDocumentSheet
 import com.performily.flowboard.features.workspace.presentation.viewmodel.EmployeeDetailViewModel
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 private val tabs = listOf("Datos", "Puesto", "Expediente", "Cuenta")
 private const val DOCUMENTS_TAB = 2
@@ -104,13 +103,9 @@ fun EmployeeDetailScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Ficha del colaborador") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(FlowboardIcons.ArrowBack, contentDescription = "Volver")
-                    }
-                },
+            FlowboardTopBar(
+                title = "Ficha del colaborador",
+                onBack = onBack,
                 actions = {
                     state.employee?.let { employee ->
                         EmployeeMenu(
@@ -122,8 +117,7 @@ fun EmployeeDetailScreen(
                             onReinstate = viewModel::openReinstate
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+                }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }

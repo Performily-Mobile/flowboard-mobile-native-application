@@ -24,8 +24,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -59,6 +57,7 @@ import com.performily.flowboard.features.request.presentation.ui.components.Requ
 import com.performily.flowboard.features.request.presentation.ui.components.RequestMessageState
 import com.performily.flowboard.features.request.presentation.ui.components.RequestSegmented
 import com.performily.flowboard.features.request.presentation.viewmodel.RequestsViewModel
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 
 /**
@@ -108,9 +107,8 @@ fun RequestsScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Solicitudes") },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+            FlowboardTopBar(
+                title = "Solicitudes"
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },

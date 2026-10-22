@@ -34,10 +34,10 @@ import com.performily.flowboard.features.attendance.presentation.ui.components.A
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceEmptyState
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceFilterDropdown
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceMetricCard
-import com.performily.flowboard.features.attendance.presentation.ui.components.AttendancePageHeader
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceSectionTabs
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceStatusChip
 import com.performily.flowboard.features.attendance.presentation.viewmodel.AttendanceAreaViewModel
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 /**
  * HR section "Resumen por área": punctuality, lateness and absences of one area in a period.
@@ -60,7 +60,9 @@ fun AttendanceAreaScreen(
     val report = state.report
     val headerState = rememberCollapsingHeaderState()
 
-    Scaffold { paddingValues ->
+    Scaffold(
+        topBar = { FlowboardTopBar(title = "Asistencia") }
+    ) { paddingValues ->
         CollapsingHeaderLayout(
             modifier = Modifier.padding(paddingValues),
             state = headerState,
@@ -73,7 +75,6 @@ fun AttendanceAreaScreen(
                         .padding(top = 4.dp, bottom = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(Spacing.s)
                 ) {
-                    AttendancePageHeader(subtitle = "Resumen de puntualidad, tardanzas e inasistencias por área.")
                     AttendanceSectionTabs(
                         selectedIndex = 1,
                         onSelected = { index ->

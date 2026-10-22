@@ -9,7 +9,7 @@ import androidx.compose.ui.unit.sp
 val Typography = Typography(
     titleLarge = TextStyle(
         fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 22.sp,
         lineHeight = 28.sp
     ),

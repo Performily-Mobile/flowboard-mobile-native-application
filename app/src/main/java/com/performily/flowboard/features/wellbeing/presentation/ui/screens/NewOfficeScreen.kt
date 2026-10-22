@@ -18,13 +18,10 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,6 +37,7 @@ import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.wellbeing.presentation.state.OfficeAreaOptions
 import com.performily.flowboard.features.wellbeing.presentation.viewmodel.NewOfficeViewModel
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 /**
  * New space form (MA-71), full screen without the app bottom navigation.
@@ -66,14 +64,9 @@ fun NewOfficeScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Nuevo espacio") },
-                navigationIcon = {
-                    IconButton(onClick = onClose) {
-                        Icon(FlowboardIcons.Close, contentDescription = "Cerrar")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+            FlowboardTopBar(
+                title = "Nuevo espacio",
+                onClose = onClose
             )
         },
         bottomBar = {
