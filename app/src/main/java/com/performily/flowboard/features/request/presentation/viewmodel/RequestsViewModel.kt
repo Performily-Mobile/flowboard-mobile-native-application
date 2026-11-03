@@ -184,10 +184,16 @@ class RequestsViewModel @Inject constructor(
     }
 
     private fun loadAll() {
+        val filter = _state.value.allFilter
         _state.update { it.copy(isLoadingAll = it.allRequests.isEmpty(), allError = null) }
         viewModelScope.launch {
-            getAllRequests()
-                .onSuccess { list -> _state.update { it.copy(isLoadingAll = false, allRequests = list) } }
+            getAllRequests(filter.status)
+                .onSuccess { result ->
+                    // Ignore the answer if the filter changed while it was loading.
+                    if (_state.value.allFilter == filter) {
+                        _state.update { it.copy(isLoadingAll = false, allRequests = result.items) }
+                    }
+                }
                 .onFailure { exception ->
                     _state.update {
                         it.copy(
@@ -199,7 +205,11 @@ class RequestsViewModel @Inject constructor(
         }
     }
 
-    fun onAllFilterSelected(filter: AllRequestsFilter) = _state.update { it.copy(allFilter = filter) }
+    fun onAllFilterSelected(filter: AllRequestsFilter) {
+        if (filter == _state.value.allFilter) return
+        _state.update { it.copy(allFilter = filter, allRequests = emptyList()) }
+        loadAll()
+    }
 
     fun onSnackbarShown() = _state.update { it.copy(snackbarMessage = null) }
 }

@@ -1,31 +1,22 @@
 package com.performily.flowboard.features.request.application.usecase
 
-import com.performily.flowboard.features.request.domain.entity.Request
-import com.performily.flowboard.features.request.domain.repository.RequestEmployeeDirectory
+import com.performily.flowboard.features.request.domain.entity.RequestPage
 import com.performily.flowboard.features.request.domain.repository.RequestRepository
+import com.performily.flowboard.features.request.domain.valueobject.RequestStatus
 import javax.inject.Inject
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 
-
+/**
+ * Gets one page of the requests of every employee, newest first, for the HR staff.
+ */
 class GetAllRequestsUseCase @Inject constructor(
     private val repository: RequestRepository,
-    private val directory: RequestEmployeeDirectory,
     private val peopleResolver: RequestPeopleResolver
 ) {
-    suspend operator fun invoke(): Result<List<Request>> = runCatching {
-        val people = directory.getPeople().getOrThrow()
-        val requests = coroutineScope {
-            people.map { person -> async { repository.getRequestsOf(person.id, status = null, size = MAX_PAGE_SIZE).getOrThrow().items } }
-                .awaitAll()
-                .flatten()
-        }
-        peopleResolver.resolve(requests.sortedByDescending { it.submittedAt })
-    }
-
-    private companion object {
-        /** Tamaño máximo de página que acepta el backend. */
-        const val MAX_PAGE_SIZE = 100
-    }
+    /**
+     * @param status status to show, or null for every status.
+     * @param page page number, starting at 0.
+     */
+    suspend operator fun invoke(status: RequestStatus? = null, page: Int = 0): Result<RequestPage> =
+        repository.getAll(statuses = listOfNotNull(status), page = page)
+            .map { result -> peopleResolver.resolve(result) }
 }

@@ -14,6 +14,14 @@ interface RequestService {
     suspend fun submit(@Body request: SubmitRequestRequestDto): Response<RequestDto>
 
 
+    @GET("requests")
+    suspend fun getAll(
+        @Query("status") statuses: List<String>?,
+        @Query("approverId") approverId: Long?,
+        @Query("page") page: Int,
+        @Query("size") size: Int
+    ): Response<PageDto<RequestDto>>
+
     @GET("requests/me")
     suspend fun getMyRequests(
         @Query("requesterId") requesterId: Long,

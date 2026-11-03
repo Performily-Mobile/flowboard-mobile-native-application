@@ -25,7 +25,7 @@ class ResolvedRequestsViewModel @Inject constructor(
         _state.update { it.copy(isLoading = it.requests.isEmpty(), errorMessage = null) }
         viewModelScope.launch {
             getResolvedTeamRequests()
-                .onSuccess { list -> _state.update { it.copy(isLoading = false, requests = list) } }
+                .onSuccess { result -> _state.update { it.copy(isLoading = false, requests = result.items) } }
                 .onFailure { exception ->
                     _state.update {
                         it.copy(

@@ -16,6 +16,15 @@ class RequestRepositoryImpl @Inject constructor(
     private val service: RequestService
 ) : RequestRepository {
 
+    override suspend fun getAll(
+        statuses: List<RequestStatus>,
+        approverId: Long?,
+        page: Int,
+        size: Int
+    ): Result<RequestPage> =
+        apiCall { service.getAll(statuses.map { it.name }.ifEmpty { null }, approverId, page, size) }
+            .mapCatching { RequestMapper.toDomain(it) }
+
     override suspend fun getRequestsOf(
         requesterId: Long,
         status: RequestStatus?,

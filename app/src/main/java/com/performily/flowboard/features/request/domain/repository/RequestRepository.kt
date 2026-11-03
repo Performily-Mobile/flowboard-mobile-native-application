@@ -8,6 +8,12 @@ import com.performily.flowboard.features.request.domain.valueobject.RequestPerio
 import com.performily.flowboard.features.request.domain.valueobject.RequestStatus
 
 interface RequestRepository {
+    suspend fun getAll(
+        statuses: List<RequestStatus> = emptyList(),
+        approverId: Long? = null,
+        page: Int = 0,
+        size: Int = RequestPage.DEFAULT_SIZE
+    ): Result<RequestPage>
     suspend fun getRequestsOf(
         requesterId: Long,
         status: RequestStatus?,
