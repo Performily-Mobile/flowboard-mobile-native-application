@@ -3,13 +3,28 @@ package com.performily.flowboard.features.request.domain.repository
 import com.performily.flowboard.core.domain.FileReference
 import com.performily.flowboard.features.request.domain.entity.Request
 import com.performily.flowboard.features.request.domain.entity.RequestFieldValue
+import com.performily.flowboard.features.request.domain.entity.RequestPage
 import com.performily.flowboard.features.request.domain.valueobject.RequestPeriod
 import com.performily.flowboard.features.request.domain.valueobject.RequestStatus
 
 interface RequestRepository {
-    suspend fun getRequestsOf(requesterId: Long, status: RequestStatus?): Result<List<Request>>
-    suspend fun getPendingForApprover(approverId: Long, requestTypeId: Long?): Result<List<Request>>
-    suspend fun getPendingForHrStaff(requestTypeId: Long?): Result<List<Request>>
+    suspend fun getRequestsOf(
+        requesterId: Long,
+        status: RequestStatus?,
+        page: Int = 0,
+        size: Int = RequestPage.DEFAULT_SIZE
+    ): Result<RequestPage>
+    suspend fun getPendingForApprover(
+        approverId: Long,
+        requestTypeId: Long?,
+        page: Int = 0,
+        size: Int = RequestPage.DEFAULT_SIZE
+    ): Result<RequestPage>
+    suspend fun getPendingForHrStaff(
+        requestTypeId: Long?,
+        page: Int = 0,
+        size: Int = RequestPage.DEFAULT_SIZE
+    ): Result<RequestPage>
     suspend fun getRequest(requestId: Long): Result<Request>
     suspend fun submit(
         requesterId: Long,

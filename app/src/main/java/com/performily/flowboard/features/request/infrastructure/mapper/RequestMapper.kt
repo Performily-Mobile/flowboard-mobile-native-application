@@ -6,12 +6,14 @@ import com.performily.flowboard.features.request.domain.entity.Request
 import com.performily.flowboard.features.request.domain.entity.RequestField
 import com.performily.flowboard.features.request.domain.entity.RequestFieldValue
 import com.performily.flowboard.features.request.domain.entity.RequestHistoryEntry
+import com.performily.flowboard.features.request.domain.entity.RequestPage
 import com.performily.flowboard.features.request.domain.entity.RequestType
 import com.performily.flowboard.features.request.domain.valueobject.BalanceDeduction
 import com.performily.flowboard.features.request.domain.valueobject.RequestPeriod
 import com.performily.flowboard.features.request.infrastructure.remote.CreateRequestFieldRequestDto
 import com.performily.flowboard.features.request.infrastructure.remote.CreateRequestTypeRequestDto
 import com.performily.flowboard.features.request.infrastructure.remote.FieldValueDto
+import com.performily.flowboard.features.request.infrastructure.remote.PageDto
 import com.performily.flowboard.features.request.infrastructure.remote.RequestAttachmentDto
 import com.performily.flowboard.features.request.infrastructure.remote.RequestDto
 import com.performily.flowboard.features.request.infrastructure.remote.RequestTypeDto
@@ -72,6 +74,16 @@ object RequestMapper {
     )
 
     // ---------- Solicitudes ----------
+
+    /** Convierte una página del backend en una página de solicitudes. */
+    fun toDomain(dto: PageDto<RequestDto>): RequestPage = RequestPage(
+        items = dto.items.orEmpty().map { toDomain(it) },
+        page = dto.page,
+        size = dto.size,
+        totalItems = dto.totalItems,
+        totalPages = dto.totalPages,
+        hasNext = dto.hasNext
+    )
 
     fun toDomain(dto: RequestDto): Request {
         val startDate = RequestEnumMapper.date(dto.startDate)

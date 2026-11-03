@@ -70,7 +70,7 @@ class RequestsViewModel @Inject constructor(
         _state.update { it.copy(isLoadingMine = it.myRequests.isEmpty(), mineError = null) }
         viewModelScope.launch {
             getMyRequests()
-                .onSuccess { list -> _state.update { it.copy(isLoadingMine = false, myRequests = list) } }
+                .onSuccess { result -> _state.update { it.copy(isLoadingMine = false, myRequests = result.items) } }
                 .onFailure { exception ->
                     _state.update {
                         it.copy(
@@ -89,10 +89,10 @@ class RequestsViewModel @Inject constructor(
         _state.update { it.copy(isLoadingPending = it.pending.isEmpty(), pendingError = null) }
         viewModelScope.launch {
             getPendingApprovals(typeId)
-                .onSuccess { list ->
+                .onSuccess { result ->
                     // Si el filtro cambió mientras cargaba, se ignora esta respuesta.
                     if (_state.value.typeFilter?.id == typeId) {
-                        _state.update { it.copy(isLoadingPending = false, pending = list) }
+                        _state.update { it.copy(isLoadingPending = false, pending = result.items) }
                     }
                 }
                 .onFailure { exception ->

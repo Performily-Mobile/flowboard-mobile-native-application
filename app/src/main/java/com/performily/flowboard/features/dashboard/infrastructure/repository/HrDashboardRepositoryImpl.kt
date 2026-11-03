@@ -4,7 +4,7 @@ import com.performily.flowboard.core.network.apiCall
 import com.performily.flowboard.features.benefits.application.usecase.GetVacationBalancesUseCase
 import com.performily.flowboard.features.dashboard.domain.entity.AttendanceSummary
 import com.performily.flowboard.features.dashboard.domain.entity.DashboardArea
-import com.performily.flowboard.features.dashboard.domain.entity.RequestToAttend
+import com.performily.flowboard.features.dashboard.domain.entity.PendingRequests
 import com.performily.flowboard.features.dashboard.domain.repository.HrDashboardRepository
 import com.performily.flowboard.features.dashboard.infrastructure.mapper.DashboardMapper
 import com.performily.flowboard.features.dashboard.infrastructure.remote.DashboardAttendanceService
@@ -41,9 +41,12 @@ class HrDashboardRepositoryImpl @Inject constructor(
         apiCall { attendanceService.getAreaSummary(areaId, from.toString(), to.toString()) }
             .map(DashboardMapper::toSummary)
 
-    override suspend fun getRequestsToAttend(): Result<List<RequestToAttend>> =
-        getPendingApprovals().map { requests ->
-            requests.sortedBy { it.submittedAt }.map(DashboardMapper::toRequestToAttend)
+    override suspend fun getRequestsToAttend(): Result<PendingRequests> =
+        getPendingApprovals().map { page ->
+            PendingRequests(
+                total = page.totalItems.toInt(),
+                oldest = page.items.sortedBy { it.submittedAt }.map(DashboardMapper::toRequestToAttend)
+            )
         }
 
     override suspend fun getAvailableVacationDays(): Result<List<BigDecimal>> =

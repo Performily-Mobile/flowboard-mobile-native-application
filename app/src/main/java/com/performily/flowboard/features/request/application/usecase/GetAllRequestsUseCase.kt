@@ -17,10 +17,15 @@ class GetAllRequestsUseCase @Inject constructor(
     suspend operator fun invoke(): Result<List<Request>> = runCatching {
         val people = directory.getPeople().getOrThrow()
         val requests = coroutineScope {
-            people.map { person -> async { repository.getRequestsOf(person.id, status = null).getOrThrow() } }
+            people.map { person -> async { repository.getRequestsOf(person.id, status = null, size = MAX_PAGE_SIZE).getOrThrow().items } }
                 .awaitAll()
                 .flatten()
         }
         peopleResolver.resolve(requests.sortedByDescending { it.submittedAt })
+    }
+
+    private companion object {
+        /** Tamaño máximo de página que acepta el backend. */
+        const val MAX_PAGE_SIZE = 100
     }
 }

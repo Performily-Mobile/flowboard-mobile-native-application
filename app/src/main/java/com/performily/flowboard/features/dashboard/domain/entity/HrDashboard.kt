@@ -83,3 +83,14 @@ data class RequestToAttend(
     val hours: Double?,
     val withoutDirectManager: Boolean
 )
+
+/**
+ * Pending requests of the HR inbox: how many there are in total and the oldest ones.
+ *
+ * @property total number of pending requests in the HR inbox.
+ * @property oldest first pending requests, oldest first.
+ */
+data class PendingRequests(
+    val total: Int,
+    val oldest: List<RequestToAttend>
+)

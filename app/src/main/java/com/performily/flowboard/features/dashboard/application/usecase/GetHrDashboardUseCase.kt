@@ -42,11 +42,11 @@ class GetHrDashboardUseCase @Inject constructor(
         HrDashboard(
             userFirstName = firstName.await(),
             activeEmployees = areas?.sumOf { it.activeEmployees },
-            pendingRequests = pending?.size,
+            pendingRequests = pending?.total,
             monthlyLateness = monthlyLateness.await(),
             expiringVacations = vacationDays.await()?.count { it >= EXPIRING_VACATION_DAYS },
             todayAttendance = todayAttendance.await(),
-            requestsToAttend = pending?.take(MAX_REQUESTS_TO_ATTEND),
+            requestsToAttend = pending?.oldest?.take(MAX_REQUESTS_TO_ATTEND),
             loadedAt = LocalDateTime.now()
         )
     }

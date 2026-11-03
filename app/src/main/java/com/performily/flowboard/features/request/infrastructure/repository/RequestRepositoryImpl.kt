@@ -4,6 +4,7 @@ import com.performily.flowboard.core.domain.FileReference
 import com.performily.flowboard.core.network.apiCall
 import com.performily.flowboard.features.request.domain.entity.Request
 import com.performily.flowboard.features.request.domain.entity.RequestFieldValue
+import com.performily.flowboard.features.request.domain.entity.RequestPage
 import com.performily.flowboard.features.request.domain.repository.RequestRepository
 import com.performily.flowboard.features.request.domain.valueobject.RequestPeriod
 import com.performily.flowboard.features.request.domain.valueobject.RequestStatus
@@ -15,17 +16,27 @@ class RequestRepositoryImpl @Inject constructor(
     private val service: RequestService
 ) : RequestRepository {
 
-    override suspend fun getRequestsOf(requesterId: Long, status: RequestStatus?): Result<List<Request>> =
-        apiCall { service.getMyRequests(requesterId, status?.name) }
-            .mapCatching { dtos -> dtos.map { RequestMapper.toDomain(it) } }
+    override suspend fun getRequestsOf(
+        requesterId: Long,
+        status: RequestStatus?,
+        page: Int,
+        size: Int
+    ): Result<RequestPage> =
+        apiCall { service.getMyRequests(requesterId, status?.name, page, size) }
+            .mapCatching { RequestMapper.toDomain(it) }
 
-    override suspend fun getPendingForApprover(approverId: Long, requestTypeId: Long?): Result<List<Request>> =
-        apiCall { service.getPendingForApprover(approverId, requestTypeId) }
-            .mapCatching { dtos -> dtos.map { RequestMapper.toDomain(it) } }
+    override suspend fun getPendingForApprover(
+        approverId: Long,
+        requestTypeId: Long?,
+        page: Int,
+        size: Int
+    ): Result<RequestPage> =
+        apiCall { service.getPendingForApprover(approverId, requestTypeId, page, size) }
+            .mapCatching { RequestMapper.toDomain(it) }
 
-    override suspend fun getPendingForHrStaff(requestTypeId: Long?): Result<List<Request>> =
-        apiCall { service.getPendingForHrStaff(requestTypeId) }
-            .mapCatching { dtos -> dtos.map { RequestMapper.toDomain(it) } }
+    override suspend fun getPendingForHrStaff(requestTypeId: Long?, page: Int, size: Int): Result<RequestPage> =
+        apiCall { service.getPendingForHrStaff(requestTypeId, page, size) }
+            .mapCatching { RequestMapper.toDomain(it) }
 
     override suspend fun getRequest(requestId: Long): Result<Request> =
         apiCall { service.getRequest(requestId) }.mapCatching { RequestMapper.toDomain(it) }

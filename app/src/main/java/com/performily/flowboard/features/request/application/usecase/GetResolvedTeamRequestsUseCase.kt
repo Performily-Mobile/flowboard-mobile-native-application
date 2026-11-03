@@ -19,7 +19,7 @@ class GetResolvedTeamRequestsUseCase @Inject constructor(
         val managerId = currentEmployee.currentEmployeeId().value
         val team = directory.getTeam(managerId).getOrThrow()
         val requests = coroutineScope {
-            team.map { person -> async { repository.getRequestsOf(person.id, status = null).getOrThrow() } }
+            team.map { person -> async { repository.getRequestsOf(person.id, status = null, size = MAX_PAGE_SIZE).getOrThrow().items } }
                 .awaitAll()
                 .flatten()
         }
@@ -27,5 +27,10 @@ class GetResolvedTeamRequestsUseCase @Inject constructor(
             .filter { it.isResolved && it.approverEmployeeId == managerId }
             .sortedByDescending { it.lastChange?.occurredAt ?: it.submittedAt }
         peopleResolver.resolve(resolved)
+    }
+
+    private companion object {
+        /** Tamaño máximo de página que acepta el backend. */
+        const val MAX_PAGE_SIZE = 100
     }
 }

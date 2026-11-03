@@ -2,7 +2,7 @@ package com.performily.flowboard.features.dashboard.domain.repository
 
 import com.performily.flowboard.features.dashboard.domain.entity.AttendanceSummary
 import com.performily.flowboard.features.dashboard.domain.entity.DashboardArea
-import com.performily.flowboard.features.dashboard.domain.entity.RequestToAttend
+import com.performily.flowboard.features.dashboard.domain.entity.PendingRequests
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -28,8 +28,8 @@ interface HrDashboardRepository {
      */
     suspend fun getAttendanceSummary(areaId: Long, from: LocalDate, to: LocalDate): Result<AttendanceSummary>
 
-    /** Returns the requests pending in the HR inbox, oldest first. */
-    suspend fun getRequestsToAttend(): Result<List<RequestToAttend>>
+    /** Returns the total of requests pending in the HR inbox and the oldest ones. */
+    suspend fun getRequestsToAttend(): Result<PendingRequests>
 
     /** Returns the available vacation days of every active employee. */
     suspend fun getAvailableVacationDays(): Result<List<BigDecimal>>

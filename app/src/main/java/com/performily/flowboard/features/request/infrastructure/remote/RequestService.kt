@@ -17,18 +17,26 @@ interface RequestService {
     @GET("requests/me")
     suspend fun getMyRequests(
         @Query("requesterId") requesterId: Long,
-        @Query("status") status: String?
-    ): Response<List<RequestDto>>
+        @Query("status") status: String?,
+        @Query("page") page: Int,
+        @Query("size") size: Int
+    ): Response<PageDto<RequestDto>>
 
 
     @GET("requests/pending-approval")
     suspend fun getPendingForApprover(
         @Query("approverId") approverId: Long,
-        @Query("requestTypeId") requestTypeId: Long?
-    ): Response<List<RequestDto>>
+        @Query("requestTypeId") requestTypeId: Long?,
+        @Query("page") page: Int,
+        @Query("size") size: Int
+    ): Response<PageDto<RequestDto>>
 
     @GET("requests/pending-approval/hr-staff")
-    suspend fun getPendingForHrStaff(@Query("requestTypeId") requestTypeId: Long?): Response<List<RequestDto>>
+    suspend fun getPendingForHrStaff(
+        @Query("requestTypeId") requestTypeId: Long?,
+        @Query("page") page: Int,
+        @Query("size") size: Int
+    ): Response<PageDto<RequestDto>>
 
     @GET("requests/{requestId}")
     suspend fun getRequest(@Path("requestId") requestId: Long): Response<RequestDto>

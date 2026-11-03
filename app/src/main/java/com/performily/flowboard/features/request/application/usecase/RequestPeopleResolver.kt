@@ -1,6 +1,7 @@
 package com.performily.flowboard.features.request.application.usecase
 
 import com.performily.flowboard.features.request.domain.entity.Request
+import com.performily.flowboard.features.request.domain.entity.RequestPage
 import com.performily.flowboard.features.request.domain.entity.RequestPerson
 import com.performily.flowboard.features.request.domain.repository.RequestEmployeeDirectory
 import javax.inject.Inject
@@ -17,6 +18,9 @@ class RequestPeopleResolver @Inject constructor(
     }
 
     suspend fun resolve(request: Request): Request = resolve(listOf(request)).first()
+
+    /** Completa los nombres de las solicitudes de una página. */
+    suspend fun resolve(page: RequestPage): RequestPage = page.copy(items = resolve(page.items))
 
     private fun Request.withPeople(people: Map<Long, RequestPerson>): Request = copy(
         requester = people[requesterId],
