@@ -19,6 +19,7 @@ import com.performily.flowboard.features.attendance.presentation.ui.navigation.a
 import com.performily.flowboard.features.dashboard.presentation.ui.navigation.dashboardNavGraph
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.OrganizationRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.workspaceNavGraph
+import com.performily.flowboard.features.request.presentation.ui.navigation.MyRequestsRoute
 import com.performily.flowboard.features.request.presentation.ui.navigation.RequestTypesRoute
 import com.performily.flowboard.features.request.presentation.ui.navigation.requestNavGraph
 
@@ -60,6 +61,7 @@ fun AppNavHost(
                 onBenefitsClick = { navController.navigate(BenefitsNavGraphRoute) },
                 onMyBenefitsClick = { navController.navigate(MyBenefitsRoute) },
                 onMyVacationBalanceClick = { navController.navigate(MyVacationBalanceRoute) },
+                onMyRequestsClick = { navController.navigate(MyRequestsRoute) },
                 onPendingClick = { title ->
                     if (title == "Tipos de solicitud") navController.navigate(RequestTypesRoute)
                     else navController.navigate(PendingFeatureRoute(title))

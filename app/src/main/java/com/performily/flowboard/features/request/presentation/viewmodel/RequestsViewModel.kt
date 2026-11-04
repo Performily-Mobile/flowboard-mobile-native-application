@@ -43,7 +43,11 @@ class RequestsViewModel @Inject constructor(
     private val role = currentEmployeeProvider.currentRole()
 
     private val _state = MutableStateFlow(
-        RequestsUiState(role = role, selectedTab = RequestsTab.forRole(role).first())
+        RequestsUiState(
+            role = role,
+            viewerId = currentEmployeeProvider.currentEmployeeId().value,
+            selectedTab = RequestsTab.forRole(role).first()
+        )
     )
     val state: StateFlow<RequestsUiState> = _state.asStateFlow()
 
@@ -199,7 +203,7 @@ class RequestsViewModel @Inject constructor(
     }
 
     fun approve(request: Request) {
-        if (_state.value.processingRequestId != null) return
+        if (_state.value.processingRequestId != null || !_state.value.canResolve(request)) return
         _state.update { it.copy(processingRequestId = request.id) }
         viewModelScope.launch {
             approveRequest(request)
@@ -224,7 +228,10 @@ class RequestsViewModel @Inject constructor(
         }
     }
 
-    fun showRejectDialog(request: Request) = _state.update { it.copy(rejectForm = RejectForm(request)) }
+    fun showRejectDialog(request: Request) {
+        if (!_state.value.canResolve(request)) return
+        _state.update { it.copy(rejectForm = RejectForm(request)) }
+    }
 
     fun dismissRejectDialog() = _state.update { it.copy(rejectForm = null) }
 

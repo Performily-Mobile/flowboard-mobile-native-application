@@ -269,8 +269,8 @@ private fun MyRequestsList(
             modifier = stateModifier
         )
         state.myRequests.isEmpty() -> RequestMessageState(
-            title = if (state.myRequests.isEmpty()) "Aún no tienes solicitudes" else "No hay solicitudes con este estado",
-            message = if (state.myRequests.isEmpty()) {
+            title = if (state.myFilter == MyRequestsFilter.ALL) "Aún no tienes solicitudes" else "No hay solicitudes con este estado",
+            message = if (state.myFilter == MyRequestsFilter.ALL) {
                 "Pide vacaciones, permisos o licencias con el botón \"Nueva solicitud\"."
             } else {
                 "Prueba con otro filtro."
@@ -355,6 +355,7 @@ private fun PendingList(
                 ApprovalCard(
                     request = request,
                     isProcessing = state.processingRequestId == request.id,
+                    canResolve = state.canResolve(request),
                     onClick = { onRequestClick(request.id) },
                     onReject = { onReject(request) },
                     onApprove = { onApprove(request) }

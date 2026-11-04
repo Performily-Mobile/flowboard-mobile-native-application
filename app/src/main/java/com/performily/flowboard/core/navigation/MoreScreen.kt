@@ -45,6 +45,7 @@ import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
  * @param onBenefitsClick opens the benefits administration.
  * @param onMyBenefitsClick opens the own benefits.
  * @param onMyVacationBalanceClick opens the own vacation balance.
+ * @param onMyRequestsClick opens the own requests.
  * @param onPendingClick opens the pending screen with the given title.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,6 +58,7 @@ fun MoreScreen(
     onBenefitsClick: () -> Unit,
     onMyBenefitsClick: () -> Unit,
     onMyVacationBalanceClick: () -> Unit,
+    onMyRequestsClick: () -> Unit,
     onPendingClick: (title: String) -> Unit
 ) {
     Scaffold(
@@ -95,6 +97,8 @@ fun MoreScreen(
                 MoreItem(FlowboardIcons.Gift, "Mis beneficios", "Beneficios vigentes y entregados", onMyBenefitsClick)
                 MoreDivider()
                 MoreItem(FlowboardIcons.Schedule, "Mi saldo de vacaciones", "Días disponibles y movimientos", onMyVacationBalanceClick)
+                MoreDivider()
+                MoreItem(FlowboardIcons.Article, "Mis solicitudes", "Vacaciones, permisos y licencias que pediste", onMyRequestsClick)
                 MoreDivider()
                 MoreItem(FlowboardIcons.Lock, "Cuenta y seguridad", "Huella, idioma y cierre de sesión") {
                     onPendingClick("Cuenta y seguridad")

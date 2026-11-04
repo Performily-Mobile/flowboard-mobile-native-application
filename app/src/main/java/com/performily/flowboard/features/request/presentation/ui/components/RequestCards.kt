@@ -77,6 +77,7 @@ fun MyRequestCard(request: Request, onClick: () -> Unit, modifier: Modifier = Mo
  *
  * @param request request to display.
  * @param isProcessing true while a decision on this request is being saved.
+ * @param canResolve false when the request belongs to the viewer, so the decision buttons are hidden.
  * @param onClick called when the card is tapped.
  * @param onReject called when "Rechazar" is tapped.
  * @param onApprove called when "Aprobar" is tapped.
@@ -86,6 +87,7 @@ fun MyRequestCard(request: Request, onClick: () -> Unit, modifier: Modifier = Mo
 fun ApprovalCard(
     request: Request,
     isProcessing: Boolean,
+    canResolve: Boolean,
     onClick: () -> Unit,
     onReject: () -> Unit,
     onApprove: () -> Unit,
@@ -121,7 +123,13 @@ fun ApprovalCard(
             horizontalArrangement = Arrangement.spacedBy(Spacing.s, Alignment.End),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (isProcessing) {
+            if (!canResolve) {
+                Text(
+                    text = "Es tu solicitud: no puedes resolverla tú.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else if (isProcessing) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
             } else {
                 OutlinedButton(onClick = onReject) { Text("Rechazar") }

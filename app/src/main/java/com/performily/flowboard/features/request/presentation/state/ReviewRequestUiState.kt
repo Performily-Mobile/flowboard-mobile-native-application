@@ -30,6 +30,7 @@ data class ReviewRequestUiState(
         get() {
             val current = request ?: return false
             if (!current.isPending) return false
+            if (current.requesterId == viewerId) return false
             return when (current.approverType) {
                 ApproverType.HR_STAFF -> role == UserRole.HUMAN_RESOURCES
                 ApproverType.DIRECT_MANAGER -> current.approverEmployeeId == viewerId

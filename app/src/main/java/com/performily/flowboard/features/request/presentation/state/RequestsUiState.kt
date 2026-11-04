@@ -51,6 +51,7 @@ data class RejectForm(
 
 data class RequestsUiState(
     val role: UserRole = UserRole.EMPLOYEE,
+    val viewerId: Long = 0,
     val selectedTab: RequestsTab = RequestsTab.MINE,
 
     val isLoadingMine: Boolean = false,
@@ -79,6 +80,9 @@ data class RequestsUiState(
     val snackbarMessage: String? = null
 ) {
     val tabs: List<RequestsTab> get() = RequestsTab.forRole(role)
+
+    /** True when the viewer can approve or reject [request]: nobody resolves their own request. */
+    fun canResolve(request: Request): Boolean = request.requesterId != viewerId
 
     fun tabLabel(tab: RequestsTab): String = when (tab) {
         RequestsTab.MINE -> "Mías"

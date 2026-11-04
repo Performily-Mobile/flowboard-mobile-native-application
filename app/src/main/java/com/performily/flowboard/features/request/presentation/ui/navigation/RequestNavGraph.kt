@@ -7,6 +7,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.performily.flowboard.core.navigation.RequestsRoute
+import com.performily.flowboard.features.request.presentation.ui.screens.MyRequestsScreen
 import com.performily.flowboard.features.request.presentation.ui.screens.NewRequestScreen
 import com.performily.flowboard.features.request.presentation.ui.screens.NewRequestTypeScreen
 import com.performily.flowboard.features.request.presentation.ui.screens.RequestDetailScreen
@@ -19,6 +20,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data object NewRequestRoute
+
+
+@Serializable
+data object MyRequestsRoute
 
 
 @Serializable
@@ -61,6 +66,19 @@ fun NavGraphBuilder.requestNavGraph(navController: NavController) {
             onMyRequestClick = { requestId -> navController.navigate(RequestDetailRoute(requestId)) },
             onReviewClick = { requestId -> navController.navigate(ReviewRequestRoute(requestId)) },
             onResolvedClick = { navController.navigate(ResolvedRequestsRoute) },
+            resultMessage = resultMessage,
+            onResultMessageConsumed = { backStackEntry.savedStateHandle[REQUEST_RESULT_KEY] = null }
+        )
+    }
+
+    composable<MyRequestsRoute> { backStackEntry ->
+        val resultMessage by backStackEntry.savedStateHandle
+            .getStateFlow<String?>(REQUEST_RESULT_KEY, null)
+            .collectAsStateWithLifecycle()
+        MyRequestsScreen(
+            onBack = { navController.popBackStack() },
+            onNewRequest = { navController.navigate(NewRequestRoute) },
+            onRequestClick = { requestId -> navController.navigate(RequestDetailRoute(requestId)) },
             resultMessage = resultMessage,
             onResultMessageConsumed = { backStackEntry.savedStateHandle[REQUEST_RESULT_KEY] = null }
         )
