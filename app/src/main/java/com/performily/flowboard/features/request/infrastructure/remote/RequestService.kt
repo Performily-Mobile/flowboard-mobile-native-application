@@ -35,6 +35,7 @@ interface RequestService {
     suspend fun getPendingForApprover(
         @Query("approverId") approverId: Long,
         @Query("requestTypeId") requestTypeId: Long?,
+        @Query("sort") sort: String,
         @Query("page") page: Int,
         @Query("size") size: Int
     ): Response<PageDto<RequestDto>>
@@ -42,6 +43,7 @@ interface RequestService {
     @GET("requests/pending-approval/hr-staff")
     suspend fun getPendingForHrStaff(
         @Query("requestTypeId") requestTypeId: Long?,
+        @Query("sort") sort: String,
         @Query("page") page: Int,
         @Query("size") size: Int
     ): Response<PageDto<RequestDto>>

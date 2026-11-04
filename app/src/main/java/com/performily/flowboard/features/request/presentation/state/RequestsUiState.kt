@@ -3,6 +3,7 @@ package com.performily.flowboard.features.request.presentation.state
 import com.performily.flowboard.core.session.UserRole
 import com.performily.flowboard.features.request.domain.entity.Request
 import com.performily.flowboard.features.request.domain.entity.RequestType
+import com.performily.flowboard.features.request.domain.valueobject.RequestSortOrder
 import com.performily.flowboard.features.request.domain.valueobject.RequestStatus
 
 
@@ -36,9 +37,9 @@ enum class AllRequestsFilter(val label: String, val status: RequestStatus) {
 }
 
 
-enum class ApprovalSort(val label: String) {
-    OLDEST_FIRST("Más antiguas primero"),
-    NEWEST_FIRST("Más recientes primero")
+enum class ApprovalSort(val label: String, val order: RequestSortOrder) {
+    OLDEST_FIRST("Más antiguas primero", RequestSortOrder.OLDEST_FIRST),
+    NEWEST_FIRST("Más recientes primero", RequestSortOrder.NEWEST_FIRST)
 }
 
 data class RejectForm(
@@ -59,6 +60,7 @@ data class RequestsUiState(
 
     val isLoadingPending: Boolean = false,
     val pending: List<Request> = emptyList(),
+    val pendingTotal: Long = 0,
     val pendingError: String? = null,
     val requestTypes: List<RequestType> = emptyList(),
     val typeFilter: RequestType? = null,
@@ -75,21 +77,10 @@ data class RequestsUiState(
 ) {
     val tabs: List<RequestsTab> get() = RequestsTab.forRole(role)
 
-    val visibleMyRequests: List<Request>
-        get() = myFilter.status?.let { status -> myRequests.filter { it.status == status } } ?: myRequests
-
-    val visiblePending: List<Request>
-        get() = when (sort) {
-            ApprovalSort.OLDEST_FIRST -> pending.sortedBy { it.submittedAt }
-            ApprovalSort.NEWEST_FIRST -> pending.sortedByDescending { it.submittedAt }
-        }
-
-    val visibleAll: List<Request> get() = allRequests.filter { it.status == allFilter.status }
-
     fun tabLabel(tab: RequestsTab): String = when (tab) {
         RequestsTab.MINE -> "Mías"
-        RequestsTab.TO_APPROVE -> "Por aprobar (${pending.size})"
-        RequestsTab.HR_INBOX -> "RR.HH. (${pending.size})"
+        RequestsTab.TO_APPROVE -> "Por aprobar ($pendingTotal)"
+        RequestsTab.HR_INBOX -> "RR.HH. ($pendingTotal)"
         RequestsTab.ALL -> "Todas"
     }
 }

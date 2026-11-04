@@ -7,6 +7,7 @@ import com.performily.flowboard.features.request.domain.entity.RequestFieldValue
 import com.performily.flowboard.features.request.domain.entity.RequestPage
 import com.performily.flowboard.features.request.domain.repository.RequestRepository
 import com.performily.flowboard.features.request.domain.valueobject.RequestPeriod
+import com.performily.flowboard.features.request.domain.valueobject.RequestSortOrder
 import com.performily.flowboard.features.request.domain.valueobject.RequestStatus
 import com.performily.flowboard.features.request.infrastructure.mapper.RequestMapper
 import com.performily.flowboard.features.request.infrastructure.remote.RequestService
@@ -37,14 +38,20 @@ class RequestRepositoryImpl @Inject constructor(
     override suspend fun getPendingForApprover(
         approverId: Long,
         requestTypeId: Long?,
+        sort: RequestSortOrder,
         page: Int,
         size: Int
     ): Result<RequestPage> =
-        apiCall { service.getPendingForApprover(approverId, requestTypeId, page, size) }
+        apiCall { service.getPendingForApprover(approverId, requestTypeId, sort.name, page, size) }
             .mapCatching { RequestMapper.toDomain(it) }
 
-    override suspend fun getPendingForHrStaff(requestTypeId: Long?, page: Int, size: Int): Result<RequestPage> =
-        apiCall { service.getPendingForHrStaff(requestTypeId, page, size) }
+    override suspend fun getPendingForHrStaff(
+        requestTypeId: Long?,
+        sort: RequestSortOrder,
+        page: Int,
+        size: Int
+    ): Result<RequestPage> =
+        apiCall { service.getPendingForHrStaff(requestTypeId, sort.name, page, size) }
             .mapCatching { RequestMapper.toDomain(it) }
 
     override suspend fun getRequest(requestId: Long): Result<Request> =

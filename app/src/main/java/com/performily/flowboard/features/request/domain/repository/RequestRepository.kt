@@ -5,6 +5,7 @@ import com.performily.flowboard.features.request.domain.entity.Request
 import com.performily.flowboard.features.request.domain.entity.RequestFieldValue
 import com.performily.flowboard.features.request.domain.entity.RequestPage
 import com.performily.flowboard.features.request.domain.valueobject.RequestPeriod
+import com.performily.flowboard.features.request.domain.valueobject.RequestSortOrder
 import com.performily.flowboard.features.request.domain.valueobject.RequestStatus
 
 interface RequestRepository {
@@ -23,11 +24,13 @@ interface RequestRepository {
     suspend fun getPendingForApprover(
         approverId: Long,
         requestTypeId: Long?,
+        sort: RequestSortOrder = RequestSortOrder.OLDEST_FIRST,
         page: Int = 0,
         size: Int = RequestPage.DEFAULT_SIZE
     ): Result<RequestPage>
     suspend fun getPendingForHrStaff(
         requestTypeId: Long?,
+        sort: RequestSortOrder = RequestSortOrder.OLDEST_FIRST,
         page: Int = 0,
         size: Int = RequestPage.DEFAULT_SIZE
     ): Result<RequestPage>

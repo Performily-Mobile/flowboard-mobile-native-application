@@ -67,10 +67,16 @@ class RequestsViewModel @Inject constructor(
 
 
     private fun loadMine() {
+        val filter = _state.value.myFilter
         _state.update { it.copy(isLoadingMine = it.myRequests.isEmpty(), mineError = null) }
         viewModelScope.launch {
-            getMyRequests()
-                .onSuccess { result -> _state.update { it.copy(isLoadingMine = false, myRequests = result.items) } }
+            getMyRequests(filter.status)
+                .onSuccess { result ->
+                    // Ignore the answer if the filter changed while it was loading.
+                    if (_state.value.myFilter == filter) {
+                        _state.update { it.copy(isLoadingMine = false, myRequests = result.items) }
+                    }
+                }
                 .onFailure { exception ->
                     _state.update {
                         it.copy(
@@ -82,17 +88,24 @@ class RequestsViewModel @Inject constructor(
         }
     }
 
-    fun onMyFilterSelected(filter: MyRequestsFilter) = _state.update { it.copy(myFilter = filter) }
+    fun onMyFilterSelected(filter: MyRequestsFilter) {
+        if (filter == _state.value.myFilter) return
+        _state.update { it.copy(myFilter = filter, myRequests = emptyList()) }
+        loadMine()
+    }
 
     private fun loadPending() {
         val typeId = _state.value.typeFilter?.id
+        val sort = _state.value.sort
         _state.update { it.copy(isLoadingPending = it.pending.isEmpty(), pendingError = null) }
         viewModelScope.launch {
-            getPendingApprovals(typeId)
+            getPendingApprovals(typeId, sort.order)
                 .onSuccess { result ->
-                    // Si el filtro cambió mientras cargaba, se ignora esta respuesta.
-                    if (_state.value.typeFilter?.id == typeId) {
-                        _state.update { it.copy(isLoadingPending = false, pending = result.items) }
+                    // Ignore the answer if the filter or the order changed while it was loading.
+                    if (_state.value.typeFilter?.id == typeId && _state.value.sort == sort) {
+                        _state.update {
+                            it.copy(isLoadingPending = false, pending = result.items, pendingTotal = result.totalItems)
+                        }
                     }
                 }
                 .onFailure { exception ->
@@ -118,7 +131,11 @@ class RequestsViewModel @Inject constructor(
         loadPending()
     }
 
-    fun onSortSelected(sort: ApprovalSort) = _state.update { it.copy(sort = sort) }
+    fun onSortSelected(sort: ApprovalSort) {
+        if (sort == _state.value.sort) return
+        _state.update { it.copy(sort = sort, pending = emptyList()) }
+        loadPending()
+    }
 
     fun approve(request: Request) {
         if (_state.value.processingRequestId != null) return
@@ -130,6 +147,7 @@ class RequestsViewModel @Inject constructor(
                         state.copy(
                             processingRequestId = null,
                             pending = state.pending.filterNot { it.id == approved.id },
+                            pendingTotal = (state.pendingTotal - 1).coerceAtLeast(0),
                             snackbarMessage = "Solicitud de ${RequestFormatters.shortName(request.requesterName)} aprobada."
                         )
                     }
@@ -166,6 +184,7 @@ class RequestsViewModel @Inject constructor(
                         state.copy(
                             rejectForm = null,
                             pending = state.pending.filterNot { it.id == rejected.id },
+                            pendingTotal = (state.pendingTotal - 1).coerceAtLeast(0),
                             snackbarMessage = "Solicitud de ${RequestFormatters.shortName(form.request.requesterName)} rechazada."
                         )
                     }

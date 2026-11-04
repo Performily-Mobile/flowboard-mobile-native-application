@@ -130,9 +130,9 @@ fun RequestsScreen(
             state = headerState,
             showHeaderKey = listOf(
                 state.selectedTab,
-                state.visibleMyRequests.size,
-                state.visiblePending.size,
-                state.visibleAll.size,
+                state.myRequests.size,
+                state.pending.size,
+                state.allRequests.size,
                 state.isLoadingMine || state.isLoadingPending || state.isLoadingAll,
                 state.mineError != null || state.pendingError != null || state.allError != null
             ),
@@ -262,7 +262,7 @@ private fun MyRequestsList(
             onAction = onRetry,
             modifier = stateModifier
         )
-        state.visibleMyRequests.isEmpty() -> RequestMessageState(
+        state.myRequests.isEmpty() -> RequestMessageState(
             title = if (state.myRequests.isEmpty()) "Aún no tienes solicitudes" else "No hay solicitudes con este estado",
             message = if (state.myRequests.isEmpty()) {
                 "Pide vacaciones, permisos o licencias con el botón \"Nueva solicitud\"."
@@ -276,7 +276,7 @@ private fun MyRequestsList(
             contentPadding = listPadding(contentPadding, bottom = Spacing.fabClearance),
             verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
         ) {
-            items(state.visibleMyRequests, key = { it.id }) { request ->
+            items(state.myRequests, key = { it.id }) { request ->
                 MyRequestCard(request = request, onClick = { onRequestClick(request.id) })
             }
         }
@@ -334,7 +334,7 @@ private fun PendingList(
             contentPadding = listPadding(contentPadding, bottom = Spacing.xl),
             verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
         ) {
-            items(state.visiblePending, key = { it.id }) { request ->
+            items(state.pending, key = { it.id }) { request ->
                 ApprovalCard(
                     request = request,
                     isProcessing = state.processingRequestId == request.id,
@@ -373,7 +373,7 @@ private fun AllRequestsList(
             onAction = onRetry,
             modifier = stateModifier
         )
-        state.visibleAll.isEmpty() -> RequestMessageState(
+        state.allRequests.isEmpty() -> RequestMessageState(
             title = "No hay solicitudes con este estado",
             message = "Prueba con otro filtro.",
             modifier = stateModifier
@@ -383,7 +383,7 @@ private fun AllRequestsList(
             contentPadding = listPadding(contentPadding, bottom = Spacing.xl),
             verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
         ) {
-            items(state.visibleAll, key = { it.id }) { request ->
+            items(state.allRequests, key = { it.id }) { request ->
                 RequestListRow(request = request, onClick = { onRequestClick(request.id) })
             }
         }
