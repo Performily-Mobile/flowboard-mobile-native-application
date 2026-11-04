@@ -57,10 +57,12 @@ data class RequestsUiState(
     val myRequests: List<Request> = emptyList(),
     val mineError: String? = null,
     val myFilter: MyRequestsFilter = MyRequestsFilter.ALL,
+    val minePaging: PagingState = PagingState(),
 
     val isLoadingPending: Boolean = false,
     val pending: List<Request> = emptyList(),
     val pendingTotal: Long = 0,
+    val pendingPaging: PagingState = PagingState(),
     val pendingError: String? = null,
     val requestTypes: List<RequestType> = emptyList(),
     val typeFilter: RequestType? = null,
@@ -72,6 +74,7 @@ data class RequestsUiState(
     val allRequests: List<Request> = emptyList(),
     val allError: String? = null,
     val allFilter: AllRequestsFilter = AllRequestsFilter.PENDING,
+    val allPaging: PagingState = PagingState(),
 
     val snackbarMessage: String? = null
 ) {

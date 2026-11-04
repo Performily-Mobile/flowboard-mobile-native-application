@@ -53,6 +53,7 @@ import com.performily.flowboard.features.request.presentation.ui.components.Requ
 import com.performily.flowboard.features.request.presentation.ui.components.RequestColors
 import com.performily.flowboard.features.request.presentation.ui.components.RequestFormatters
 import com.performily.flowboard.features.request.presentation.ui.components.RequestListRow
+import com.performily.flowboard.features.request.presentation.ui.components.RequestLoadMoreItem
 import com.performily.flowboard.features.request.presentation.ui.components.RequestLoading
 import com.performily.flowboard.features.request.presentation.ui.components.RequestMessageState
 import com.performily.flowboard.features.request.presentation.ui.components.RequestSegmented
@@ -201,6 +202,7 @@ fun RequestsScreen(
                     state = state,
                     contentPadding = contentPadding,
                     onRequestClick = onMyRequestClick,
+                    onLoadMore = viewModel::loadMoreMine,
                     onRetry = viewModel::load
                 )
                 RequestsTab.TO_APPROVE, RequestsTab.HR_INBOX -> PendingList(
@@ -211,12 +213,14 @@ fun RequestsScreen(
                     onApprove = viewModel::approve,
                     onReject = viewModel::showRejectDialog,
                     onResolvedClick = onResolvedClick,
+                    onLoadMore = viewModel::loadMorePending,
                     onRetry = viewModel::load
                 )
                 RequestsTab.ALL -> AllRequestsList(
                     state = state,
                     contentPadding = contentPadding,
                     onRequestClick = onReviewClick,
+                    onLoadMore = viewModel::loadMoreAll,
                     onRetry = viewModel::load
                 )
             }
@@ -243,6 +247,7 @@ fun RequestsScreen(
  * @param state screen state.
  * @param contentPadding padding that leaves room for the collapsing header.
  * @param onRequestClick called with the identifier of the tapped request.
+ * @param onLoadMore called when the end of the list is reached.
  * @param onRetry called when "Reintentar" is tapped.
  */
 @Composable
@@ -250,6 +255,7 @@ private fun MyRequestsList(
     state: RequestsUiState,
     contentPadding: PaddingValues,
     onRequestClick: (Long) -> Unit,
+    onLoadMore: () -> Unit,
     onRetry: () -> Unit
 ) {
     val stateModifier = Modifier.padding(top = contentPadding.calculateTopPadding())
@@ -279,6 +285,15 @@ private fun MyRequestsList(
             items(state.myRequests, key = { it.id }) { request ->
                 MyRequestCard(request = request, onClick = { onRequestClick(request.id) })
             }
+            if (state.minePaging.hasMore) {
+                item(key = LOAD_MORE_KEY) {
+                    RequestLoadMoreItem(
+                        itemCount = state.myRequests.size,
+                        failed = state.minePaging.loadMoreFailed,
+                        onLoadMore = onLoadMore
+                    )
+                }
+            }
         }
     }
 }
@@ -294,6 +309,7 @@ private fun MyRequestsList(
  * @param onApprove called when a request is approved from its card.
  * @param onReject called when a request is rejected from its card.
  * @param onResolvedClick called when "Ver solicitudes resueltas" is tapped.
+ * @param onLoadMore called when the end of the list is reached.
  * @param onRetry called when "Reintentar" is tapped.
  */
 @Composable
@@ -305,6 +321,7 @@ private fun PendingList(
     onApprove: (Request) -> Unit,
     onReject: (Request) -> Unit,
     onResolvedClick: () -> Unit,
+    onLoadMore: () -> Unit,
     onRetry: () -> Unit
 ) {
     val stateModifier = Modifier.padding(top = contentPadding.calculateTopPadding())
@@ -343,6 +360,15 @@ private fun PendingList(
                     onApprove = { onApprove(request) }
                 )
             }
+            if (state.pendingPaging.hasMore) {
+                item(key = LOAD_MORE_KEY) {
+                    RequestLoadMoreItem(
+                        itemCount = state.pending.size,
+                        failed = state.pendingPaging.loadMoreFailed,
+                        onLoadMore = onLoadMore
+                    )
+                }
+            }
         }
     }
 }
@@ -354,6 +380,7 @@ private fun PendingList(
  * @param state screen state.
  * @param contentPadding padding that leaves room for the collapsing header.
  * @param onRequestClick called with the identifier of the tapped request.
+ * @param onLoadMore called when the end of the list is reached.
  * @param onRetry called when "Reintentar" is tapped.
  */
 @Composable
@@ -361,6 +388,7 @@ private fun AllRequestsList(
     state: RequestsUiState,
     contentPadding: PaddingValues,
     onRequestClick: (Long) -> Unit,
+    onLoadMore: () -> Unit,
     onRetry: () -> Unit
 ) {
     val stateModifier = Modifier.padding(top = contentPadding.calculateTopPadding())
@@ -386,9 +414,22 @@ private fun AllRequestsList(
             items(state.allRequests, key = { it.id }) { request ->
                 RequestListRow(request = request, onClick = { onRequestClick(request.id) })
             }
+            if (state.allPaging.hasMore) {
+                item(key = LOAD_MORE_KEY) {
+                    RequestLoadMoreItem(
+                        itemCount = state.allRequests.size,
+                        failed = state.allPaging.loadMoreFailed,
+                        onLoadMore = onLoadMore
+                    )
+                }
+            }
         }
     }
 }
+
+
+/** Key of the last item that loads the next page of a list. */
+private const val LOAD_MORE_KEY = "load-more"
 
 
 /**

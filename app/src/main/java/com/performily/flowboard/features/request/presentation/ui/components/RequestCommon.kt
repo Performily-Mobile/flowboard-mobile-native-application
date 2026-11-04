@@ -24,6 +24,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -245,6 +246,27 @@ fun RequestSectionHeader(text: String, modifier: Modifier = Modifier, action: (@
 fun RequestLoading(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator()
+    }
+}
+
+/**
+ * Last item of a list that has more requests: asks for the next page when it appears,
+ * or shows a retry button if the last attempt failed.
+ */
+@Composable
+fun RequestLoadMoreItem(itemCount: Int, failed: Boolean, onLoadMore: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = Spacing.m),
+        contentAlignment = Alignment.Center
+    ) {
+        if (failed) {
+            TextButton(onClick = onLoadMore) { Text("No se pudieron cargar más. Reintentar") }
+        } else {
+            LaunchedEffect(itemCount) { onLoadMore() }
+            CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+        }
     }
 }
 

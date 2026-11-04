@@ -18,6 +18,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.request.presentation.ui.components.RequestListRow
+import com.performily.flowboard.features.request.presentation.ui.components.RequestLoadMoreItem
 import com.performily.flowboard.features.request.presentation.ui.components.RequestLoading
 import com.performily.flowboard.features.request.presentation.ui.components.RequestMessageState
 import com.performily.flowboard.features.request.presentation.viewmodel.ResolvedRequestsViewModel
@@ -78,6 +79,15 @@ fun ResolvedRequestsScreen(
             ) {
                 items(state.requests, key = { it.id }) { request ->
                     RequestListRow(request = request, onClick = { onRequestClick(request.id) })
+                }
+                if (state.paging.hasMore) {
+                    item(key = "load-more") {
+                        RequestLoadMoreItem(
+                            itemCount = state.requests.size,
+                            failed = state.paging.loadMoreFailed,
+                            onLoadMore = viewModel::loadMore
+                        )
+                    }
                 }
             }
         }
