@@ -1,5 +1,6 @@
 package com.performily.flowboard.core.di
 
+import com.performily.flowboard.features.iam.infrastructure.local.SecureSessionStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,9 +20,15 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
-        val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
+    fun provideOkHttpClient(store: SecureSessionStore): OkHttpClient {
+        val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC }
         return OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val token = store.read()?.token
+                val builder = chain.request().newBuilder()
+                if (!token.isNullOrBlank()) builder.header("Authorization", "Bearer $token")
+                chain.proceed(builder.build())
+            }
             .addInterceptor(logging)
             .connectTimeout(60, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
