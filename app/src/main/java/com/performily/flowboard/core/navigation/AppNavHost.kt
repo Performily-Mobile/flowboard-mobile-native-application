@@ -6,6 +6,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.performily.flowboard.features.iam.presentation.ui.navigation.iamNavGraph
+import com.performily.flowboard.features.iam.presentation.ui.navigation.AccountSecurityRoute
 import com.performily.flowboard.features.payroll.presentation.ui.navigation.PayrollNavGraphRoute
 import com.performily.flowboard.features.payroll.presentation.ui.navigation.payrollNavGraph
 import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.WellbeingNavGraphRoute
@@ -51,6 +53,7 @@ fun AppNavHost(
         requestNavGraph(navController)
         attendanceNavGraph(navController)
         dashboardNavGraph(navController)
+        iamNavGraph(navController)
 
         composable<MoreRoute> {
             MoreScreen(
@@ -63,7 +66,8 @@ fun AppNavHost(
                 onMyVacationBalanceClick = { navController.navigate(MyVacationBalanceRoute) },
                 onMyRequestsClick = { navController.navigate(MyRequestsRoute) },
                 onPendingClick = { title ->
-                    if (title == "Tipos de solicitud") navController.navigate(RequestTypesRoute)
+                    if (title == "Cuenta y seguridad") navController.navigate(AccountSecurityRoute)
+                    else if (title == "Tipos de solicitud") navController.navigate(RequestTypesRoute)
                     else navController.navigate(PendingFeatureRoute(title))
                 }
             )

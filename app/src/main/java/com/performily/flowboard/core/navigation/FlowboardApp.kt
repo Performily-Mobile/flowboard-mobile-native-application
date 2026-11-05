@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -13,6 +15,9 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.performily.flowboard.core.session.UserRole
+import com.performily.flowboard.features.iam.presentation.ui.screens.LoginScreen
+import com.performily.flowboard.features.iam.presentation.ui.screens.PasswordChangeScreen
+import com.performily.flowboard.features.iam.presentation.ui.screens.AccountSecurityScreen
 import com.performily.flowboard.features.payroll.presentation.ui.navigation.PaymentStatusRoute
 import com.performily.flowboard.features.payroll.presentation.ui.navigation.UploadPayslipsRoute
 import com.performily.flowboard.features.benefits.presentation.ui.navigation.AssignBenefitRoute
@@ -52,6 +57,14 @@ private val routesWithoutBottomBar = listOf(
  */
 @Composable
 fun FlowboardApp(viewModel: AppShellViewModel = hiltViewModel()) {
+    val session by viewModel.session.collectAsState()
+    if (session == null) { LoginScreen(); return }
+    if (session?.mustChangePassword == true) { PasswordChangeScreen(mandatory = true, onBack = {}); return }
+    key(session?.employeeId, session?.role) { AuthenticatedFlowboard(viewModel) }
+}
+
+@Composable
+private fun AuthenticatedFlowboard(viewModel: AppShellViewModel) {
     val navController = rememberNavController()
     val destinations = remember(viewModel.role) { TopLevelDestination.forRole(viewModel.role) }
     val startDestination: Any = when (viewModel.role) {
@@ -62,6 +75,7 @@ fun FlowboardApp(viewModel: AppShellViewModel = hiltViewModel()) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
     val showBottomBar = currentDestination != null &&
+            !currentDestination.hasRoute(com.performily.flowboard.features.iam.presentation.ui.navigation.AccountSecurityRoute::class) &&
             routesWithoutBottomBar.none { currentDestination.hasRoute(it) }
 
     Scaffold(
