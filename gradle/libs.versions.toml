@@ -23,6 +23,7 @@ desugarJdkLibs = "2.1.5"
 okhttp = "4.12.0"
 
 [libraries]
+androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore-preferences-core = { module = "androidx.datastore:datastore-preferences-core", version.ref = "datastorePreferencesCore" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
