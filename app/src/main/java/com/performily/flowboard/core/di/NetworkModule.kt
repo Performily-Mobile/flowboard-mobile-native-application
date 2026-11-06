@@ -1,12 +1,10 @@
+
 package com.performily.flowboard.core.di
 
-import android.content.Context
-import android.content.pm.ApplicationInfo
 import com.performily.flowboard.features.iam.infrastructure.local.SecureSessionStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -19,10 +17,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val LOCAL_URL =
-        "http://127.0.0.1:8080/api/v1/"
-
-    private const val PRODUCTION_URL =
+    private const val BASE_URL =
         "https://flowboard-mobile-service.onrender.com/api/v1/"
 
     @Provides
@@ -59,22 +54,10 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(
-        @ApplicationContext context: Context,
         client: OkHttpClient
     ): Retrofit {
-
-        val isDebug =
-            (context.applicationInfo.flags and
-                    ApplicationInfo.FLAG_DEBUGGABLE) != 0
-
-        val baseUrl = if (isDebug) {
-            LOCAL_URL
-        } else {
-            PRODUCTION_URL
-        }
-
         return Retrofit.Builder()
-            .baseUrl(baseUrl)
+            .baseUrl(BASE_URL)
             .client(client)
             .addConverterFactory(
                 GsonConverterFactory.create()
@@ -82,4 +65,3 @@ object NetworkModule {
             .build()
     }
 }
-
