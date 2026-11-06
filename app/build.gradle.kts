@@ -23,11 +23,29 @@ android {
     }
 
     buildTypes {
-        release {
+        getByName("debug") {
+            buildConfigField(
+                "String",
+                "BASE_URL",
+                "\"http://10.0.2.2:8080/api/v1/\""
+            )
+        }
+
+        getByName("release") {
             optimization {
                 enable = true
-                packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
+                packageScope = setOf(
+                    "androidx.**",
+                    "kotlin.**",
+                    "kotlinx.**"
+                )
             }
+
+            buildConfigField(
+                "String",
+                "BASE_URL",
+                "\"https://flowboard-mobile-service.onrender.com/api/v1/\""
+            )
         }
     }
     compileOptions {
@@ -37,6 +55,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
