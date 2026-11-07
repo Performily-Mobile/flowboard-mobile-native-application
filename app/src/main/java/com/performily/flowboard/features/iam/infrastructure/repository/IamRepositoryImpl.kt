@@ -1,7 +1,7 @@
 package com.performily.flowboard.features.iam.infrastructure.repository
 
 import com.performily.flowboard.features.iam.domain.entity.AuthSession
-import com.performily.flowboard.features.iam.domain.repository.Account
+import com.performily.flowboard.features.iam.domain.entity.Account
 import com.performily.flowboard.features.iam.domain.repository.IamRepository
 import com.performily.flowboard.features.iam.infrastructure.local.SecureSessionStore
 import com.performily.flowboard.features.iam.infrastructure.remote.*
@@ -49,6 +49,7 @@ class IamRepositoryImpl @Inject constructor(private val api: IamService, private
     }
     override suspend fun resetPassword(id: Long) = runCatching {
         val r = api.resetPassword(id); if (!r.isSuccessful) error("No se pudo restablecer la contraseña (HTTP ${r.code()}).")
+        r.body()?.temporaryPassword?.takeIf { it.isNotBlank() } ?: error("El servidor no devolvió una contraseña temporal")
     }
     override fun setBiometricEnabled(enabled: Boolean) = secure.setBiometricEnabled(enabled)
     override fun isBiometricEnabled() = secure.biometricEnabled()
