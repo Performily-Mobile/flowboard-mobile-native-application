@@ -40,6 +40,11 @@ class IamRepositoryImpl @Inject constructor(private val api: IamService, private
         catch (e: Exception) { Result.failure(e) }
         finally { secure.clear(); current.value = null }
     }
+    override fun expireSession(token: String) {
+        if (current.value?.token != token) return
+        secure.clear()
+        current.value = null
+    }
     override suspend fun accounts() = runCatching {
         val response = api.accounts(); if (!response.isSuccessful) error("Error HTTP ${response.code()}")
         response.body().orEmpty().map { Account(it.id, it.employeeId, it.username, it.role, it.status) }

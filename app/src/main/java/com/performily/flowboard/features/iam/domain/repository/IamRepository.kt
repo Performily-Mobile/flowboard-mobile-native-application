@@ -9,6 +9,9 @@ interface IamRepository {
     suspend fun signIn(username: String, password: String): Result<AuthSession>
     suspend fun changePassword(currentPassword: String, newPassword: String): Result<Unit>
     suspend fun signOut(): Result<Unit>
+
+    /** Ends the session signed with [token] because the server no longer accepts it. */
+    fun expireSession(token: String)
     suspend fun accounts(): Result<List<Account>>
     suspend fun changeRole(id: Long, role: String): Result<Unit>
     suspend fun resetPassword(id: Long): Result<String>

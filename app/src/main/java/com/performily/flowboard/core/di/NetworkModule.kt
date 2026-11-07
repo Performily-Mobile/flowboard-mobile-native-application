@@ -2,7 +2,9 @@
 package com.performily.flowboard.core.di
 
 import com.performily.flowboard.BuildConfig
+import com.performily.flowboard.features.iam.domain.repository.IamRepository
 import com.performily.flowboard.features.iam.infrastructure.local.SecureSessionStore
+import dagger.Lazy
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,7 +23,8 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(
-        store: SecureSessionStore
+        store: SecureSessionStore,
+        iamRepository: Lazy<IamRepository>
     ): OkHttpClient {
 
         val logging = HttpLoggingInterceptor().apply {
@@ -40,7 +43,14 @@ object NetworkModule {
                     )
                 }
 
-                chain.proceed(builder.build())
+                val response = chain.proceed(builder.build())
+                // An expired or revoked token signs the user out, so the app shows the login again.
+                if (response.code == 401 && !token.isNullOrBlank() &&
+                    !chain.request().url.encodedPath.endsWith("/auth/login")
+                ) {
+                    iamRepository.get().expireSession(token)
+                }
+                response
             }
             .addInterceptor(logging)
             .connectTimeout(60, TimeUnit.SECONDS)
