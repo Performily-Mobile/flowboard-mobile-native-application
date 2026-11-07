@@ -51,8 +51,9 @@ class CollapsingHeaderState(initialOffset: Float = 0f) {
     }
 
     internal val connection = object : NestedScrollConnection {
-        override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-            offset = (offset + available.y).coerceIn(-height.toFloat(), 0f)
+        /** Moves the header only as much as the list really scrolled, so a short list keeps it visible. */
+        override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
+            offset = (offset + consumed.y).coerceIn(-height.toFloat(), 0f)
             return Offset.Zero
         }
     }
