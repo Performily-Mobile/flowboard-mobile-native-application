@@ -9,10 +9,5 @@ interface IamService {
     @POST("auth/logout") suspend fun logout(): Response<Unit>
     @GET("accounts") suspend fun accounts(): Response<List<AccountDto>>
     @PATCH("accounts/{id}/role") suspend fun changeRole(@Path("id") id: Long, @Body request: RoleRequest): Response<Unit>
-    @POST("accounts/{id}/reset-password") suspend fun resetPassword(@Path("id") id: Long): Response<Unit>
+    @POST("accounts/{id}/reset-password") suspend fun resetPassword(@Path("id") id: Long): Response<ResetPasswordResponse>
 }
-data class LoginRequest(val username: String, val password: String)
-data class LoginResponse(val token: String, val role: String, val employeeId: Long, val mustChangePassword: Boolean = false)
-data class ChangePasswordRequest(val currentPassword: String, val newPassword: String)
-data class AccountDto(val id: Long, val employeeId: Long, val username: String, val role: String, val status: String)
-data class RoleRequest(val role: String)
