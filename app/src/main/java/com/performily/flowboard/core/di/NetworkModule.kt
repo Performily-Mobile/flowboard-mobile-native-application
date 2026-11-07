@@ -1,6 +1,7 @@
 
 package com.performily.flowboard.core.di
 
+import com.performily.flowboard.BuildConfig
 import com.performily.flowboard.features.iam.infrastructure.local.SecureSessionStore
 import dagger.Module
 import dagger.Provides
@@ -16,9 +17,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
-
-    private const val BASE_URL =
-        "https://flowboard-mobile-service.onrender.com/api/v1/"
 
     @Provides
     @Singleton
@@ -57,7 +55,7 @@ object NetworkModule {
         client: OkHttpClient
     ): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(BuildConfig.BASE_URL)
             .client(client)
             .addConverterFactory(
                 GsonConverterFactory.create()
