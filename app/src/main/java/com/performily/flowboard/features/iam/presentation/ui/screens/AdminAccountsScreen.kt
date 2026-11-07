@@ -2,19 +2,13 @@ package com.performily.flowboard.features.iam.presentation.ui.screens
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.performily.flowboard.features.iam.presentation.viewmodel.IamViewModel
@@ -31,8 +25,15 @@ fun AdminAccountsScreen(onBack: () -> Unit, vm: IamViewModel = hiltViewModel()) 
     val message by vm.message.collectAsState()
     var selected by remember { mutableStateOf<Long?>(null) }
     LaunchedEffect(Unit) { vm.loadAccounts() }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(22.dp)) {
-        TextButton(onClick = onBack) { Text("‹  Cuentas de colaboradores") }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp, vertical = 24.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onBack) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = androidx.compose.ui.graphics.Color(0xFF4B4F58))
+            }
+            Spacer(Modifier.width(8.dp))
+            Text("Cuentas de colaboradores", style = MaterialTheme.typography.headlineSmall)
+        }
+        Spacer(Modifier.height(22.dp))
         if (loading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         if (error != null) ErrorBanner(error!!)
         if (message != null) Text(message!!, color = brand)
