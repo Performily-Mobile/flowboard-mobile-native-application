@@ -24,15 +24,50 @@ import androidx.compose.runtime.collectAsState
 internal val brand = androidx.compose.ui.graphics.Color(0xFF3D6292)
 
 @Composable
-fun PasswordField(value: String, onChange: (String) -> Unit, label: String, error: Boolean = false) {
+fun PasswordField(
+    value: String,
+    onChange: (String) -> Unit,
+    label: String,
+    error: Boolean = false,
+    supportingError: String? = null
+) {
     var visible by remember { mutableStateOf(false) }
-    OutlinedTextField(value, onChange, label = { Text(label) }, singleLine = true, modifier = Modifier.fillMaxWidth(), isError = error,
+    OutlinedTextField(
+        value = value,
+        onValueChange = onChange,
+        label = { Text(label) },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+        isError = error,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
         visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
-        trailingIcon = { IconButton(onClick = { visible = !visible }) { Icon(if (visible) Icons.Default.VisibilityOff else Icons.Default.Visibility, if (visible) "Ocultar contraseña" else "Mostrar contraseña") } })
+        trailingIcon = {
+            IconButton(onClick = { visible = !visible }) {
+                Icon(
+                    if (visible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                    if (visible) "Ocultar contraseña" else "Mostrar contraseña"
+                )
+            }
+        },
+        supportingText = {
+            if (error && !supportingError.isNullOrBlank()) {
+                Text(supportingError)
+            }
+        }
+    )
 }
 
 
 @Composable
-fun ErrorBanner(message: String) { Surface(color = androidx.compose.ui.graphics.Color(0xFFFFD9D4), shape = RoundedCornerShape(14.dp)) { Text("⚠  $message", color = androidx.compose.ui.graphics.Color(0xFF7F1616), modifier = Modifier.fillMaxWidth().padding(16.dp)) } }
-
+fun ErrorBanner(message: String) {
+    Surface(
+        color = androidx.compose.ui.graphics.Color(0xFFFFD9D4),
+        shape = RoundedCornerShape(14.dp)
+    ) {
+        Text(
+            text = "⚠  $message",
+            color = androidx.compose.ui.graphics.Color(0xFF7F1616),
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        )
+    }
+}

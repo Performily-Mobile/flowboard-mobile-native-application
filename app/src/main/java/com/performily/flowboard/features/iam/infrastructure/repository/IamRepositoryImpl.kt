@@ -17,9 +17,8 @@ class IamRepositoryImpl @Inject constructor(private val api: IamService, private
     override suspend fun signIn(username: String, password: String): Result<AuthSession> = runCatching {
         val response = api.login(LoginRequest(username, password))
         if (!response.isSuccessful) throw IllegalStateException(when (response.code()) {
-            401 -> "El usuario o la contraseña no son correctos."
             403, 422 -> "Tu cuenta está inhabilitada. Comunícate con Recursos Humanos."
-            else -> "No se pudo iniciar sesión (HTTP ${response.code()})."
+            else -> "El usuario o la contraseña no son correctos. Revisa tus datos e intenta de nuevo."
         })
         val body = response.body() ?: error("Respuesta de inicio de sesión vacía")
         AuthSession(body.token, body.role, body.employeeId, body.mustChangePassword, username).also { secure.save(it); current.value = it }
@@ -59,3 +58,4 @@ class IamRepositoryImpl @Inject constructor(private val api: IamService, private
     override fun setBiometricEnabled(enabled: Boolean) = secure.setBiometricEnabled(enabled)
     override fun isBiometricEnabled() = secure.biometricEnabled()
 }
+
