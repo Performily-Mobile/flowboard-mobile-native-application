@@ -1,6 +1,7 @@
 package com.performily.flowboard.features.iam.domain.repository
 
 import com.performily.flowboard.features.iam.domain.entity.AuthSession
+import com.performily.flowboard.features.iam.domain.entity.Account
 import kotlinx.coroutines.flow.StateFlow
 
 interface IamRepository {
@@ -10,8 +11,7 @@ interface IamRepository {
     suspend fun signOut(): Result<Unit>
     suspend fun accounts(): Result<List<Account>>
     suspend fun changeRole(id: Long, role: String): Result<Unit>
-    suspend fun resetPassword(id: Long): Result<Unit>
+    suspend fun resetPassword(id: Long): Result<String>
     fun setBiometricEnabled(enabled: Boolean)
     fun isBiometricEnabled(): Boolean
 }
-data class Account(val id: Long, val employeeId: Long, val username: String, val role: String, val status: String)
