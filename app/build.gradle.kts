@@ -6,6 +6,12 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+/** API deployed on Render, used by every build unless flowboard.baseUrl says otherwise. */
+val renderBaseUrl = "https://flowboard-mobile-service.onrender.com/api/v1/"
+
+/** API of the debug build: Render, or a local backend set in ~/.gradle/gradle.properties. */
+val debugBaseUrl = providers.gradleProperty("flowboard.baseUrl").getOrElse(renderBaseUrl)
+
 android {
     namespace = "com.performily.flowboard"
     compileSdk {
@@ -27,7 +33,7 @@ android {
             buildConfigField(
                 "String",
                 "BASE_URL",
-                "\"http://127.0.0.1:8080/api/v1/\""
+                "\"$debugBaseUrl\""
             )
         }
 
@@ -44,7 +50,7 @@ android {
             buildConfigField(
                 "String",
                 "BASE_URL",
-                "\"https://flowboard-mobile-service.onrender.com/api/v1/\""
+                "\"$renderBaseUrl\""
             )
         }
     }
