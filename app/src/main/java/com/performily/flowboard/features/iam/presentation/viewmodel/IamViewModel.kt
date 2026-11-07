@@ -2,11 +2,11 @@ package com.performily.flowboard.features.iam.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.performily.flowboard.features.iam.application.ChangePasswordUseCase
-import com.performily.flowboard.features.iam.application.SignInUseCase
-import com.performily.flowboard.features.iam.application.SignOutUseCase
+import com.performily.flowboard.features.iam.application.usecase.ChangePasswordUseCase
+import com.performily.flowboard.features.iam.application.usecase.SignInUseCase
+import com.performily.flowboard.features.iam.application.usecase.SignOutUseCase
 import com.performily.flowboard.features.iam.domain.repository.IamRepository
-import com.performily.flowboard.features.iam.domain.repository.Account
+import com.performily.flowboard.features.iam.domain.entity.Account
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,6 +27,9 @@ class IamViewModel @Inject constructor(
     val error = _error.asStateFlow()
     private val _message = MutableStateFlow<String?>(null)
     val message = _message.asStateFlow()
+    private val _temporaryPassword = MutableStateFlow<String?>(null)
+    val temporaryPassword = _temporaryPassword.asStateFlow()
+    fun dismissTemporaryPassword() { _temporaryPassword.value = null }
     private val _accounts = MutableStateFlow<List<Account>>(emptyList())
     val accounts = _accounts.asStateFlow()
     fun clearFeedback() { _error.value = null; _message.value = null }
@@ -39,7 +42,7 @@ class IamViewModel @Inject constructor(
     fun logout() = execute { signOut().getOrThrow() }
     fun loadAccounts() = execute { _accounts.value = repository.accounts().getOrThrow() }
     fun changeRole(id: Long, role: String) = execute { repository.changeRole(id, role).getOrThrow(); _accounts.value = repository.accounts().getOrThrow() }
-    fun resetPassword(id: Long) = execute { repository.resetPassword(id).getOrThrow(); _message.value = "Restablecimiento solicitado. Verifica el envío desde el backend." }
+    fun resetPassword(id: Long) = execute { _temporaryPassword.value = repository.resetPassword(id).getOrThrow(); _message.value = "Contraseña temporal generada. Entrégala por un canal seguro." }
     fun biometricEnabled() = repository.isBiometricEnabled()
     fun setBiometricEnabled(value: Boolean) = repository.setBiometricEnabled(value)
     private fun execute(block: suspend () -> Unit) { viewModelScope.launch { _loading.value = true; clearFeedback(); try { block() } catch (e: Exception) { _error.value = e.message ?: "Ocurrió un error" } finally { _loading.value = false } } }
