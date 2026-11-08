@@ -11,7 +11,6 @@ interface AttendanceService {
 
     @GET("attendance/me")
     suspend fun getMyAttendance(
-        @Query("employeeId") employeeId: Long,
         @Query("from") fromDate: String,
         @Query("to") toDate: String
     ): Response<List<AttendanceRecordDto>>
@@ -19,6 +18,22 @@ interface AttendanceService {
     @GET("attendance/employees/{employeeId}")
     suspend fun getEmployeeAttendance(
         @Path("employeeId") employeeId: Long,
+        @Query("from") fromDate: String,
+        @Query("to") toDate: String
+    ): Response<List<AttendanceRecordDto>>
+
+    @GET("attendance/records")
+    suspend fun getRecords(
+        @Query("from") fromDate: String,
+        @Query("to") toDate: String,
+        @Query("status") status: String?,
+        @Query("page") page: Int,
+        @Query("size") size: Int
+    ): Response<AttendancePageDto>
+
+    @GET("attendance/areas/{areaId}/records")
+    suspend fun getAreaRecords(
+        @Path("areaId") areaId: Long,
         @Query("from") fromDate: String,
         @Query("to") toDate: String
     ): Response<List<AttendanceRecordDto>>

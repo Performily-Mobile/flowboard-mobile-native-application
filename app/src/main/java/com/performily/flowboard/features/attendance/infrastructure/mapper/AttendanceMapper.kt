@@ -44,6 +44,8 @@ object AttendanceMapper {
     )
 
     private fun String.toLocalTimeOrNull(): LocalTime? = runCatching {
-        LocalTime.parse(this)
+        // Spring Boot returns ISO LocalDateTime, while older mocks may contain just HH:mm:ss.
+        if ('T' in this) java.time.LocalDateTime.parse(this).toLocalTime()
+        else LocalTime.parse(this)
     }.getOrNull()
 }

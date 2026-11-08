@@ -2,6 +2,7 @@ package com.performily.flowboard.features.attendance.infrastructure.repository
 
 import com.performily.flowboard.core.network.apiCall
 import com.performily.flowboard.core.session.CurrentEmployeeProvider
+import com.performily.flowboard.features.attendance.domain.repository.AttendancePage
 import com.performily.flowboard.features.attendance.domain.entity.AttendanceArea
 import com.performily.flowboard.features.attendance.domain.entity.AttendanceAreaReport
 import com.performily.flowboard.features.attendance.domain.entity.AttendanceEmployee
@@ -21,7 +22,8 @@ import com.performily.flowboard.features.attendance.infrastructure.remote.PunchR
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 import javax.inject.Inject
 import kotlin.math.round
 
@@ -35,7 +37,6 @@ class AttendanceRepositoryImpl @Inject constructor(
         val employeeId = currentEmployeeProvider.currentEmployeeId().value
         val recordsResult = apiCall {
             attendanceService.getMyAttendance(
-                employeeId = employeeId,
                 fromDate = period.from.toString(),
                 toDate = period.to.toString()
             )
@@ -73,9 +74,6 @@ class AttendanceRepositoryImpl @Inject constructor(
 
         if (recordsResult.isFailure) return recordsResult
 
-        // AttendanceRecordResource deliberately exposes only attendance data. Employee
-        // identity/area data belongs to Workspace, so enrich the UI model through the
-        // Workspace API without coupling Attendance to Workspace persistence.
         return apiCall { workspaceService.getEmployee(employeeId) }
             .mapCatching { employee ->
                 val employeeName = employee.fullName
@@ -92,91 +90,79 @@ class AttendanceRepositoryImpl @Inject constructor(
             .recoverCatching { recordsResult.getOrThrow() }
     }
 
+    override suspend fun getRecords(
+        period: AttendancePeriod, status: String?, page: Int, size: Int
+    ): Result<AttendancePage> = runCatching {
+        val response = apiCall {
+            attendanceService.getRecords(
+                period.from.toString(), period.to.toString(), status, page, size
+            )
+        }.getOrThrow()
+        // Fetch the employee directory once per page instead of one API call per record.
+        val employees = apiCall {
+            workspaceService.searchEmployees(search = null, status = null)
+        }.getOrNull().orEmpty().associateBy { it.id }
+        val records = response.content.map(AttendanceMapper::toDomain).map { record ->
+            val employee = employees[record.employeeId]
+            record.copy(
+                employeeName = employee?.fullName
+                    ?: listOfNotNull(employee?.firstName, employee?.lastName).joinToString(" ").ifBlank { record.employeeName },
+                areaId = record.areaId ?: employee?.areaId,
+                areaName = record.areaName ?: employee?.areaName,
+                positionTitle = record.positionTitle ?: employee?.positionTitle
+            )
+        }
+        AttendancePage(records, response.totalElements, response.last)
+    }
+
     override suspend fun getAreaAttendance(
-        areaId: Long,
-        period: AttendancePeriod
+        areaId: Long, period: AttendancePeriod
     ): Result<AttendanceAreaReport> = coroutineScope {
-        val summaryDeferred = async {
-            apiCall {
-                attendanceService.getAreaSummary(
-                    areaId = areaId,
-                    fromDate = period.from.toString(),
-                    toDate = period.to.toString()
-                )
-            }
-        }
-
-        // The backend's area-report endpoint returns aggregate metrics only. The
-        // mockup also needs the employee rows and record history, so retrieve the
-        // daily area records for that presentation detail.
-        val dates = generateSequence(period.from) { current ->
-            current.plusDays(1).takeUnless { it.isAfter(period.to) }
-        }.toList()
-
-        val dailyRecordsDeferred = dates.map { date ->
-            async {
-                apiCall { attendanceService.getAreaAttendance(areaId, date.toString()) }
-                    .getOrElse { throw it }
-                    .map(AttendanceMapper::toDomain)
-            }
-        }
-
         runCatching {
-            val summary = summaryDeferred.await().getOrElse { throw it }
-
-            val rawRecords = dailyRecordsDeferred.awaitAll()
-                .flatten()
-                .distinctBy { it.id ?: "${it.employeeId}-${it.workDate}" }
-
-            val employeeIds = rawRecords.map { it.employeeId }.distinct()
-            val employeeMap = employeeIds.map { employeeId ->
-                async {
-                    employeeId to apiCall { workspaceService.getEmployee(employeeId) }
-                        .getOrNull()
-                }
-            }.awaitAll().toMap()
-
+            val summary = apiCall {
+                attendanceService.getAreaSummary(areaId, period.from.toString(), period.to.toString())
+            }.getOrThrow()
+            val rawRecords = apiCall {
+                attendanceService.getAreaRecords(areaId, period.from.toString(), period.to.toString())
+            }.getOrThrow().map(AttendanceMapper::toDomain)
+            val employees = apiCall {
+                workspaceService.searchEmployees(search = null, areaId = areaId, status = "ACTIVE")
+            }.getOrThrow()
+            val grouped = rawRecords.groupBy { it.employeeId }
             val records = rawRecords.map { record ->
-                val employee = employeeMap[record.employeeId]
+                val employee = employees.firstOrNull { it.id == record.employeeId }
                 record.copy(
                     employeeName = employee?.fullName
                         ?: listOfNotNull(employee?.firstName, employee?.lastName).joinToString(" ").ifBlank { record.employeeName },
-                    areaId = record.areaId ?: employee?.areaId ?: areaId,
+                    areaId = record.areaId ?: areaId,
                     areaName = record.areaName ?: employee?.areaName,
                     positionTitle = record.positionTitle ?: employee?.positionTitle
                 )
             }
-
-            val totalStatusCount = summary.onTime + summary.late + summary.absent + summary.incomplete + summary.justified
-            val punctuality = if (totalStatusCount == 0L) {
-                0
-            } else {
-                round(summary.onTime * 100.0 / totalStatusCount).toInt()
-            }
-
+            val count = summary.onTime + summary.late + summary.absent + summary.incomplete + summary.justified
+            val punctuality = if (count == 0L) 0 else round(summary.onTime * 100.0 / count).toInt()
             AttendanceAreaReport(
-                areaId = summary.areaId,
-                areaName = records.firstOrNull()?.areaName ?: "Área $areaId",
+                areaId = areaId,
+                areaName = employees.firstOrNull()?.areaName ?: "Área $areaId",
                 punctualityPercentage = punctuality,
                 lateCount = summary.late.toInt(),
                 absenceCount = summary.absent.toInt(),
                 totalEffectiveHours = summary.workedHours,
                 totalOvertimeHours = summary.overtimeHours,
-                employees = records
-                    .groupBy { it.employeeId }
-                    .map { (employeeId, employeeRecords) ->
-                        AttendanceEmployeeSummary(
-                            employeeId = employeeId,
-                            employeeName = employeeRecords.firstNotNullOfOrNull { it.employeeName }
-                                ?: "Colaborador #$employeeId",
-                            effectiveHours = employeeRecords.sumOf { it.effectiveHours ?: 0.0 },
-                            overtimeHours = employeeRecords.sumOf { it.overtimeHours ?: 0.0 },
-                            lateCount = employeeRecords.count { it.status == AttendanceStatus.LATE },
-                            absenceCount = employeeRecords.count { it.status == AttendanceStatus.ABSENT },
-                            status = employeeRecords.maxByOrNull { it.workDate }?.status ?: AttendanceStatus.INCOMPLETE
-                        )
-                    }
-                    .sortedBy { it.employeeName },
+                employees = employees.map { employee ->
+                    val rows = grouped[employee.id].orEmpty()
+                    AttendanceEmployeeSummary(
+                        employeeId = employee.id,
+                        employeeName = employee.fullName
+                            ?: listOfNotNull(employee.firstName, employee.lastName).joinToString(" ").ifBlank { "Colaborador #${employee.id}" },
+                        effectiveHours = rows.sumOf { it.effectiveHours ?: 0.0 },
+                        overtimeHours = rows.sumOf { it.overtimeHours ?: 0.0 },
+                        lateCount = rows.count { it.status == AttendanceStatus.LATE },
+                        absenceCount = rows.count { it.status == AttendanceStatus.ABSENT },
+                        status = rows.maxByOrNull { it.workDate }?.status ?: AttendanceStatus.INCOMPLETE,
+                        hasRecords = rows.isNotEmpty()
+                    )
+                }.sortedBy { it.employeeName },
                 records = records
             )
         }
@@ -247,7 +233,7 @@ class AttendanceRepositoryImpl @Inject constructor(
                 PunchRequestDto(
                     employeeId = currentEmployeeProvider.currentEmployeeId().value,
                     type = type.name,
-                    punchedAt = Instant.now().toString()
+                    punchedAt = LocalDateTime.now(ZoneId.of("America/Lima")).toString()
                 )
             )
         }
@@ -272,4 +258,3 @@ class AttendanceRepositoryImpl @Inject constructor(
         apiCall { workspaceService.searchEmployees(query.takeIf { it.isNotBlank() }) }
             .mapCatching { it.map(AttendanceMapper::toEmployee) }
 }
-
