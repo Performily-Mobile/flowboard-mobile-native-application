@@ -11,6 +11,7 @@ import com.performily.flowboard.features.attendance.domain.valueobject.PunchType
 interface AttendanceRepository {
     suspend fun getMyAttendance(period: AttendancePeriod): Result<List<AttendanceRecord>>
     suspend fun getEmployeeAttendance(employeeId: Long, period: AttendancePeriod): Result<List<AttendanceRecord>>
+    suspend fun getRecords(period: AttendancePeriod, status: String?, page: Int, size: Int): Result<AttendancePage>
     suspend fun getAreaAttendance(areaId: Long, period: AttendancePeriod): Result<AttendanceAreaReport>
     suspend fun getHoursReport(period: AttendancePeriod, areaId: Long?, orderByOvertime: Boolean): Result<AttendanceHoursReport>
     suspend fun registerPunch(type: PunchType): Result<Long>
@@ -18,3 +19,10 @@ interface AttendanceRepository {
     suspend fun getAreas(): Result<List<AttendanceArea>>
     suspend fun searchEmployees(query: String): Result<List<AttendanceEmployee>>
 }
+
+/** General HR attendance history, paginated by the backend. */
+data class AttendancePage(
+    val records: List<AttendanceRecord>,
+    val total: Long,
+    val last: Boolean
+)

@@ -9,5 +9,6 @@ data class AttendanceEmployeeSummary(
     val overtimeHours: Double,
     val lateCount: Int,
     val absenceCount: Int,
-    val status: AttendanceStatus
+    val status: AttendanceStatus,
+    val hasRecords: Boolean = true
 )
