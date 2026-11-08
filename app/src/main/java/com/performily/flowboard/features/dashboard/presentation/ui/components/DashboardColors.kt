@@ -19,14 +19,18 @@ internal enum class DashboardAccent(val container: Color, val content: Color) {
     PRIMARY(PrimaryContainer, OnPrimaryContainer),
     AMBER(PendingContainer, Color(0xFF7A4B00)),
     RED(ErrorContainer, OnErrorContainer),
-    GREEN(ActiveContainer, Color(0xFF1B4D1B))
+    GREEN(ActiveContainer, Color(0xFF1B4D1B)),
+    PURPLE(Color(0xFFE9DDFF), Color(0xFF3F2D6B))
 }
 
 /** Bar colors of the attendance rows, from healthy to worrying. */
 internal object DashboardColors {
 
-    private val healthy = Color(0xFF2E7D32)
-    private val warning = Color(0xFFB26A00)
+    /** Bar color of healthy values, such as punctual days. */
+    val healthy = Color(0xFF2E7D32)
+
+    /** Bar color of values that deserve attention, such as late days. */
+    val warning = Color(0xFFB26A00)
 
     /**
      * Returns the bar color for an attendance percentage.
