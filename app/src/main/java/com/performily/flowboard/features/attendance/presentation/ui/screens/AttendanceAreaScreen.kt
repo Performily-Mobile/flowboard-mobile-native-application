@@ -153,7 +153,7 @@ fun AttendanceAreaScreen(
                     }
                     item {
                         Text(
-                            "Por colaborador",
+                            "Por colaborador (${report.employees.size})",
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(top = Spacing.m)
                         )
@@ -166,7 +166,7 @@ fun AttendanceAreaScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(shape)
-                                .clickable { onEmployeeClick(employee.employeeId, employee.employeeName) }
+                                .clickable(enabled = employee.hasRecords) { onEmployeeClick(employee.employeeId, employee.employeeName) }
                         ) {
                             Row(
                                 modifier = Modifier
@@ -185,16 +185,17 @@ fun AttendanceAreaScreen(
                                     )
                                     Text(
                                         "${formatHours(employee.effectiveHours)} · ${formatHours(employee.overtimeHours)} extra" +
-                                            if (employee.lateCount > 0 || employee.absenceCount > 0) {
-                                                " · ${employee.lateCount} tard. · ${employee.absenceCount} inas."
-                                            } else "",
+                                                if (employee.lateCount > 0 || employee.absenceCount > 0) {
+                                                    " · ${employee.lateCount} tard. · ${employee.absenceCount} inas."
+                                                } else "",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
                                 }
-                                AttendanceStatusChip(employee.status)
+                                if (employee.hasRecords) AttendanceStatusChip(employee.status)
+                                else Text("Sin registros", style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }

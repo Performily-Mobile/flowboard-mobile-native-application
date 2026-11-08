@@ -147,7 +147,7 @@ fun AttendanceHoursScreen(
                     }
                     item {
                         Text(
-                            "Por colaborador",
+                            "Por colaborador (${report.employees.size})",
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(top = Spacing.m)
                         )

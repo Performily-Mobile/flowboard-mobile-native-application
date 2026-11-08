@@ -32,10 +32,9 @@ import com.performily.flowboard.features.attendance.domain.valueobject.Attendanc
 import com.performily.flowboard.features.attendance.domain.valueobject.label
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceDatePickerField
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceEmptyState
-import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceFilterDropdown
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceRecordItem
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceSectionTabs
-import com.performily.flowboard.features.attendance.presentation.viewmodel.AttendanceAreaViewModel
+import com.performily.flowboard.features.attendance.presentation.viewmodel.AttendanceRecordsViewModel
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 /**
@@ -51,11 +50,10 @@ import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 fun AttendanceRecordsScreen(
     onAreaReport: () -> Unit,
     onHoursReport: () -> Unit,
-    viewModel: AttendanceAreaViewModel = hiltViewModel()
+    viewModel: AttendanceRecordsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val records = state.report?.records.orEmpty()
-    val filteredRecords = if (state.statusFilter == "TODOS") records else records.filter { it.status.name == state.statusFilter }
+    val filteredRecords = state.records
     val headerState = rememberCollapsingHeaderState()
 
     Scaffold(
@@ -97,14 +95,6 @@ fun AttendanceRecordsScreen(
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    AttendanceFilterDropdown(
-                        label = "Área",
-                        selectedLabel = state.selectedArea?.name ?: "Selecciona un área",
-                        options = state.areas,
-                        optionLabel = { it.name },
-                        onSelected = viewModel::selectArea,
-                        modifier = Modifier.fillMaxWidth()
-                    )
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -131,10 +121,10 @@ fun AttendanceRecordsScreen(
                 .fillMaxSize()
                 .padding(top = contentPadding.calculateTopPadding())
             when {
-                state.isLoading -> Box(stateModifier, contentAlignment = Alignment.Center) {
+                state.isLoading && state.records.isEmpty() -> Box(stateModifier, contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
-                state.errorMessage != null -> Column(
+                state.errorMessage != null && state.records.isEmpty() -> Column(
                     modifier = stateModifier.padding(top = Spacing.xl),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(Spacing.m)
@@ -159,16 +149,23 @@ fun AttendanceRecordsScreen(
                 ) {
                     item {
                         Text(
-                            "${filteredRecords.size} registros",
+                            "${filteredRecords.size} de ${state.total} registros",
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     items(
-                        filteredRecords.sortedByDescending { it.workDate },
+                        filteredRecords,
                         key = { it.id ?: "${it.employeeId}-${it.workDate}" }
                     ) { record ->
                         AttendanceRecordItem(record = record, showEmployee = true)
+                    }
+                    if (state.hasMore || state.isLoading) {
+                        item {
+                            OutlinedButton(onClick = viewModel::loadMore, enabled = !state.isLoading) {
+                                Text(if (state.isLoading) "Cargando…" else "Cargar más registros")
+                            }
+                        }
                     }
                 }
             }
