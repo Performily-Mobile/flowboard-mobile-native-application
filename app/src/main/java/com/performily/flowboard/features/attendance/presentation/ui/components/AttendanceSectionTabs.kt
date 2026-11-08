@@ -1,26 +1,32 @@
 package com.performily.flowboard.features.attendance.presentation.ui.components
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.performily.flowboard.core.designsystem.component.FlowboardTabs
+import androidx.compose.ui.unit.dp
 
-/**
- * Sections of the HR Attendance tab: records, report by area and hours.
- *
- * @param selectedIndex position of the section currently shown.
- * @param onSelected called with the position of the section the user taps.
- * @param modifier modifier applied to the tabs.
- */
 @Composable
 fun AttendanceSectionTabs(
     selectedIndex: Int,
     onSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    FlowboardTabs(
-        labels = listOf("Registros", "Resumen por área", "Horas y sobretiempo"),
-        selectedIndex = selectedIndex,
-        onSelect = onSelected,
-        modifier = modifier
-    )
+    val labels = listOf("Registros", "Resumen por área", "Horas y sobretiempo")
+    Row(
+        modifier = modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        labels.forEachIndexed { index, label ->
+            FilterChip(
+                selected = index == selectedIndex,
+                onClick = { onSelected(index) },
+                label = { Text(label, maxLines = 1) }
+            )
+        }
+    }
 }
