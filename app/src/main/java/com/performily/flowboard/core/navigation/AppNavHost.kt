@@ -81,7 +81,5 @@ fun AppNavHost(
                 onBack = { navController.popBackStack() }
             )
         }
-
-        composable<HomeRoute> { PendingFeatureScreen(title = "Inicio") }
     }
 }
