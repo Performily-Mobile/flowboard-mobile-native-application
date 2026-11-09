@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.performily.flowboard.features.attendance.presentation.ui.navigation.MyAttendanceFromMoreRoute
 import com.performily.flowboard.features.iam.presentation.ui.navigation.iamNavGraph
 import com.performily.flowboard.features.iam.presentation.ui.navigation.AccountSecurityRoute
 import com.performily.flowboard.features.payroll.presentation.ui.navigation.PayrollNavGraphRoute
@@ -65,6 +66,7 @@ fun AppNavHost(
                 onMyBenefitsClick = { navController.navigate(MyBenefitsRoute) },
                 onMyVacationBalanceClick = { navController.navigate(MyVacationBalanceRoute) },
                 onMyRequestsClick = { navController.navigate(MyRequestsRoute) },
+                onMyAttendanceClick = { navController.navigate(MyAttendanceFromMoreRoute) },
                 onPendingClick = { title ->
                     if (title == "Cuenta y seguridad") navController.navigate(AccountSecurityRoute)
                     else if (title == "Tipos de solicitud") navController.navigate(RequestTypesRoute)

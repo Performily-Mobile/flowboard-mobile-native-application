@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -48,7 +47,6 @@ import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
  * @param onMyRequestsClick opens the own requests.
  * @param onPendingClick opens the pending screen with the given title.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoreScreen(
     onOrganizationClick: () -> Unit,
@@ -59,6 +57,7 @@ fun MoreScreen(
     onMyBenefitsClick: () -> Unit,
     onMyVacationBalanceClick: () -> Unit,
     onMyRequestsClick: () -> Unit,
+    onMyAttendanceClick: () -> Unit,
     onPendingClick: (title: String) -> Unit
 ) {
     Scaffold(
@@ -99,6 +98,8 @@ fun MoreScreen(
                 MoreItem(FlowboardIcons.Schedule, "Mi saldo de vacaciones", "Días disponibles y movimientos", onMyVacationBalanceClick)
                 MoreDivider()
                 MoreItem(FlowboardIcons.Article, "Mis solicitudes", "Vacaciones, permisos y licencias que pediste", onMyRequestsClick)
+                MoreDivider()
+                MoreItem(FlowboardIcons.Schedule, "Mi asistencia", "Mis marcaciones e historial personal", onMyAttendanceClick)
                 MoreDivider()
                 MoreItem(FlowboardIcons.Lock, "Cuenta y seguridad", "Huella, idioma y cierre de sesión") {
                     onPendingClick("Cuenta y seguridad")

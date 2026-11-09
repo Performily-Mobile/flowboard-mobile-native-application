@@ -11,8 +11,12 @@ import com.performily.flowboard.features.attendance.presentation.ui.screens.Atte
 import com.performily.flowboard.features.attendance.presentation.ui.screens.AttendanceHomeScreen
 import com.performily.flowboard.features.attendance.presentation.ui.screens.AttendanceHoursScreen
 import com.performily.flowboard.features.attendance.presentation.ui.screens.JustifyAttendanceScreen
+import com.performily.flowboard.features.attendance.presentation.ui.screens.MyAttendanceScreen
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
+
+@Serializable
+data object MyAttendanceFromMoreRoute
 
 @Serializable
 data object AttendanceHomeRoute
@@ -41,6 +45,15 @@ data class JustifyAttendanceRoute(
  * @param navController controller used to move between the screens.
  */
 fun NavGraphBuilder.attendanceNavGraph(navController: NavController) {
+    // HR also has personal attendance, accessible from "Más > Mi cuenta".
+    composable<MyAttendanceFromMoreRoute> {
+        MyAttendanceScreen(
+            onJustify = { recordId, workDate ->
+                navController.navigate(JustifyAttendanceRoute(recordId, workDate.toString()))
+            },
+            onBack = { navController.popBackStack() }
+        )
+    }
     navigation<AttendanceRoute>(startDestination = AttendanceHomeRoute) {
         composable<AttendanceHomeRoute> {
             AttendanceHomeScreen(

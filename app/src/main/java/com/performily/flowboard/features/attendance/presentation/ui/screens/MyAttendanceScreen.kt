@@ -61,6 +61,7 @@ private const val PUNCH_NOTE = "Las marcaciones se registran en el servidor y se
 @Composable
 fun MyAttendanceScreen(
     onJustify: (Long, LocalDate) -> Unit,
+    onBack: (() -> Unit)? = null,
     viewModel: MyAttendanceViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -72,7 +73,8 @@ fun MyAttendanceScreen(
     Scaffold(
         topBar = {
             FlowboardTopBar(
-                title = "Mi asistencia"
+                title = "Mi asistencia",
+                onBack = onBack
             )
         }
     ) { paddingValues ->
