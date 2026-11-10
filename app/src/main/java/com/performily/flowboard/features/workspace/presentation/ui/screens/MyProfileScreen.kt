@@ -181,7 +181,7 @@ private fun ShortcutButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    OutlinedButton(onClick = onClick, modifier = modifier.height(48.dp)) {
+    OutlinedButton(onClick = onClick, modifier = modifier.height(52.dp)) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
         Text(text, modifier = Modifier.padding(start = 8.dp))
     }

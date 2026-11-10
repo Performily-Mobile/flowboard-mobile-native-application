@@ -9,6 +9,8 @@ import com.performily.flowboard.features.benefits.presentation.ui.navigation.MyB
 import com.performily.flowboard.features.benefits.presentation.ui.navigation.MyVacationBalanceRoute
 import com.performily.flowboard.features.benefits.presentation.ui.navigation.VacationBalanceDetailRoute
 import com.performily.flowboard.features.benefits.presentation.ui.navigation.VacationBalancesRoute
+import com.performily.flowboard.features.iam.presentation.ui.navigation.AccountSecurityRoute
+import com.performily.flowboard.features.notifications.presentation.ui.navigation.NotificationsRoute
 import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.NewOfficeRoute
 import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.OfficeDetailRoute
 import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.OfficesRoute
@@ -31,9 +33,12 @@ import com.performily.flowboard.features.request.presentation.ui.navigation.Revi
 import kotlin.reflect.KClass
 
 /**
- * Pestañas de la barra inferior.
- * route: a dónde lleva la pestaña.
- * matches: pantallas en las que la pestaña se ve seleccionada.
+ * Tabs of the bottom bar.
+ *
+ * @property label text of the tab.
+ * @property icon icon of the tab.
+ * @property route screen the tab opens.
+ * @property matches screens on which the tab is shown as selected.
  */
 enum class TopLevelDestination(
     val label: String,
@@ -41,8 +46,10 @@ enum class TopLevelDestination(
     val route: Any,
     val matches: List<KClass<*>>
 ) {
-    // ---------- RR.HH. (MA-18 a MA-20) ----------
+    /** HR dashboard (MA-18). */
     PANEL("Panel", FlowboardIcons.GridView, PanelRoute, listOf(PanelRoute::class)),
+
+    /** HR employee management. */
     PERSONAL(
         "Personal",
         FlowboardIcons.Group,
@@ -54,6 +61,8 @@ enum class TopLevelDestination(
             EditPersonalDataRoute::class
         )
     ),
+
+    /** Requests, shared by both roles. */
     REQUESTS(
         "Solicitudes",
         FlowboardIcons.Article,
@@ -66,11 +75,16 @@ enum class TopLevelDestination(
             ResolvedRequestsRoute::class
         )
     ),
+
+    /** Attendance, shared by both roles. */
     ATTENDANCE(
         "Asistencia",
         FlowboardIcons.Schedule,
         AttendanceRoute,
-        listOf(AttendanceRoute::class)),
+        listOf(AttendanceRoute::class)
+    ),
+
+    /** Every other option, grouped by role in the "Más" screen (MA-19). */
     MORE(
         "Más",
         FlowboardIcons.Menu,
@@ -94,29 +108,29 @@ enum class TopLevelDestination(
             MyBenefitsRoute::class,
             MyVacationBalanceRoute::class,
             RequestTypesRoute::class,
-            NewRequestTypeRoute::class
+            NewRequestTypeRoute::class,
+            NotificationsRoute::class,
+            AccountSecurityRoute::class
         )
     ),
 
-    // ---------- Colaborador (MA-14 a MA-17) ----------
+    /** Employee home (MA-14). */
     HOME("Inicio", FlowboardIcons.Home, HomeRoute, listOf(HomeRoute::class)),
-    PAYSLIPS("Boletas", FlowboardIcons.CreditCard, PayslipsRoute, listOf(PayslipsRoute::class)),
-    PROFILE(
-        "Perfil",
-        FlowboardIcons.Person,
-        MyProfileRoute,
-        listOf(MyProfileRoute::class, MyRecordRoute::class, OrganizationChartRoute::class)
-    );
+
+    /** Own payslips of the employee (MA-65). */
+    PAYSLIPS("Boletas", FlowboardIcons.CreditCard, PayslipsRoute, listOf(PayslipsRoute::class));
 
     companion object {
 
         /**
-         * RR.HH. tiene su barra de gestión; su vista de colaborador
-         * (Mi perfil, Mi expediente) está en "Más" › "Mi perfil y autogestión".
+         * Tabs of each role. Both bars end with "Más": HR finds its own employee view there, and
+         * employees find their profile, benefits, organization chart, notifications and account.
+         *
+         * @param role role of the signed-in user.
          */
         fun forRole(role: UserRole): List<TopLevelDestination> = when (role) {
             UserRole.HUMAN_RESOURCES -> listOf(PANEL, PERSONAL, REQUESTS, ATTENDANCE, MORE)
-            UserRole.EMPLOYEE -> listOf(HOME, REQUESTS, ATTENDANCE, PAYSLIPS, PROFILE)
+            UserRole.EMPLOYEE -> listOf(HOME, REQUESTS, ATTENDANCE, PAYSLIPS, MORE)
         }
     }
 }

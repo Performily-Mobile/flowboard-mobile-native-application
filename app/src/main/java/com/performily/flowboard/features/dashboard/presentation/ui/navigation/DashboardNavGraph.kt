@@ -6,7 +6,6 @@ import androidx.navigation.compose.composable
 import com.performily.flowboard.core.navigation.AttendanceRoute
 import com.performily.flowboard.core.navigation.HomeRoute
 import com.performily.flowboard.core.navigation.PanelRoute
-import com.performily.flowboard.core.navigation.PendingFeatureRoute
 import com.performily.flowboard.core.navigation.navigateToTab
 import com.performily.flowboard.core.navigation.RequestsRoute
 import com.performily.flowboard.features.attendance.presentation.ui.navigation.AttendanceAreaReportRoute
@@ -15,6 +14,7 @@ import com.performily.flowboard.features.benefits.presentation.ui.navigation.MyV
 import com.performily.flowboard.features.benefits.presentation.ui.navigation.VacationBalancesRoute
 import com.performily.flowboard.features.dashboard.presentation.ui.screens.EmployeeDashboardScreen
 import com.performily.flowboard.features.dashboard.presentation.ui.screens.HrDashboardScreen
+import com.performily.flowboard.features.notifications.presentation.ui.navigation.NotificationsRoute
 import com.performily.flowboard.features.request.presentation.ui.navigation.RequestDetailRoute
 import com.performily.flowboard.features.request.presentation.ui.navigation.ReviewRequestRoute
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.EmployeesRoute
@@ -34,7 +34,7 @@ fun NavGraphBuilder.dashboardNavGraph(navController: NavController) {
             onExpiringVacationsClick = { navController.navigate(VacationBalancesRoute) },
             onAttendanceByAreaClick = { navController.navigate(AttendanceAreaReportRoute) },
             onRequestClick = { requestId -> navController.navigate(ReviewRequestRoute(requestId)) },
-            onNotificationsClick = { navController.navigate(PendingFeatureRoute("Notificaciones")) }
+            onNotificationsClick = { navController.navigate(NotificationsRoute) }
         )
     }
 
@@ -45,7 +45,7 @@ fun NavGraphBuilder.dashboardNavGraph(navController: NavController) {
             onRequestClick = { requestId -> navController.navigate(RequestDetailRoute(requestId)) },
             onVacationClick = { navController.navigate(MyVacationBalanceRoute) },
             onBenefitsClick = { navController.navigate(MyBenefitsRoute) },
-            onNotificationsClick = { navController.navigate(PendingFeatureRoute("Notificaciones")) }
+            onNotificationsClick = { navController.navigate(NotificationsRoute) }
         )
     }
 }

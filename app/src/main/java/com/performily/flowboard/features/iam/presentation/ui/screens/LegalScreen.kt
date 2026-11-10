@@ -1,127 +1,64 @@
 package com.performily.flowboard.features.iam.presentation.ui.screens
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.performily.flowboard.core.designsystem.component.FlowboardTabs
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.theme.Spacing
 
-private val legalBackground = Color(0xFFF8F9FF)
-private val legalText = Color(0xFF202124)
-private val legalSecondary = Color(0xFF4A4E57)
-
+/**
+ * Terms of service and privacy policy, opened from the login and from the account settings.
+ *
+ * @param onBack called when the back button is tapped.
+ */
 @Composable
 fun LegalScreen(onBack: () -> Unit) {
-    var selectedTab by rememberSaveable { mutableIntStateOf(1) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(PRIVACY_TAB) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(legalBackground)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(88.dp)
-                .padding(start = 20.dp, end = 20.dp, top = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Volver",
-                    tint = legalSecondary
-                )
-            }
-            Text(
-                text = "Términos y privacidad",
-                color = legalText,
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        TabRow(
-            selectedTabIndex = selectedTab,
-            containerColor = legalBackground,
-            contentColor = brand,
-            indicator = { tabPositions ->
-                TabRowDefaults.SecondaryIndicator(
-                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                    height = 3.dp,
-                    color = brand
-                )
-            },
-            divider = { HorizontalDivider(color = Color(0xFFE1E4EA)) }
-        ) {
-            listOf("Términos del servicio", "Privacidad").forEachIndexed { index, label ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = {
-                        Text(
-                            label,
-                            fontSize = 16.sp,
-                            fontWeight = if (selectedTab == index) FontWeight.SemiBold else FontWeight.Medium,
-                            maxLines = 1
-                        )
-                    },
-                    selectedContentColor = brand,
-                    unselectedContentColor = legalSecondary,
-                    modifier = Modifier.height(64.dp)
-                )
-            }
-        }
-
+    Scaffold(
+        topBar = { FlowboardTopBar(title = "Términos y privacidad", onBack = onBack) }
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 32.dp, vertical = 18.dp)
+                .padding(horizontal = Spacing.screenHorizontal)
+                .padding(top = Spacing.xs, bottom = Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.l)
         ) {
-            Text(
-                text = if (selectedTab == 1) "Política de privacidad" else "Términos del servicio",
-                style = MaterialTheme.typography.headlineMedium,
-                color = legalText
+            FlowboardTabs(
+                labels = listOf("Términos del servicio", "Privacidad"),
+                selectedIndex = selectedTab,
+                onSelect = { selectedTab = it }
             )
-            Spacer(Modifier.height(10.dp))
-            Text(
-                text = "Última actualización: 01/09/2026",
-                style = MaterialTheme.typography.bodyMedium,
-                color = legalSecondary
-            )
-            Spacer(Modifier.height(14.dp))
 
-            if (selectedTab == 1) {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                Text(
+                    text = if (selectedTab == PRIVACY_TAB) "Política de privacidad" else "Términos del servicio",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    text = "Última actualización: 01/09/2026",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            if (selectedTab == PRIVACY_TAB) {
                 LegalParagraph(
                     "Datos que tratamos",
                     "Tu ficha laboral, asistencia, solicitudes, beneficios y boletas, registrados por tu organización."
@@ -141,26 +78,31 @@ fun LegalScreen(onBack: () -> Unit) {
             } else {
                 LegalParagraph(
                     "Uso del servicio",
-                    "Flowboard facilita la consulta de información laboral, sujeto a los permisos asignados por tu organización. La versión legal definitiva debe ser aprobada por la organización."
+                    "Flowboard facilita la consulta de información laboral, sujeto a los permisos asignados por tu " +
+                        "organización. La versión legal definitiva debe ser aprobada por la organización."
                 )
             }
         }
     }
 }
 
+/**
+ * One clause of the legal text: a title and its detail.
+ *
+ * @param title title of the clause.
+ * @param detail text of the clause.
+ */
 @Composable
 private fun LegalParagraph(title: String, detail: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleLarge,
-        fontWeight = FontWeight.Bold,
-        color = legalText,
-        modifier = Modifier.padding(top = 16.dp)
-    )
-    Text(
-        text = detail,
-        style = MaterialTheme.typography.bodyLarge,
-        color = legalSecondary,
-        modifier = Modifier.padding(top = 8.dp)
-    )
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        Text(text = title, style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = detail,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }
+
+/** Index of the privacy tab, shown first. */
+private const val PRIVACY_TAB = 1

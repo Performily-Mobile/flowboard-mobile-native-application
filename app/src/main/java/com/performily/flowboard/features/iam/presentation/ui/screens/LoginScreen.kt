@@ -1,12 +1,9 @@
 package com.performily.flowboard.features.iam.presentation.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -44,7 +41,7 @@ fun LoginScreen(vm: IamViewModel = hiltViewModel()) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F9FF))
+            .background(MaterialTheme.colorScheme.surface)
             .imePadding()
     ) {
         Column(
@@ -94,8 +91,7 @@ fun LoginScreen(vm: IamViewModel = hiltViewModel()) {
                 Spacer(Modifier.height(48.dp))
                 Button(
                     onClick = { recovery = false },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = brand)
+                    modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) { Text("Volver a iniciar sesión") }
             } else {
                 Spacer(Modifier.height(45.dp))
@@ -147,8 +143,7 @@ fun LoginScreen(vm: IamViewModel = hiltViewModel()) {
                 Button(
                     onClick = { vm.login(username, password) },
                     enabled = username.isNotBlank() && password.isNotBlank() && !loading,
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = brand)
+                    modifier = Modifier.fillMaxWidth().height(52.dp)
                 ) {
                     Text(if (loading) "Ingresando…" else "Ingresar")
                 }
@@ -206,16 +201,7 @@ private fun BiometricPlaceholderButton() {
         enabled = false,
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(
-            1.dp,
-            Color(0xFFB0B0B0)
-        ),
-        colors = ButtonDefaults.outlinedButtonColors(
-            disabledContainerColor = Color(0xFFF2F2F2),
-            disabledContentColor = Color(0xFF9E9E9E)
-        )
+            .height(52.dp)
     ) {
         Icon(
             Icons.Default.Fingerprint,

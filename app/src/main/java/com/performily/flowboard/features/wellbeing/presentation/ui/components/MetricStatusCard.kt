@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.performily.flowboard.features.wellbeing.domain.entity.MetricStatus
 
 /**
@@ -46,7 +45,7 @@ fun MetricStatusCard(
                     } else {
                         "—"
                     },
-                    fontSize = 26.sp,
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )

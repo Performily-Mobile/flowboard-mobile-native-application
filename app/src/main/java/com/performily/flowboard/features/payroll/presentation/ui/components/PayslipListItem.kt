@@ -17,10 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.performily.flowboard.core.designsystem.theme.AvatarContainer
 import com.performily.flowboard.core.designsystem.theme.OnAvatarContainer
 
@@ -66,7 +64,7 @@ fun PayslipListItem(
                     .background(AvatarContainer, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = initials, color = OnAvatarContainer, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text(text = initials, color = OnAvatarContainer, style = MaterialTheme.typography.labelLarge)
             }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(

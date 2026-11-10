@@ -1,64 +1,63 @@
 package com.performily.flowboard.core.navigation
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Spacing
+import com.performily.flowboard.core.designsystem.component.FlowboardListDivider
+import com.performily.flowboard.core.designsystem.component.FlowboardListItem
+import com.performily.flowboard.core.designsystem.component.FlowboardListSection
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.session.UserRole
 
 /**
- * More options screen for HR (MA-19).
+ * "Más" screen of both roles (MA-19), with the options that are not in the bottom bar.
  *
- * Options are grouped in two tonal blocks, "Gestión" and "Mi cuenta"; sections not integrated yet
- * open the pending screen with their title.
+ * HR sees its management tools, its own employee view and the general options. Employees, whose
+ * bar already has Inicio, Solicitudes, Asistencia and Boletas, see their profile and record, their
+ * benefits and vacation balance, the read-only organization chart, the notifications and the
+ * account options.
  *
- * @param onOrganizationClick opens the organization.
+ * @param role role of the signed-in user.
+ * @param onOrganizationClick opens areas, positions and organization chart management (HR).
+ * @param onRequestTypesClick opens the request types (HR).
+ * @param onBenefitsClick opens the benefits administration (HR).
+ * @param onPayslipsClick opens payslips and payments (HR).
+ * @param onWellbeingClick opens wellbeing (HR).
  * @param onMyProfileClick opens the own profile.
- * @param onPayslipsClick opens payslips and payments.
- * @param onWellbeingClick opens wellbeing.
- * @param onBenefitsClick opens the benefits administration.
+ * @param onMyRecordClick opens the own record.
  * @param onMyBenefitsClick opens the own benefits.
  * @param onMyVacationBalanceClick opens the own vacation balance.
- * @param onMyRequestsClick opens the own requests.
- * @param onPendingClick opens the pending screen with the given title.
+ * @param onMyRequestsClick opens the own requests (HR, employees have the tab).
+ * @param onMyAttendanceClick opens the own attendance (HR, employees have the tab).
+ * @param onOrganizationChartClick opens the read-only organization chart.
+ * @param onNotificationsClick opens the notifications.
+ * @param onAccountSecurityClick opens account and security, where the user signs out.
  */
 @Composable
 fun MoreScreen(
+    role: UserRole,
     onOrganizationClick: () -> Unit,
-    onMyProfileClick: () -> Unit,
+    onRequestTypesClick: () -> Unit,
+    onBenefitsClick: () -> Unit,
     onPayslipsClick: () -> Unit,
     onWellbeingClick: () -> Unit,
-    onBenefitsClick: () -> Unit,
+    onMyProfileClick: () -> Unit,
+    onMyRecordClick: () -> Unit,
     onMyBenefitsClick: () -> Unit,
     onMyVacationBalanceClick: () -> Unit,
     onMyRequestsClick: () -> Unit,
     onMyAttendanceClick: () -> Unit,
-    onPendingClick: (title: String) -> Unit
+    onOrganizationChartClick: () -> Unit,
+    onNotificationsClick: () -> Unit,
+    onAccountSecurityClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -76,129 +75,57 @@ fun MoreScreen(
                 .padding(top = Spacing.xs, bottom = Spacing.xl),
             verticalArrangement = Arrangement.spacedBy(Spacing.sectionGap)
         ) {
-            MoreSection("Gestión") {
-                MoreItem(FlowboardIcons.AccountTree, "Organización", "Áreas, posiciones y organigrama", onOrganizationClick)
-                MoreDivider()
-                MoreItem(FlowboardIcons.Article, "Tipos de solicitud", "Campos, adjuntos y descuento de saldo") {
-                    onPendingClick("Tipos de solicitud")
+            when (role) {
+                UserRole.HUMAN_RESOURCES -> {
+                    FlowboardListSection("Gestión") {
+                        FlowboardListItem(FlowboardIcons.AccountTree, "Organización", subtitle = "Áreas, posiciones y organigrama", onClick = onOrganizationClick)
+                        FlowboardListDivider()
+                        FlowboardListItem(FlowboardIcons.Article, "Tipos de solicitud", subtitle = "Campos, adjuntos y descuento de saldo", onClick = onRequestTypesClick)
+                        FlowboardListDivider()
+                        FlowboardListItem(FlowboardIcons.Gift, "Beneficios", subtitle = "Catálogo, asignación y entregas", onClick = onBenefitsClick)
+                        FlowboardListDivider()
+                        FlowboardListItem(FlowboardIcons.CreditCard, "Boletas y pagos", subtitle = "Carga, publicación y estado de depósito", onClick = onPayslipsClick)
+                        FlowboardListDivider()
+                        FlowboardListItem(FlowboardIcons.Favorite, "Bienestar", subtitle = "Espacios, dispositivos e indicadores", onClick = onWellbeingClick)
+                    }
+
+                    FlowboardListSection("Mi cuenta") {
+                        FlowboardListItem(FlowboardIcons.Person, "Mi perfil y autogestión", subtitle = "Ver mi información como colaborador", onClick = onMyProfileClick)
+                        FlowboardListDivider()
+                        FlowboardListItem(FlowboardIcons.Gift, "Mis beneficios", subtitle = "Beneficios vigentes y entregados", onClick = onMyBenefitsClick)
+                        FlowboardListDivider()
+                        FlowboardListItem(FlowboardIcons.Calendar, "Mi saldo de vacaciones", subtitle = "Días disponibles y movimientos", onClick = onMyVacationBalanceClick)
+                        FlowboardListDivider()
+                        FlowboardListItem(FlowboardIcons.Article, "Mis solicitudes", subtitle = "Vacaciones, permisos y licencias que pediste", onClick = onMyRequestsClick)
+                        FlowboardListDivider()
+                        FlowboardListItem(FlowboardIcons.Schedule, "Mi asistencia", subtitle = "Mis marcaciones e historial personal", onClick = onMyAttendanceClick)
+                    }
                 }
-                MoreDivider()
-                MoreItem(FlowboardIcons.Gift, "Beneficios", "Catálogo, asignación y entregas", onBenefitsClick)
-                MoreDivider()
-                MoreItem(FlowboardIcons.CreditCard, "Boletas y pagos", "Carga, publicación y estado de depósito", onPayslipsClick)
-                MoreDivider()
-                MoreItem(FlowboardIcons.Favorite, "Bienestar", "Espacios, dispositivos e indicadores", onWellbeingClick)
+
+                UserRole.EMPLOYEE -> {
+                    FlowboardListSection("Mi información") {
+                        FlowboardListItem(FlowboardIcons.Person, "Mi perfil", subtitle = "Datos personales, contrato y puesto", onClick = onMyProfileClick)
+                        FlowboardListDivider()
+                        FlowboardListItem(FlowboardIcons.Folder, "Mi expediente", subtitle = "Documentos de tu legajo", onClick = onMyRecordClick)
+                    }
+
+                    FlowboardListSection("Beneficios") {
+                        FlowboardListItem(FlowboardIcons.Gift, "Mis beneficios", subtitle = "Beneficios vigentes y entregados", onClick = onMyBenefitsClick)
+                        FlowboardListDivider()
+                        FlowboardListItem(FlowboardIcons.Calendar, "Mi saldo de vacaciones", subtitle = "Días disponibles y movimientos", onClick = onMyVacationBalanceClick)
+                    }
+
+                    FlowboardListSection("Empresa") {
+                        FlowboardListItem(FlowboardIcons.AccountTree, "Organigrama", subtitle = "Quién es quién en cada área", onClick = onOrganizationChartClick)
+                    }
+                }
             }
 
-            MoreSection("Mi cuenta") {
-                MoreItem(FlowboardIcons.Person, "Mi perfil y autogestión", "Ver mi información como colaborador", onMyProfileClick)
-                MoreDivider()
-                MoreItem(FlowboardIcons.Gift, "Mis beneficios", "Beneficios vigentes y entregados", onMyBenefitsClick)
-                MoreDivider()
-                MoreItem(FlowboardIcons.Schedule, "Mi saldo de vacaciones", "Días disponibles y movimientos", onMyVacationBalanceClick)
-                MoreDivider()
-                MoreItem(FlowboardIcons.Article, "Mis solicitudes", "Vacaciones, permisos y licencias que pediste", onMyRequestsClick)
-                MoreDivider()
-                MoreItem(FlowboardIcons.Schedule, "Mi asistencia", "Mis marcaciones e historial personal", onMyAttendanceClick)
-                MoreDivider()
-                MoreItem(FlowboardIcons.Lock, "Cuenta y seguridad", "Huella, idioma y cierre de sesión") {
-                    onPendingClick("Cuenta y seguridad")
-                }
+            FlowboardListSection("General") {
+                FlowboardListItem(FlowboardIcons.Notifications, "Notificaciones", subtitle = "Avisos de tus solicitudes, boletas y beneficios", onClick = onNotificationsClick)
+                FlowboardListDivider()
+                FlowboardListItem(FlowboardIcons.Lock, "Cuenta y seguridad", subtitle = "Contraseña, privacidad y cierre de sesión", onClick = onAccountSecurityClick)
             }
         }
-    }
-}
-
-/**
- * Titled group of options shown inside a tonal card.
- *
- * @param title title of the group.
- * @param content options of the group.
- */
-@Composable
-private fun MoreSection(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = Spacing.xs)
-        )
-        Surface(
-            shape = MaterialTheme.shapes.medium,
-            color = MaterialTheme.colorScheme.surfaceContainerLow,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(content = content)
-        }
-    }
-}
-
-/** Thin divider between two options, inset so it starts after the icon. */
-@Composable
-private fun MoreDivider() {
-    HorizontalDivider(
-        modifier = Modifier.padding(start = 72.dp, end = Spacing.l),
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-    )
-}
-
-/**
- * One option: round icon, title, short description and a chevron.
- *
- * @param icon icon of the option.
- * @param title name of the option.
- * @param subtitle short description of the option.
- * @param onClick opens the option.
- */
-@Composable
-private fun MoreItem(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = Spacing.l, vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.l),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-        Icon(
-            imageVector = FlowboardIcons.ChevronRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 }

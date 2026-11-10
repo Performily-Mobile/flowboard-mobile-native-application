@@ -25,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
@@ -175,7 +174,7 @@ private fun BalanceCard(balance: VacationBalance, onRequestVacation: () -> Unit)
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.Bottom) {
             Text(
                 text = BenefitsFormatters.number(balance.availableDays),
-                fontSize = 40.sp,
+                style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -214,7 +213,7 @@ private fun BalanceCard(balance: VacationBalance, onRequestVacation: () -> Unit)
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = Spacing.xs)
-                .height(48.dp)
+                .height(52.dp)
         ) {
             Icon(FlowboardIcons.Add, contentDescription = null, modifier = Modifier.size(18.dp))
             Text("Solicitar vacaciones", modifier = Modifier.padding(start = 8.dp))

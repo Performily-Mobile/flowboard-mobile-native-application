@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.FlowboardBottomActionBar
@@ -219,7 +218,7 @@ private fun ColumnScope.TypeStep(
             .padding(bottom = Spacing.l),
         verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
     ) {
-        Text("¿Qué quieres solicitar?", fontSize = 20.sp)
+        Text("¿Qué quieres solicitar?", style = MaterialTheme.typography.titleMedium)
         state.types.forEach { type ->
             val selected = type.id == state.selectedType?.id
             RequestCard(
@@ -423,7 +422,7 @@ private fun ColumnScope.ConfirmationStep(state: NewRequestUiState) {
             .padding(bottom = Spacing.l),
         verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
     ) {
-        Text("Revisa tu solicitud", fontSize = 20.sp)
+        Text("Revisa tu solicitud", style = MaterialTheme.typography.titleMedium)
         KeyValueCard(items = items)
         Text(
             text = "${RequestFormatters.shortName(state.approverName)} recibirá una notificación en su teléfono. " +

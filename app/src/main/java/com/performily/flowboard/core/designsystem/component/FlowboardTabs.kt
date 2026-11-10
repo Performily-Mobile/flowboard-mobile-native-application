@@ -3,12 +3,9 @@ package com.performily.flowboard.core.designsystem.component
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
@@ -23,17 +20,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 
 /**
  * Pill-shaped tab selector used for every set of tabs and every single-choice switch of the app.
  *
- * Up to three options share the width equally while their labels fit (about 36 characters in
- * total split between the options, so two tabs allow 18 characters each); with more options or
- * longer labels the row scrolls horizontally so no label gets cut.
+ * The pills always fill the whole track: when their labels fit they share the width (equally when
+ * every label fits in an equal share, otherwise each one keeps its natural width plus an equal part
+ * of the free space), and only when they do not fit the row scrolls horizontally, so a label is
+ * never cut and the track never shows an empty gap.
  *
  * @param options options to show, in order.
  * @param selected option currently selected.
@@ -51,30 +50,45 @@ fun <T> FlowboardTabs(
     modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
-    val labels = options.map(label)
-    val maxLabelLength = MAX_EQUAL_WIDTH_CHARACTERS / options.size.coerceAtLeast(1)
-    val fillWidth = options.size <= MAX_EQUAL_WIDTH_OPTIONS && labels.all { it.length <= maxLabelLength }
     Surface(
         shape = CircleShape,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         modifier = modifier.fillMaxWidth()
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .then(if (fillWidth) Modifier else Modifier.horizontalScroll(rememberScrollState()))
-                .padding(4.dp)
-                .selectableGroup(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            options.forEachIndexed { index, option ->
-                TabPill(
-                    text = labels[index],
-                    selected = option == selected,
-                    enabled = enabled,
-                    fillWidth = fillWidth,
-                    onClick = { onSelect(option) }
-                )
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val trackWidth = if (constraints.hasBoundedWidth) constraints.maxWidth else null
+            Layout(
+                content = {
+                    options.forEach { option ->
+                        TabPill(
+                            text = label(option),
+                            selected = option == selected,
+                            enabled = enabled,
+                            onClick = { onSelect(option) }
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .padding(TRACK_PADDING)
+                    .selectableGroup()
+            ) { measurables, _ ->
+                val gap = PILL_GAP.roundToPx()
+                val pillHeight = PILL_HEIGHT.roundToPx()
+                val gaps = gap * (measurables.size - 1).coerceAtLeast(0)
+                val naturalWidths = measurables.map { it.maxIntrinsicWidth(pillHeight) }
+                val space = trackWidth?.let { it - TRACK_PADDING.roundToPx() * 2 - gaps }
+                val widths = if (space == null) naturalWidths else tabWidths(naturalWidths, space)
+                val placeables = measurables.mapIndexed { index, measurable ->
+                    measurable.measure(Constraints.fixed(widths[index], pillHeight))
+                }
+                layout(width = (widths.sum() + gaps).coerceAtLeast(0), height = pillHeight) {
+                    var x = 0
+                    placeables.forEach { placeable ->
+                        placeable.placeRelative(x, 0)
+                        x += placeable.width + gap
+                    }
+                }
             }
         }
     }
@@ -104,13 +118,36 @@ fun FlowboardTabs(
     )
 }
 
+/**
+ * Width of each pill so the pills cover the whole track.
+ *
+ * @param naturalWidths width each pill needs to show its label.
+ * @param space width available for the pills, without the gaps between them.
+ * @return the natural widths when they do not fit (the row then scrolls); otherwise equal widths
+ * when every label fits in an equal share, or the natural widths plus an equal part of the free space.
+ */
+internal fun tabWidths(naturalWidths: List<Int>, space: Int): List<Int> {
+    if (naturalWidths.isEmpty()) return emptyList()
+    val total = naturalWidths.sum()
+    if (total >= space) return naturalWidths
+    val count = naturalWidths.size
+    val equalShare = space / count
+    val widths = if (naturalWidths.all { it <= equalShare }) {
+        List(count) { equalShare }
+    } else {
+        val extra = (space - total) / count
+        naturalWidths.map { it + extra }
+    }
+    val leftover = space - widths.sum()
+    return widths.mapIndexed { index, width -> if (index == count - 1) width + leftover else width }
+}
+
 /** One option of the selector: a pill that turns into a raised chip when selected. */
 @Composable
-private fun RowScope.TabPill(
+private fun TabPill(
     text: String,
     selected: Boolean,
     enabled: Boolean,
-    fillWidth: Boolean,
     onClick: () -> Unit
 ) {
     val background by animateColorAsState(
@@ -123,8 +160,6 @@ private fun RowScope.TabPill(
     )
     Box(
         modifier = Modifier
-            .then(if (fillWidth) Modifier.weight(1f) else Modifier)
-            .height(40.dp)
             .then(if (selected) Modifier.shadow(1.dp, CircleShape) else Modifier)
             .clip(CircleShape)
             .background(background)
@@ -138,10 +173,16 @@ private fun RowScope.TabPill(
             style = MaterialTheme.typography.labelLarge,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            softWrap = false
         )
     }
 }
 
-private const val MAX_EQUAL_WIDTH_OPTIONS = 3
-private const val MAX_EQUAL_WIDTH_CHARACTERS = 36
+/** Space between the track and the pills. */
+private val TRACK_PADDING = 4.dp
+
+/** Space between two pills. */
+private val PILL_GAP = 4.dp
+
+/** Height of each pill. */
+private val PILL_HEIGHT = 40.dp

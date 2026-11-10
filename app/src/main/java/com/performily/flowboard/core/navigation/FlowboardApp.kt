@@ -17,7 +17,6 @@ import androidx.navigation.compose.rememberNavController
 import com.performily.flowboard.core.session.UserRole
 import com.performily.flowboard.features.iam.presentation.ui.screens.LoginScreen
 import com.performily.flowboard.features.iam.presentation.ui.screens.PasswordChangeScreen
-import com.performily.flowboard.features.iam.presentation.ui.screens.AccountSecurityScreen
 import com.performily.flowboard.features.payroll.presentation.ui.navigation.PaymentStatusRoute
 import com.performily.flowboard.features.payroll.presentation.ui.navigation.PayslipViewerRoute
 import com.performily.flowboard.features.payroll.presentation.ui.navigation.UploadPayslipsRoute
@@ -95,6 +94,7 @@ private fun AuthenticatedFlowboard(viewModel: AppShellViewModel) {
         AppNavHost(
             navController = navController,
             startDestination = startDestination,
+            role = viewModel.role,
             modifier = Modifier
                 .padding(paddingValues)
                 .consumeWindowInsets(paddingValues)

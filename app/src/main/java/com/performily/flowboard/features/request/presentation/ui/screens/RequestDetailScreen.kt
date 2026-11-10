@@ -30,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.FlowboardBottomActionBar
@@ -249,7 +248,7 @@ private fun SummaryCard(request: Request) {
             horizontalArrangement = Arrangement.spacedBy(Spacing.m),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(request.requestTypeName, fontSize = 20.sp, modifier = Modifier.weight(1f))
+            Text(request.requestTypeName, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
             RequestStatusChip(request.status)
         }
         Text(

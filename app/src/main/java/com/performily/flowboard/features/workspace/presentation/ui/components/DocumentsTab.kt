@@ -51,7 +51,7 @@ fun DocumentsTab(
                 onClick = onClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .height(52.dp)
             ) {
                 Icon(FlowboardIcons.Upload, contentDescription = null)
                 Text("Subir documento", modifier = Modifier.padding(start = 8.dp))

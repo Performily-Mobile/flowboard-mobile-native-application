@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.performily.flowboard.core.session.UserRole
 import com.performily.flowboard.features.attendance.presentation.ui.navigation.MyAttendanceFromMoreRoute
 import com.performily.flowboard.features.iam.presentation.ui.navigation.iamNavGraph
 import com.performily.flowboard.features.iam.presentation.ui.navigation.AccountSecurityRoute
@@ -16,8 +17,12 @@ import com.performily.flowboard.features.benefits.presentation.ui.navigation.Ben
 import com.performily.flowboard.features.benefits.presentation.ui.navigation.MyBenefitsRoute
 import com.performily.flowboard.features.benefits.presentation.ui.navigation.MyVacationBalanceRoute
 import com.performily.flowboard.features.benefits.presentation.ui.navigation.benefitsNavGraph
+import com.performily.flowboard.features.notifications.presentation.ui.navigation.NotificationsRoute
+import com.performily.flowboard.features.notifications.presentation.ui.navigation.notificationsNavGraph
 import com.performily.flowboard.features.wellbeing.presentation.ui.navigation.wellbeingNavGraph
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.MyProfileRoute
+import com.performily.flowboard.features.workspace.presentation.ui.navigation.MyRecordRoute
+import com.performily.flowboard.features.workspace.presentation.ui.navigation.OrganizationChartRoute
 import com.performily.flowboard.features.attendance.presentation.ui.navigation.attendanceNavGraph
 import com.performily.flowboard.features.dashboard.presentation.ui.navigation.dashboardNavGraph
 import com.performily.flowboard.features.workspace.presentation.ui.navigation.OrganizationRoute
@@ -34,12 +39,14 @@ import com.performily.flowboard.features.request.presentation.ui.navigation.requ
  *
  * @param navController controller that drives the navigation.
  * @param startDestination route shown when the app opens, which depends on the user role.
+ * @param role role of the signed-in user, used to build the "Más" screen.
  * @param modifier modifier applied to the host.
  */
 @Composable
 fun AppNavHost(
     navController: NavHostController,
     startDestination: Any,
+    role: UserRole,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -55,23 +62,25 @@ fun AppNavHost(
         attendanceNavGraph(navController)
         dashboardNavGraph(navController)
         iamNavGraph(navController)
+        notificationsNavGraph(navController)
 
         composable<MoreRoute> {
             MoreScreen(
+                role = role,
                 onOrganizationClick = { navController.navigate(OrganizationRoute) },
-                onMyProfileClick = { navController.navigate(MyProfileRoute) },
+                onRequestTypesClick = { navController.navigate(RequestTypesRoute) },
+                onBenefitsClick = { navController.navigate(BenefitsNavGraphRoute) },
                 onPayslipsClick = { navController.navigate(PayrollNavGraphRoute) },
                 onWellbeingClick = { navController.navigate(WellbeingNavGraphRoute) },
-                onBenefitsClick = { navController.navigate(BenefitsNavGraphRoute) },
+                onMyProfileClick = { navController.navigate(MyProfileRoute) },
+                onMyRecordClick = { navController.navigate(MyRecordRoute) },
                 onMyBenefitsClick = { navController.navigate(MyBenefitsRoute) },
                 onMyVacationBalanceClick = { navController.navigate(MyVacationBalanceRoute) },
                 onMyRequestsClick = { navController.navigate(MyRequestsRoute) },
                 onMyAttendanceClick = { navController.navigate(MyAttendanceFromMoreRoute) },
-                onPendingClick = { title ->
-                    if (title == "Cuenta y seguridad") navController.navigate(AccountSecurityRoute)
-                    else if (title == "Tipos de solicitud") navController.navigate(RequestTypesRoute)
-                    else navController.navigate(PendingFeatureRoute(title))
-                }
+                onOrganizationChartClick = { navController.navigate(OrganizationChartRoute()) },
+                onNotificationsClick = { navController.navigate(NotificationsRoute) },
+                onAccountSecurityClick = { navController.navigate(AccountSecurityRoute) }
             )
         }
 
