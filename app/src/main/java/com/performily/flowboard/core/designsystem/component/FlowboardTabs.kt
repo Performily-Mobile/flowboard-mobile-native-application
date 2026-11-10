@@ -31,8 +31,9 @@ import androidx.compose.ui.unit.dp
 /**
  * Pill-shaped tab selector used for every set of tabs and every single-choice switch of the app.
  *
- * Up to three short options share the width equally; with more options or longer labels the row
- * scrolls horizontally so no label gets cut.
+ * Up to three options share the width equally while their labels fit (about 36 characters in
+ * total split between the options, so two tabs allow 18 characters each); with more options or
+ * longer labels the row scrolls horizontally so no label gets cut.
  *
  * @param options options to show, in order.
  * @param selected option currently selected.
@@ -51,7 +52,8 @@ fun <T> FlowboardTabs(
     enabled: Boolean = true
 ) {
     val labels = options.map(label)
-    val fillWidth = options.size <= MAX_EQUAL_WIDTH_OPTIONS && labels.all { it.length <= MAX_EQUAL_WIDTH_LABEL }
+    val maxLabelLength = MAX_EQUAL_WIDTH_CHARACTERS / options.size.coerceAtLeast(1)
+    val fillWidth = options.size <= MAX_EQUAL_WIDTH_OPTIONS && labels.all { it.length <= maxLabelLength }
     Surface(
         shape = CircleShape,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -142,4 +144,4 @@ private fun RowScope.TabPill(
 }
 
 private const val MAX_EQUAL_WIDTH_OPTIONS = 3
-private const val MAX_EQUAL_WIDTH_LABEL = 12
+private const val MAX_EQUAL_WIDTH_CHARACTERS = 36

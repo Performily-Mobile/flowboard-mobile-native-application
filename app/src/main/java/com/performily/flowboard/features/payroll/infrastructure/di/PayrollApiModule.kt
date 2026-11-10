@@ -1,5 +1,6 @@
 package com.performily.flowboard.features.payroll.infrastructure.di
 
+import com.performily.flowboard.features.payroll.infrastructure.remote.MyPayslipService
 import com.performily.flowboard.features.payroll.infrastructure.remote.PayrollPeriodService
 import com.performily.flowboard.features.payroll.infrastructure.remote.PayrollWorkspaceService
 import com.performily.flowboard.features.payroll.infrastructure.remote.PayslipService
@@ -18,6 +19,11 @@ object PayrollApiModule {
     @Singleton
     fun providePayslipService(retrofit: Retrofit): PayslipService =
         retrofit.create(PayslipService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideMyPayslipService(retrofit: Retrofit): MyPayslipService =
+        retrofit.create(MyPayslipService::class.java)
 
     @Provides
     @Singleton

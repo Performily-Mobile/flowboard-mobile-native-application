@@ -5,7 +5,10 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
+import com.performily.flowboard.core.navigation.PayslipsRoute
+import com.performily.flowboard.features.payroll.presentation.ui.screens.MyPayslipsScreen
 import com.performily.flowboard.features.payroll.presentation.ui.screens.PaymentStatusScreen
+import com.performily.flowboard.features.payroll.presentation.ui.screens.PayslipViewerScreen
 import com.performily.flowboard.features.payroll.presentation.ui.screens.UploadPayslipsScreen
 import kotlinx.serialization.Serializable
 
@@ -26,10 +29,18 @@ data object UploadPayslipsRoute
 data class PaymentStatusRoute(val payrollPeriodId: Long? = null)
 
 /**
- * Registers the payroll screens for HR: payslip upload and payment status.
+ * Payslip viewer of the employee (MA-66).
  *
- * The employee screens (ProtectedPayslipsRoute MA-64, MyPayslipsRoute MA-65 and
- * PayslipViewerRoute MA-66) are still pending and will be added to this same graph.
+ * @param payslipId payslip to show.
+ */
+@Serializable
+data class PayslipViewerRoute(val payslipId: Long)
+
+/**
+ * Registers the payroll screens: payslip upload and payment status for HR, and the "Boletas" tab
+ * (MA-65) with its viewer (MA-66) for employees.
+ *
+ * The protected access screen of the employee (ProtectedPayslipsRoute MA-64) is still pending.
  *
  * @param navController controller used to move between the screens.
  */
@@ -50,5 +61,18 @@ fun NavGraphBuilder.payrollNavGraph(navController: NavController) {
                 onBack = { navController.popBackStack() }
             )
         }
+    }
+
+    composable<PayslipsRoute> {
+        MyPayslipsScreen(
+            onPayslipClick = { payslipId -> navController.navigate(PayslipViewerRoute(payslipId)) }
+        )
+    }
+
+    composable<PayslipViewerRoute> { backStackEntry ->
+        PayslipViewerScreen(
+            payslipId = backStackEntry.toRoute<PayslipViewerRoute>().payslipId,
+            onBack = { navController.popBackStack() }
+        )
     }
 }
