@@ -22,8 +22,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.performily.flowboard.features.iam.presentation.viewmodel.IamViewModel
-import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Spacing
+import com.performily.flowboard.core.designsystem.component.FlowboardLogo
 
 @Composable
 fun LoginScreen(vm: IamViewModel = hiltViewModel()) {
@@ -101,7 +101,7 @@ fun LoginScreen(vm: IamViewModel = hiltViewModel()) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(Spacing.s)
                 ) {
-                    Icon(FlowboardIcons.GridView, contentDescription = null, tint = brand)
+                    FlowboardLogo()
                     Text(
                         "Flowboard",
                         color = brand,
