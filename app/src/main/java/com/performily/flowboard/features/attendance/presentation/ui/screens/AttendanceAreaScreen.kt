@@ -2,7 +2,6 @@ package com.performily.flowboard.features.attendance.presentation.ui.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -38,6 +36,7 @@ import com.performily.flowboard.features.attendance.presentation.ui.components.A
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceStatusChip
 import com.performily.flowboard.features.attendance.presentation.viewmodel.AttendanceAreaViewModel
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 /**
  * HR section "Resumen por área": punctuality, lateness and absences of one area in a period.
@@ -114,7 +113,7 @@ fun AttendanceAreaScreen(
                 .fillMaxSize()
                 .padding(top = contentPadding.calculateTopPadding())
             when {
-                state.isLoading -> Box(stateModifier, contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                state.isLoading -> SkeletonList(modifier = stateModifier)
                 state.errorMessage != null -> Column(
                     modifier = stateModifier.padding(top = Spacing.xl),
                     horizontalAlignment = Alignment.CenterHorizontally,

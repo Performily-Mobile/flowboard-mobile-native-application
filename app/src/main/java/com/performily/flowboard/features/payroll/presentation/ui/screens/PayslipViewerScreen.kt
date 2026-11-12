@@ -4,7 +4,6 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -50,6 +49,7 @@ import com.performily.flowboard.features.payroll.presentation.ui.components.Paym
 import com.performily.flowboard.features.payroll.presentation.ui.components.PayrollMessageState
 import com.performily.flowboard.features.payroll.presentation.ui.components.toDisplay
 import com.performily.flowboard.features.payroll.presentation.viewmodel.PayslipViewerViewModel
+import com.performily.flowboard.core.designsystem.component.SkeletonDetail
 
 /**
  * Viewer of one payslip of the employee (MA-66): net amount, payment status, employer data and a
@@ -122,14 +122,12 @@ fun PayslipViewerScreen(
     ) { paddingValues ->
         val detail = state.detail
         when {
-            state.isLoading -> Box(
+            state.isLoading -> SkeletonDetail(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
+                showTabs = false
+            )
             detail == null -> PayrollMessageState(
                 title = "No se pudo cargar la boleta",
                 message = state.errorMessage.orEmpty(),

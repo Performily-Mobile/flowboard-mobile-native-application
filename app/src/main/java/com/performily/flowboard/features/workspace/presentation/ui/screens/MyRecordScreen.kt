@@ -1,13 +1,11 @@
 package com.performily.flowboard.features.workspace.presentation.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -24,6 +22,7 @@ import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.workspace.presentation.ui.components.DocumentsTab
 import com.performily.flowboard.features.workspace.presentation.viewmodel.MyRecordViewModel
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 /**
  * Documents of the signed-in employee, filtered by category.
@@ -48,12 +47,13 @@ fun MyRecordScreen(
         }
     ) { paddingValues ->
         when {
-            state.isLoading && state.documents.isEmpty() -> Box(
+            state.isLoading && state.documents.isEmpty() -> SkeletonList(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) { CircularProgressIndicator() }
+                itemCount = 4,
+                showTrailing = false
+            )
 
             state.errorMessage != null && state.documents.isEmpty() -> Column(
                 modifier = Modifier

@@ -1,7 +1,6 @@
 package com.performily.flowboard.features.workspace.presentation.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -19,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -33,6 +30,7 @@ import com.performily.flowboard.features.workspace.presentation.ui.components.Fo
 import com.performily.flowboard.features.workspace.presentation.ui.components.SectionTitle
 import com.performily.flowboard.features.workspace.presentation.viewmodel.EditPersonalDataViewModel
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonForm
 
 /**
  * Form to edit the personal data and address of an employee; the identity document is read-only.
@@ -80,12 +78,11 @@ fun EditPersonalDataScreen(
         }
     ) { paddingValues ->
         if (state.isLoading) {
-            Box(
+            SkeletonForm(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) { CircularProgressIndicator() }
+                    .padding(paddingValues)
+            )
             return@Scaffold
         }
 

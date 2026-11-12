@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -20,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -43,6 +41,7 @@ import com.performily.flowboard.features.payroll.presentation.ui.components.list
 import com.performily.flowboard.features.payroll.presentation.ui.components.paymentReportCountLabel
 import com.performily.flowboard.features.payroll.presentation.ui.components.toDisplay
 import com.performily.flowboard.features.payroll.presentation.viewmodel.PaymentStatusViewModel
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 /**
  * Payment status screen for HR (MA-69).
@@ -98,12 +97,7 @@ fun PaymentStatusScreen(
                 .fillMaxSize()
                 .padding(top = contentPadding.calculateTopPadding())
             when {
-                state.isLoading && state.entries.isEmpty() -> Box(
-                    modifier = stateModifier.padding(top = Spacing.xxl),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    CircularProgressIndicator()
-                }
+                state.isLoading && state.entries.isEmpty() -> SkeletonList(modifier = stateModifier)
 
                 state.errorMessage != null -> Box(stateModifier) {
                     MessageState(

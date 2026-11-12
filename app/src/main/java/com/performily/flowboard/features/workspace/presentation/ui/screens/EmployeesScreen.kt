@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,6 +50,7 @@ import com.performily.flowboard.features.workspace.presentation.ui.components.la
 import com.performily.flowboard.features.workspace.presentation.viewmodel.EmployeesViewModel
 import com.performily.flowboard.features.workspace.domain.valueobject.EmploymentStatus
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 /**
  * List of employees with a search box and filters that slide away while scrolling down.
@@ -146,14 +146,11 @@ fun EmployeesScreen(
         ) { contentPadding ->
             when {
                 state.isLoading && state.employees.isEmpty() -> {
-                    Box(
+                    SkeletonList(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(top = contentPadding.calculateTopPadding()),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
+                            .padding(top = contentPadding.calculateTopPadding())
+                    )
                 }
 
                 state.errorMessage != null -> {

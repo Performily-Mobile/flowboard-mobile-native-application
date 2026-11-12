@@ -177,13 +177,7 @@ fun RequestsScreen(
                                 onSelect = viewModel::onSortSelected
                             )
                         }
-                        RequestsTab.HR_INBOX -> RequestBanner(
-                            message = "Aquí llegan las solicitudes de colaboradores que no tienen jefe directo asignado.",
-                            icon = FlowboardIcons.Info,
-                            containerColor = RequestColors.InfoBanner,
-                            contentColor = RequestColors.OnInfoBanner,
-                            modifier = Modifier.padding(horizontal = Spacing.screenHorizontal)
-                        )
+                        RequestsTab.HR_INBOX -> Unit
                         RequestsTab.ALL -> ChipRow {
                             AllRequestsFilter.entries.forEach { filter ->
                                 SelectableChip(

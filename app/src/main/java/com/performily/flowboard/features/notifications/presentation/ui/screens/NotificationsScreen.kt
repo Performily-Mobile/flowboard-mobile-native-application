@@ -1,7 +1,6 @@
 package com.performily.flowboard.features.notifications.presentation.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -40,6 +38,7 @@ import com.performily.flowboard.features.notifications.presentation.ui.component
 import com.performily.flowboard.features.notifications.presentation.ui.components.NotificationItem
 import com.performily.flowboard.features.notifications.presentation.viewmodel.NotificationsViewModel
 import java.time.LocalDateTime
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 /**
  * Notices of the signed-in user, grouped by day: changes in their requests, requests to approve,
@@ -109,12 +108,7 @@ fun NotificationsScreen(
                 val stateModifier = Modifier.padding(top = contentPadding.calculateTopPadding())
                 val visible = state.visibleNotifications
                 when {
-                    state.isLoading -> Box(
-                        modifier = stateModifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
+                    state.isLoading -> SkeletonList(modifier = stateModifier.fillMaxSize(), showTrailing = false)
                     state.errorMessage != null && state.notifications.isEmpty() -> MessageState(
                         title = "No se pudieron cargar tus notificaciones",
                         message = state.errorMessage.orEmpty(),

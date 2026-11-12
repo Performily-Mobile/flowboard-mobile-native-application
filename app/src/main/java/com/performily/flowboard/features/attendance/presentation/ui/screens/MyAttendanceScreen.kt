@@ -2,7 +2,6 @@ package com.performily.flowboard.features.attendance.presentation.ui.screens
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -14,7 +13,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -45,6 +43,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 /** Note about how punches are consolidated, shown once on the screen. */
 private const val PUNCH_NOTE = "Las marcaciones se registran en el servidor y se consolidan según la jornada del puesto."
@@ -140,7 +139,7 @@ fun MyAttendanceScreen(
                 .fillMaxSize()
                 .padding(top = contentPadding.calculateTopPadding())
             when {
-                state.isLoading -> Box(stateModifier, contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                state.isLoading -> SkeletonList(modifier = stateModifier, showAvatar = false)
                 state.errorMessage != null -> Column(
                     modifier = stateModifier.padding(top = Spacing.xxl),
                     horizontalAlignment = Alignment.CenterHorizontally,

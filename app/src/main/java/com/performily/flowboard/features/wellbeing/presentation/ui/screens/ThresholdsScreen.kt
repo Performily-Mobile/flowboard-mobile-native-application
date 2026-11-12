@@ -37,6 +37,7 @@ import com.performily.flowboard.features.wellbeing.presentation.ui.components.We
 import com.performily.flowboard.features.wellbeing.presentation.ui.components.WellbeingMessageState
 import com.performily.flowboard.features.wellbeing.presentation.viewmodel.ThresholdsViewModel
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonForm
 
 /**
  * MA-74 - Thresholds: ranges of each indicator per metric.
@@ -108,7 +109,7 @@ fun ThresholdsScreen(
             .fillMaxSize()
             .padding(paddingValues)
         when {
-            state.isLoading -> WellbeingLoading(modifier = contentModifier)
+            state.isLoading -> SkeletonForm(modifier = contentModifier, fieldCount = 5)
 
             state.errorMessage != null -> WellbeingMessageState(
                 title = "No se pudieron cargar los umbrales",

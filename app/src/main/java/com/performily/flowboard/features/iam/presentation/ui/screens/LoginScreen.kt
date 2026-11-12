@@ -22,6 +22,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.performily.flowboard.features.iam.presentation.viewmodel.IamViewModel
+import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 
 @Composable
 fun LoginScreen(vm: IamViewModel = hiltViewModel()) {
@@ -95,12 +97,18 @@ fun LoginScreen(vm: IamViewModel = hiltViewModel()) {
                 ) { Text("Volver a iniciar sesión") }
             } else {
                 Spacer(Modifier.height(45.dp))
-                Text(
-                    "▰  Flowboard",
-                    color = brand,
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.s)
+                ) {
+                    Icon(FlowboardIcons.GridView, contentDescription = null, tint = brand)
+                    Text(
+                        "Flowboard",
+                        color = brand,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
                 Spacer(Modifier.height(20.dp))
                 Text("Iniciar sesión", style = MaterialTheme.typography.headlineLarge)
                 Spacer(Modifier.height(12.dp))
@@ -163,6 +171,7 @@ fun LoginScreen(vm: IamViewModel = hiltViewModel()) {
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
+                    .navigationBarsPadding()
                     .padding(
                         horizontal = 28.dp,
                         vertical = 16.dp

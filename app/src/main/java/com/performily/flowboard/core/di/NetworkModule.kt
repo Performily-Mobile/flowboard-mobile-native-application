@@ -3,7 +3,6 @@ package com.performily.flowboard.core.di
 
 import com.performily.flowboard.BuildConfig
 import com.performily.flowboard.features.iam.domain.repository.IamRepository
-import com.performily.flowboard.features.iam.infrastructure.local.SecureSessionStore
 import dagger.Lazy
 import dagger.Module
 import dagger.Provides
@@ -23,7 +22,6 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(
-        store: SecureSessionStore,
         iamRepository: Lazy<IamRepository>
     ): OkHttpClient {
 
@@ -33,7 +31,8 @@ object NetworkModule {
 
         return OkHttpClient.Builder()
             .addInterceptor { chain ->
-                val token = store.read()?.token
+                // Token of the session kept in memory.
+                val token = iamRepository.get().session.value?.token
                 val builder = chain.request().newBuilder()
 
                 if (!token.isNullOrBlank()) {

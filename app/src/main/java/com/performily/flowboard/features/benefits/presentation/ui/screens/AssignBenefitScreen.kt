@@ -41,6 +41,7 @@ import com.performily.flowboard.features.benefits.presentation.ui.components.Ben
 import com.performily.flowboard.features.benefits.presentation.ui.components.BenefitsSelectField
 import com.performily.flowboard.features.benefits.presentation.viewmodel.AssignBenefitViewModel
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonForm
 
 /**
  * Assign benefit screen (MA-61).
@@ -110,7 +111,7 @@ fun AssignBenefitScreen(
             .fillMaxSize()
             .padding(paddingValues)
         when {
-            state.isLoading -> BenefitsLoading(modifier = contentModifier)
+            state.isLoading -> SkeletonForm(modifier = contentModifier, fieldCount = 4)
             state.loadError != null -> BenefitsMessageState(
                 title = "No se pudo abrir el formulario",
                 message = state.loadError.orEmpty(),

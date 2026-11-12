@@ -1,7 +1,6 @@
 package com.performily.flowboard.features.workspace.presentation.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +39,7 @@ import com.performily.flowboard.features.workspace.presentation.ui.components.la
 import com.performily.flowboard.features.workspace.presentation.ui.components.toDisplay
 import com.performily.flowboard.features.workspace.presentation.viewmodel.MyProfileViewModel
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonDetail
 
 /**
  * Profile of the signed-in employee with shortcuts to the record and the organization chart.
@@ -70,12 +69,11 @@ fun MyProfileScreen(
     ) { paddingValues ->
         val employee = state.employee
         when {
-            state.isLoading && employee == null -> Box(
+            state.isLoading && employee == null -> SkeletonDetail(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center
-            ) { CircularProgressIndicator() }
+                    .padding(paddingValues)
+            )
 
             employee == null -> Column(
                 modifier = Modifier

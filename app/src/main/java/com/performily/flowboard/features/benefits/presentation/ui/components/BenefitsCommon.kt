@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +32,7 @@ import com.performily.flowboard.core.designsystem.theme.Divider
 import com.performily.flowboard.core.designsystem.theme.OnAvatarContainer
 import com.performily.flowboard.core.designsystem.theme.OnSurface
 import com.performily.flowboard.core.designsystem.theme.Spacing
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 /** Pill-shaped status chip: Asignado, Entregado, Activo, Inactivo. */
 @Composable
@@ -192,12 +192,10 @@ fun SectionHeader(text: String, modifier: Modifier = Modifier) {
     )
 }
 
-/** Centered progress indicator shown while a screen loads. */
+/** Placeholder of a list shown while a screen loads. */
 @Composable
 fun BenefitsLoading(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
-    }
+    SkeletonList(modifier = modifier.fillMaxSize())
 }
 
 /** Centered message for errors or empty lists, with an optional action. */

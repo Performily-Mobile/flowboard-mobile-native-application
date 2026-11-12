@@ -2,7 +2,6 @@ package com.performily.flowboard.features.attendance.presentation.ui.screens
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -36,6 +34,7 @@ import com.performily.flowboard.features.attendance.presentation.ui.components.A
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceSectionTabs
 import com.performily.flowboard.features.attendance.presentation.viewmodel.AttendanceRecordsViewModel
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 /**
  * HR section "Registros": attendance records of the staff, filtered by period, area and status.
@@ -121,9 +120,7 @@ fun AttendanceRecordsScreen(
                 .fillMaxSize()
                 .padding(top = contentPadding.calculateTopPadding())
             when {
-                state.isLoading && state.records.isEmpty() -> Box(stateModifier, contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                state.isLoading && state.records.isEmpty() -> SkeletonList(modifier = stateModifier)
                 state.errorMessage != null && state.records.isEmpty() -> Column(
                     modifier = stateModifier.padding(top = Spacing.xl),
                     horizontalAlignment = Alignment.CenterHorizontally,

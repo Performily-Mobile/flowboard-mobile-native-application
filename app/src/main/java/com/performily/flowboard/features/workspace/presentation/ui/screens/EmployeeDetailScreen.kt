@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -52,6 +51,7 @@ import com.performily.flowboard.features.workspace.presentation.ui.components.Te
 import com.performily.flowboard.features.workspace.presentation.ui.components.UploadDocumentSheet
 import com.performily.flowboard.features.workspace.presentation.viewmodel.EmployeeDetailViewModel
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonDetail
 
 private val tabs = listOf("Datos", "Puesto", "Expediente", "Cuenta")
 private const val DOCUMENTS_TAB = 2
@@ -125,12 +125,11 @@ fun EmployeeDetailScreen(
         val employee = state.employee
         when {
             state.isLoading && employee == null -> {
-                Box(
+                SkeletonDetail(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) { CircularProgressIndicator() }
+                        .padding(paddingValues)
+                )
             }
 
             employee == null -> {

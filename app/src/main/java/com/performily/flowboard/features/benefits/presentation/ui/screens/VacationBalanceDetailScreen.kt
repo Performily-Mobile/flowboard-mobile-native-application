@@ -37,6 +37,7 @@ import com.performily.flowboard.features.benefits.presentation.ui.components.Sec
 import com.performily.flowboard.features.benefits.presentation.ui.components.VacationMovementRow
 import com.performily.flowboard.features.benefits.presentation.viewmodel.VacationBalanceDetailViewModel
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonDetail
 
 /**
  * Vacation balance of one employee (MA-63), with the manual adjustment made by HR.
@@ -92,7 +93,7 @@ fun VacationBalanceDetailScreen(
             .padding(paddingValues)
         val balance = state.balance
         when {
-            state.isLoading -> BenefitsLoading(modifier = contentModifier)
+            state.isLoading -> SkeletonDetail(modifier = contentModifier, showTabs = false)
             balance == null -> BenefitsMessageState(
                 title = "No se pudo cargar el saldo",
                 message = state.errorMessage ?: "Inténtalo nuevamente.",

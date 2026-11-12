@@ -57,6 +57,7 @@ import com.performily.flowboard.features.request.presentation.ui.components.Step
 import com.performily.flowboard.features.request.presentation.ui.components.rememberAttachmentPicker
 import com.performily.flowboard.features.request.presentation.viewmodel.NewRequestViewModel
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonForm
 
 
 /**
@@ -110,7 +111,7 @@ fun NewRequestScreen(
             .fillMaxSize()
             .padding(paddingValues)
         when {
-            state.isLoading -> RequestLoading(modifier = contentModifier)
+            state.isLoading -> SkeletonForm(modifier = contentModifier, fieldCount = 4)
             state.types.isEmpty() -> RequestMessageState(
                 title = if (state.loadError != null) "No se pudo cargar el formulario" else "No hay tipos de solicitud activos",
                 message = state.loadError ?: "Recursos Humanos aún no ha habilitado tipos de solicitud.",

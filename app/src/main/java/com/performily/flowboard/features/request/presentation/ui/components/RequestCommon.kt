@@ -40,6 +40,7 @@ import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.core.designsystem.theme.OnAvatarContainer
 import com.performily.flowboard.core.designsystem.theme.OnSurface
 import com.performily.flowboard.features.request.domain.valueobject.RequestStatus
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 
 /** Pill with the label of a request status, tinted by the status. */
@@ -241,12 +242,10 @@ fun RequestSectionHeader(text: String, modifier: Modifier = Modifier, action: (@
     }
 }
 
-/** Centered progress indicator that fills the available space. */
+/** Placeholder of a list shown while a screen loads. */
 @Composable
 fun RequestLoading(modifier: Modifier = Modifier) {
-    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
-    }
+    SkeletonList(modifier = modifier.fillMaxSize())
 }
 
 /**

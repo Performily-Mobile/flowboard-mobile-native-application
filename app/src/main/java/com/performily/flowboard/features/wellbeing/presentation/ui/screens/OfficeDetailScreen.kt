@@ -53,6 +53,7 @@ import com.performily.flowboard.features.wellbeing.presentation.ui.components.We
 import com.performily.flowboard.features.wellbeing.presentation.viewmodel.OfficeDetailViewModel
 import kotlinx.coroutines.delay
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonDetail
 
 /**
  * MA-72 - Indicators of an office, and MA-81 - no readings.
@@ -129,7 +130,7 @@ fun OfficeDetailScreen(
             .fillMaxSize()
             .padding(paddingValues)
         when {
-            state.isLoading -> WellbeingLoading(modifier = contentModifier)
+            state.isLoading -> SkeletonDetail(modifier = contentModifier, showTabs = false)
 
             status == null -> WellbeingMessageState(
                 title = "No se pudo cargar el espacio",

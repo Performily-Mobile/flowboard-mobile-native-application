@@ -50,6 +50,7 @@ import com.performily.flowboard.features.request.presentation.ui.components.Retu
 import com.performily.flowboard.features.request.presentation.ui.components.timelineOf
 import com.performily.flowboard.features.request.presentation.viewmodel.ReviewRequestViewModel
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonDetail
 
 
 /**
@@ -108,7 +109,7 @@ fun ReviewRequestScreen(
             .padding(paddingValues)
         val request = state.request
         when {
-            state.isLoading -> RequestLoading(modifier = contentModifier)
+            state.isLoading -> SkeletonDetail(modifier = contentModifier, showTabs = false)
             request == null -> RequestMessageState(
                 title = "No se pudo cargar la solicitud",
                 message = state.errorMessage ?: "Inténtalo nuevamente.",
