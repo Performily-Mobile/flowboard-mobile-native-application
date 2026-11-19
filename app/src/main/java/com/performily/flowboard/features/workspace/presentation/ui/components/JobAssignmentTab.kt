@@ -13,8 +13,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.performily.flowboard.core.designsystem.theme.ActiveContainer
+import com.performily.flowboard.core.designsystem.component.FlowboardStatusBadge
 import com.performily.flowboard.core.designsystem.theme.Spacing
+import com.performily.flowboard.core.designsystem.theme.StatusTone
 import com.performily.flowboard.features.workspace.domain.entity.Employee
 import com.performily.flowboard.features.workspace.domain.entity.JobAssignment
 
@@ -94,7 +95,7 @@ private fun JobAssignmentItem(assignment: JobAssignment) {
                 )
             }
             if (assignment.current) {
-                LabelChip(text = "Vigente", containerColor = ActiveContainer)
+                FlowboardStatusBadge(text = "Vigente", tone = StatusTone.SUCCESS)
             }
         }
     }

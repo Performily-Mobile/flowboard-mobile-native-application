@@ -3,7 +3,6 @@ package com.performily.flowboard.features.workspace.presentation.ui.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.DropdownMenu
@@ -16,13 +15,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
-import com.performily.flowboard.core.designsystem.theme.ActiveContainer
 import com.performily.flowboard.core.designsystem.theme.Spacing
-import com.performily.flowboard.core.designsystem.theme.SurfaceContainerHigh
 import com.performily.flowboard.features.workspace.domain.entity.Area
 
 /**
@@ -56,17 +52,10 @@ fun AreasTab(
                 title = area.name,
                 subtitle = "${area.activeEmployees} colaboradores activos",
                 trailing = {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        LabelChip(
-                            text = if (area.active) "Activa" else "Inactiva",
-                            containerColor = if (area.active) ActiveContainer else SurfaceContainerHigh
-                        )
-                        if (area.active) {
-                            AreaMenu(onDeactivateClick = { onDeactivateClick(area) })
-                        }
+                    if (area.active) {
+                        AreaMenu(onDeactivateClick = { onDeactivateClick(area) })
+                    } else {
+                        ActiveChip(active = false, inactiveLabel = "Inactiva")
                     }
                 }
             )
