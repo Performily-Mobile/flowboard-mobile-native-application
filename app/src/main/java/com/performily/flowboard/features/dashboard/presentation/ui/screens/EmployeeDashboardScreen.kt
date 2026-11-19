@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonDashboard
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Divider
 import com.performily.flowboard.core.designsystem.theme.Error
@@ -61,7 +62,6 @@ import com.performily.flowboard.features.dashboard.presentation.ui.components.My
 import com.performily.flowboard.features.dashboard.presentation.viewmodel.EmployeeDashboardViewModel
 import java.time.LocalDateTime
 import kotlinx.coroutines.delay
-import com.performily.flowboard.core.designsystem.component.SkeletonDashboard
 
 /**
  * Home screen of the employee (MA-14): a summary of their own attendance, vacation, requests and
@@ -283,7 +283,7 @@ private fun MonthSection(
     month: MonthAttendance?,
     onSeeAll: () -> Unit
 ) {
-    DashboardSectionCard(title = "Mi asistencia del mes", action = "Ver", onAction = onSeeAll) {
+    DashboardSectionCard(title = "Mi asistencia del mes", action = "Ver detalle", onAction = onSeeAll) {
         when {
             month == null -> DashboardSectionMessage("No se pudo cargar tu asistencia del mes.")
             month.totalDays == 0 -> DashboardSectionMessage("Todavía no tienes marcaciones este mes.")
@@ -338,7 +338,7 @@ private fun VacationSection(
     vacation: VacationOverview?,
     onSeeAll: () -> Unit
 ) {
-    DashboardSectionCard(title = "Mis vacaciones", action = "Ver", onAction = onSeeAll) {
+    DashboardSectionCard(title = "Mis vacaciones", action = "Ver detalle", onAction = onSeeAll) {
         if (vacation == null) {
             DashboardSectionMessage("No se pudo cargar tu saldo de vacaciones.")
         } else {

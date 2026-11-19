@@ -28,6 +28,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonDashboard
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Divider
 import com.performily.flowboard.core.designsystem.theme.Spacing
@@ -45,8 +47,6 @@ import com.performily.flowboard.features.dashboard.presentation.ui.components.Re
 import com.performily.flowboard.features.dashboard.presentation.viewmodel.HrDashboardViewModel
 import java.time.LocalDateTime
 import kotlinx.coroutines.delay
-import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
-import com.performily.flowboard.core.designsystem.component.SkeletonDashboard
 
 /**
  * HR dashboard screen (MA-18).
@@ -231,17 +231,14 @@ private fun AttendanceSection(
     dashboard: HrDashboard?,
     onSeeAll: () -> Unit
 ) {
-    DashboardSectionCard(title = "Asistencia de hoy por área", action = "Ver", onAction = onSeeAll) {
+    DashboardSectionCard(title = "Asistencia de hoy por área", action = "Ver detalle", onAction = onSeeAll) {
         val attendance = dashboard?.todayAttendance
         when {
             attendance == null -> DashboardSectionMessage("No se pudo cargar la asistencia de hoy.")
             attendance.isEmpty() -> DashboardSectionMessage("Todavía no hay áreas con colaboradores activos.")
-            else -> {
-                attendance.forEach { AreaAttendanceRow(it) }
-                if (attendance.all { it.percentage == 0 }) {
-                    DashboardSectionMessage("Nadie ha marcado entrada hoy todavía.")
-                }
-            }
+            attendance.all { it.percentage == 0 } ->
+                DashboardSectionMessage("Nadie ha marcado entrada hoy todavía. Las barras por área aparecerán con las primeras marcaciones.")
+            else -> attendance.forEach { AreaAttendanceRow(it) }
         }
     }
 }
