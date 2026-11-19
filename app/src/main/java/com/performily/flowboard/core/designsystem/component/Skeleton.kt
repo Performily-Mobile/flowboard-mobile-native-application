@@ -6,7 +6,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +15,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -29,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -123,6 +122,7 @@ fun SkeletonCircle(size: Dp = 40.dp) {
 fun SkeletonListTile(showAvatar: Boolean = true, showTrailing: Boolean = true) {
     SkeletonCard(padding = PaddingValues(horizontal = 16.dp, vertical = 14.dp)) {
         Row(
+            modifier = Modifier.heightIn(min = Spacing.listRowMinHeight - 28.dp),
             horizontalArrangement = Arrangement.spacedBy(Spacing.m),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -280,20 +280,18 @@ fun SkeletonDashboard(modifier: Modifier = Modifier) {
     }
 }
 
-/** Card that holds the blocks of a placeholder, with the shape and border of the real cards. */
+/** Card that holds the blocks of a placeholder, with the same tonal look as [FlowboardCard]. */
 @Composable
 private fun SkeletonCard(padding: PaddingValues, content: @Composable () -> Unit) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
         Box(modifier = Modifier.padding(padding)) { content() }
     }
 }
 
-/** Color of the blocks, softer in the dark theme. */
+/** Color of the blocks: the strongest surface container, visible over the card in both themes. */
 @Composable
-private fun skeletonColor(): Color =
-    if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) Color(0x1AFFFFFF) else Color(0xFFE6E8EF)
+private fun skeletonColor(): Color = MaterialTheme.colorScheme.surfaceContainerHighest
