@@ -21,9 +21,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.performily.flowboard.features.iam.presentation.viewmodel.IamViewModel
-import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.core.designsystem.component.FlowboardLogo
+import com.performily.flowboard.core.designsystem.theme.Spacing
+import com.performily.flowboard.features.iam.presentation.viewmodel.IamViewModel
 
 @Composable
 fun LoginScreen(vm: IamViewModel = hiltViewModel()) {
@@ -93,7 +93,7 @@ fun LoginScreen(vm: IamViewModel = hiltViewModel()) {
                 Spacer(Modifier.height(48.dp))
                 Button(
                     onClick = { recovery = false },
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth().height(56.dp)
                 ) { Text("Volver a iniciar sesión") }
             } else {
                 Spacer(Modifier.height(45.dp))
@@ -151,7 +151,7 @@ fun LoginScreen(vm: IamViewModel = hiltViewModel()) {
                 Button(
                     onClick = { vm.login(username, password) },
                     enabled = username.isNotBlank() && password.isNotBlank() && !loading,
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth().height(56.dp)
                 ) {
                     Text(if (loading) "Ingresando…" else "Ingresar")
                 }
@@ -210,7 +210,7 @@ private fun BiometricPlaceholderButton() {
         enabled = false,
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp)
+            .height(56.dp)
     ) {
         Icon(
             Icons.Default.Fingerprint,
