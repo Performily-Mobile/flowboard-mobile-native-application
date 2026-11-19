@@ -1,5 +1,6 @@
 package com.performily.flowboard.features.workspace.application.usecase
 
+import com.performily.flowboard.core.text.sortedAlphabeticallyBy
 import com.performily.flowboard.features.workspace.domain.entity.Employee
 import com.performily.flowboard.features.workspace.domain.repository.EmployeeRepository
 import com.performily.flowboard.features.workspace.domain.valueobject.EmploymentStatus
@@ -14,6 +15,6 @@ class GetEmployeesUseCase @Inject constructor(private val repository: EmployeeRe
         positionId: Long? = null
     ): Result<List<Employee>> {
         return repository.getEmployees(search?.trim()?.takeIf { it.isNotEmpty() }, areaId, status, positionId)
-            .map { employees -> employees.sortedBy { it.name.sortableName.lowercase() } }
+            .map { employees -> employees.sortedAlphabeticallyBy { it.name.sortableName } }
     }
 }

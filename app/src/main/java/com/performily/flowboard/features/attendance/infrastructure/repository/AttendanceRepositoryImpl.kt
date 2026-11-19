@@ -2,7 +2,7 @@ package com.performily.flowboard.features.attendance.infrastructure.repository
 
 import com.performily.flowboard.core.network.apiCall
 import com.performily.flowboard.core.session.CurrentEmployeeProvider
-import com.performily.flowboard.features.attendance.domain.repository.AttendancePage
+import com.performily.flowboard.core.text.sortedAlphabeticallyBy
 import com.performily.flowboard.features.attendance.domain.entity.AttendanceArea
 import com.performily.flowboard.features.attendance.domain.entity.AttendanceAreaReport
 import com.performily.flowboard.features.attendance.domain.entity.AttendanceEmployee
@@ -10,6 +10,7 @@ import com.performily.flowboard.features.attendance.domain.entity.AttendanceEmpl
 import com.performily.flowboard.features.attendance.domain.entity.AttendanceHoursReport
 import com.performily.flowboard.features.attendance.domain.entity.AttendanceRecord
 import com.performily.flowboard.features.attendance.domain.entity.EmployeeHoursSummary
+import com.performily.flowboard.features.attendance.domain.repository.AttendancePage
 import com.performily.flowboard.features.attendance.domain.repository.AttendanceRepository
 import com.performily.flowboard.features.attendance.domain.valueobject.AttendancePeriod
 import com.performily.flowboard.features.attendance.domain.valueobject.AttendanceStatus
@@ -19,13 +20,13 @@ import com.performily.flowboard.features.attendance.infrastructure.remote.Attend
 import com.performily.flowboard.features.attendance.infrastructure.remote.AttendanceWorkspaceService
 import com.performily.flowboard.features.attendance.infrastructure.remote.JustifyAttendanceRequestDto
 import com.performily.flowboard.features.attendance.infrastructure.remote.PunchRequestDto
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import java.time.LocalDateTime
 import java.time.ZoneId
 import javax.inject.Inject
 import kotlin.math.round
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
 class AttendanceRepositoryImpl @Inject constructor(
     private val attendanceService: AttendanceService,
@@ -162,7 +163,7 @@ class AttendanceRepositoryImpl @Inject constructor(
                         status = rows.maxByOrNull { it.workDate }?.status ?: AttendanceStatus.INCOMPLETE,
                         hasRecords = rows.isNotEmpty()
                     )
-                }.sortedBy { it.employeeName },
+                }.sortedAlphabeticallyBy { it.employeeName },
                 records = records
             )
         }
@@ -215,7 +216,7 @@ class AttendanceRepositoryImpl @Inject constructor(
             )
         }.let { values ->
             if (orderByOvertime) values.sortedByDescending { it.overtimeHours }
-            else values.sortedBy { it.employeeName }
+            else values.sortedAlphabeticallyBy { it.employeeName }
         }
 
         Result.success(
