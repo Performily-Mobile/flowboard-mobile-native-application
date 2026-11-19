@@ -3,7 +3,6 @@ package com.performily.flowboard.features.attendance.presentation.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -24,14 +23,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.CollapsingHeaderLayout
+import com.performily.flowboard.core.designsystem.component.FlowboardChipRow
+import com.performily.flowboard.core.designsystem.component.FlowboardDateRangeChip
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 import com.performily.flowboard.core.designsystem.component.rememberCollapsingHeaderState
 import com.performily.flowboard.core.designsystem.theme.Spacing
-import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceDatePickerField
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceEmptyState
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceRecordItem
 import com.performily.flowboard.features.attendance.presentation.viewmodel.EmployeeAttendanceViewModel
-import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
-import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 /**
  * Attendance records of one employee, opened from the report by area.
@@ -78,21 +78,11 @@ fun AttendanceEmployeeScreen(
                         .padding(top = 4.dp, bottom = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(Spacing.m)
                 ) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), modifier = Modifier.fillMaxWidth()) {
-                        AttendanceDatePickerField(
-                            label = "Desde",
-                            value = state.period.from,
-                            onValueChange = { viewModel.setPeriod(it, state.period.to) },
-                            modifier = Modifier.weight(1f),
-                            isError = invalidRange,
-                            supportingText = if (invalidRange) "Debe ser anterior a la fecha de fin." else null
-                        )
-                        AttendanceDatePickerField(
-                            label = "Hasta",
-                            value = state.period.to,
-                            onValueChange = { viewModel.setPeriod(state.period.from, it) },
-                            modifier = Modifier.weight(1f),
-                            isError = invalidRange
+                    FlowboardChipRow(contentPadding = PaddingValues(0.dp)) {
+                        FlowboardDateRangeChip(
+                            from = state.period.from,
+                            to = state.period.to,
+                            onRangeChange = viewModel::setPeriod
                         )
                     }
                     if (invalidRange) {

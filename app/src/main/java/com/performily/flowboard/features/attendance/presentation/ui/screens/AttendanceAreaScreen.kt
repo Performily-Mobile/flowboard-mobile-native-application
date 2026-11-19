@@ -25,18 +25,19 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.CollapsingHeaderLayout
+import com.performily.flowboard.core.designsystem.component.FlowboardChipRow
+import com.performily.flowboard.core.designsystem.component.FlowboardDateRangeChip
+import com.performily.flowboard.core.designsystem.component.FlowboardMenuChip
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 import com.performily.flowboard.core.designsystem.component.rememberCollapsingHeaderState
 import com.performily.flowboard.core.designsystem.theme.Spacing
-import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceDatePickerField
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceEmployeeAvatar
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceEmptyState
-import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceFilterDropdown
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceMetricCard
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceSectionTabs
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceStatusChip
 import com.performily.flowboard.features.attendance.presentation.viewmodel.AttendanceAreaViewModel
-import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
-import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 /**
  * HR section "Resumen por área": punctuality, lateness and absences of one area in a period.
@@ -70,7 +71,6 @@ fun AttendanceAreaScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = Spacing.screenHorizontal)
                         .padding(top = 4.dp, bottom = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(Spacing.s)
                 ) {
@@ -82,28 +82,20 @@ fun AttendanceAreaScreen(
                                 2 -> onHoursReport()
                             }
                         },
-                        modifier = Modifier.padding(vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = Spacing.screenHorizontal, vertical = 4.dp)
                     )
-                    AttendanceFilterDropdown(
-                        label = "Área",
-                        selectedLabel = state.selectedArea?.name ?: "Selecciona un área",
-                        options = state.areas,
-                        optionLabel = { it.name },
-                        onSelected = viewModel::selectArea,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), modifier = Modifier.fillMaxWidth()) {
-                        AttendanceDatePickerField(
-                            label = "Período · Desde",
-                            value = state.period.from,
-                            onValueChange = { viewModel.setPeriod(it, state.period.to) },
-                            modifier = Modifier.weight(1f)
+                    FlowboardChipRow {
+                        FlowboardMenuChip(
+                            name = "Área",
+                            selectedLabel = state.selectedArea?.name,
+                            options = state.areas,
+                            optionLabel = { it.name },
+                            onSelect = viewModel::selectArea
                         )
-                        AttendanceDatePickerField(
-                            label = "Período · Hasta",
-                            value = state.period.to,
-                            onValueChange = { viewModel.setPeriod(state.period.from, it) },
-                            modifier = Modifier.weight(1f)
+                        FlowboardDateRangeChip(
+                            from = state.period.from,
+                            to = state.period.to,
+                            onRangeChange = viewModel::setPeriod
                         )
                     }
                 }

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -24,17 +23,19 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.CollapsingHeaderLayout
+import com.performily.flowboard.core.designsystem.component.FlowboardChipRow
+import com.performily.flowboard.core.designsystem.component.FlowboardChoiceChip
+import com.performily.flowboard.core.designsystem.component.FlowboardDateRangeChip
+import com.performily.flowboard.core.designsystem.component.FlowboardMenuChip
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 import com.performily.flowboard.core.designsystem.component.rememberCollapsingHeaderState
 import com.performily.flowboard.core.designsystem.theme.Spacing
-import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceDatePickerField
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceEmployeeAvatar
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceEmptyState
-import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceFilterDropdown
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceMetricCard
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceSectionTabs
 import com.performily.flowboard.features.attendance.presentation.viewmodel.AttendanceHoursViewModel
-import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
-import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 /**
  * HR section "Horas y sobretiempo": effective hours and overtime of each employee of an area.
@@ -66,7 +67,6 @@ fun AttendanceHoursScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = Spacing.screenHorizontal)
                         .padding(top = 4.dp, bottom = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(Spacing.s)
                 ) {
@@ -78,35 +78,27 @@ fun AttendanceHoursScreen(
                                 1 -> onAreaReport()
                             }
                         },
-                        modifier = Modifier.padding(vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = Spacing.screenHorizontal, vertical = 4.dp)
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), modifier = Modifier.fillMaxWidth()) {
-                        AttendanceDatePickerField(
-                            label = "Desde",
-                            value = state.period.from,
-                            onValueChange = { viewModel.setPeriod(it, state.period.to) },
-                            modifier = Modifier.weight(1f)
+                    FlowboardChipRow {
+                        FlowboardDateRangeChip(
+                            from = state.period.from,
+                            to = state.period.to,
+                            onRangeChange = viewModel::setPeriod
                         )
-                        AttendanceDatePickerField(
-                            label = "Hasta",
-                            value = state.period.to,
-                            onValueChange = { viewModel.setPeriod(state.period.from, it) },
-                            modifier = Modifier.weight(1f)
+                        FlowboardMenuChip(
+                            name = "Área",
+                            selectedLabel = state.selectedArea?.name,
+                            options = state.areas,
+                            optionLabel = { it.name },
+                            onSelect = viewModel::selectArea
+                        )
+                        FlowboardChoiceChip(
+                            label = "Más horas extra primero",
+                            selected = state.orderByOvertime,
+                            onClick = viewModel::toggleOrder
                         )
                     }
-                    AttendanceFilterDropdown(
-                        label = "Área",
-                        selectedLabel = state.selectedArea?.name ?: "Selecciona un área",
-                        options = state.areas,
-                        optionLabel = { it.name },
-                        onSelected = viewModel::selectArea,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    FilterChip(
-                        selected = state.orderByOvertime,
-                        onClick = viewModel::toggleOrder,
-                        label = { Text(if (state.orderByOvertime) "Mayor sobretiempo" else "Orden alfabético") }
-                    )
                 }
             }
         ) { contentPadding ->

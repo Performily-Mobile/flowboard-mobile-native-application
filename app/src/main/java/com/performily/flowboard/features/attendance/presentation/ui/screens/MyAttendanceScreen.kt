@@ -1,6 +1,5 @@
 package com.performily.flowboard.features.attendance.presentation.ui.screens
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,10 +10,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -28,12 +25,16 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.CollapsingHeaderLayout
+import com.performily.flowboard.core.designsystem.component.FlowboardChipRow
+import com.performily.flowboard.core.designsystem.component.FlowboardChoiceChip
+import com.performily.flowboard.core.designsystem.component.FlowboardDateRangeChip
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 import com.performily.flowboard.core.designsystem.component.rememberCollapsingHeaderState
 import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.attendance.domain.entity.AttendanceRecord
 import com.performily.flowboard.features.attendance.domain.valueobject.AttendanceStatus
 import com.performily.flowboard.features.attendance.domain.valueobject.label
-import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceDatePickerField
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceEmptyState
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceInfoBanner
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceRecordItem
@@ -42,8 +43,6 @@ import com.performily.flowboard.features.attendance.presentation.viewmodel.MyAtt
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
-import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 /** Note about how punches are consolidated, shown once on the screen. */
 private const val PUNCH_NOTE = "Las marcaciones se registran en el servidor y se consolidan según la jornada del puesto."
@@ -99,36 +98,22 @@ fun MyAttendanceScreen(
                     } else {
                         AttendanceInfoBanner(PUNCH_NOTE)
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), modifier = Modifier.fillMaxWidth()) {
-                        AttendanceDatePickerField(
-                            label = "Desde",
-                            value = state.period.from,
-                            onValueChange = { viewModel.setPeriod(it, state.period.to) },
-                            modifier = Modifier.weight(1f)
+                    FlowboardChipRow(contentPadding = PaddingValues(0.dp)) {
+                        FlowboardDateRangeChip(
+                            from = state.period.from,
+                            to = state.period.to,
+                            onRangeChange = viewModel::setPeriod
                         )
-                        AttendanceDatePickerField(
-                            label = "Hasta",
-                            value = state.period.to,
-                            onValueChange = { viewModel.setPeriod(state.period.from, it) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
-                    ) {
-                        FilterChip(
+                        FlowboardChoiceChip(
+                            label = "Todos",
                             selected = state.statusFilter == "TODOS",
-                            onClick = { viewModel.setStatusFilter("TODOS") },
-                            label = { Text("Todos") }
+                            onClick = { viewModel.setStatusFilter("TODOS") }
                         )
                         AttendanceStatus.entries.forEach { status ->
-                            FilterChip(
+                            FlowboardChoiceChip(
+                                label = status.label(),
                                 selected = state.statusFilter == status.name,
-                                onClick = { viewModel.setStatusFilter(status.name) },
-                                label = { Text(status.label()) }
+                                onClick = { viewModel.setStatusFilter(status.name) }
                             )
                         }
                     }
