@@ -25,8 +25,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.performily.flowboard.core.designsystem.component.FlowboardStatusBadge
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Spacing
+import com.performily.flowboard.core.designsystem.theme.StatusTone
 import com.performily.flowboard.features.request.domain.entity.Request
 import com.performily.flowboard.features.request.domain.entity.RequestType
 
@@ -223,10 +225,9 @@ fun RequestTypeRow(
                     overflow = TextOverflow.Ellipsis
                 )
             }
-            RequestChip(
-                text = if (type.active) "Activo" else "Inactivo",
-                containerColor = if (type.active) RequestColors.TypeActive else RequestColors.TypeInactive
-            )
+            if (!type.active) {
+                FlowboardStatusBadge(text = "Inactivo", tone = StatusTone.NEUTRAL)
+            }
             Box {
                 IconButton(onClick = { menuExpanded = true }) {
                     Icon(FlowboardIcons.MoreVert, contentDescription = "Opciones de ${type.name}")

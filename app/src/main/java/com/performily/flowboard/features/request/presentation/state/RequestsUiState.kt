@@ -84,10 +84,20 @@ data class RequestsUiState(
     /** True when the viewer can approve or reject [request]: nobody resolves their own request. */
     fun canResolve(request: Request): Boolean = request.requesterId != viewerId
 
-    fun tabLabel(tab: RequestsTab): String = when (tab) {
-        RequestsTab.MINE -> "Mías"
-        RequestsTab.TO_APPROVE -> "Por aprobar ($pendingTotal)"
-        RequestsTab.HR_INBOX -> "RR.HH. ($pendingTotal)"
-        RequestsTab.ALL -> "Todas"
+    /**
+     * Label of a tab. The pending count is added only when there is something pending and it
+     * has finished loading, so the tab never shows a misleading "(0)" while the list loads.
+     *
+     * @param tab tab to label.
+     * @return the text of the tab.
+     */
+    fun tabLabel(tab: RequestsTab): String {
+        val count = if (!isLoadingPending && pendingTotal > 0) " ($pendingTotal)" else ""
+        return when (tab) {
+            RequestsTab.MINE -> "Mías"
+            RequestsTab.TO_APPROVE -> "Por aprobar$count"
+            RequestsTab.HR_INBOX -> "Por atender$count"
+            RequestsTab.ALL -> "Todas"
+        }
     }
 }

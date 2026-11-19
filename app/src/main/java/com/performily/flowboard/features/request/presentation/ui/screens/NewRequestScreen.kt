@@ -1,7 +1,6 @@
 package com.performily.flowboard.features.request.presentation.ui.screens
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -27,14 +26,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.FlowboardBottomActionBar
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonForm
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
-import com.performily.flowboard.core.designsystem.theme.Divider
 import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.request.domain.entity.RequestType
 import com.performily.flowboard.features.request.presentation.state.NewRequestStep
@@ -56,8 +55,6 @@ import com.performily.flowboard.features.request.presentation.ui.components.Requ
 import com.performily.flowboard.features.request.presentation.ui.components.StepHeader
 import com.performily.flowboard.features.request.presentation.ui.components.rememberAttachmentPicker
 import com.performily.flowboard.features.request.presentation.viewmodel.NewRequestViewModel
-import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
-import com.performily.flowboard.core.designsystem.component.SkeletonForm
 
 
 /**
@@ -224,13 +221,12 @@ private fun ColumnScope.TypeStep(
             val selected = type.id == state.selectedType?.id
             RequestCard(
                 onClick = { onTypeSelected(type) },
-                containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer else Color.White,
-                border = BorderStroke(1.dp, Divider)
+                containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m), verticalAlignment = Alignment.CenterVertically) {
                     RadioButton(selected = selected, onClick = { onTypeSelected(type) }, modifier = Modifier.size(24.dp))
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                        Text(type.name, style = MaterialTheme.typography.bodyLarge)
+                        Text(type.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
                         Text(
                             text = RequestFormatters.typeHint(type, state.availability?.availableDays),
                             style = MaterialTheme.typography.bodySmall,

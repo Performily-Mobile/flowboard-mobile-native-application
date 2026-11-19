@@ -31,22 +31,30 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.performily.flowboard.core.designsystem.theme.Divider
-import com.performily.flowboard.core.designsystem.theme.Spacing
+import com.performily.flowboard.core.designsystem.component.FlowboardEmptyState
+import com.performily.flowboard.core.designsystem.component.FlowboardStatusBadge
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 import com.performily.flowboard.core.designsystem.theme.OnAvatarContainer
 import com.performily.flowboard.core.designsystem.theme.OnSurface
+import com.performily.flowboard.core.designsystem.theme.Spacing
+import com.performily.flowboard.core.designsystem.theme.StatusTone
 import com.performily.flowboard.features.request.domain.valueobject.RequestStatus
-import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 
-/** Pill with the label of a request status, tinted by the status. */
+/** Badge with the label of a request status, colored by the meaning of the status. */
 @Composable
 fun RequestStatusChip(status: RequestStatus, modifier: Modifier = Modifier) {
-    RequestChip(text = status.label, containerColor = RequestColors.status(status), modifier = modifier)
+    val tone = when (status) {
+        RequestStatus.IN_PROGRESS -> StatusTone.WARNING
+        RequestStatus.UNDER_REVIEW -> StatusTone.INFO
+        RequestStatus.APPROVED -> StatusTone.SUCCESS
+        RequestStatus.REJECTED -> StatusTone.DANGER
+        RequestStatus.CANCELLED -> StatusTone.NEUTRAL
+    }
+    FlowboardStatusBadge(text = status.label, tone = tone, modifier = modifier)
 }
 
 
@@ -102,7 +110,7 @@ fun RequestIconCircle(
 
 
 /**
- * Card used by every list and panel of the request feature.
+ * Card used by every list and panel of the request feature: tonal and borderless, like [com.performily.flowboard.core.designsystem.component.FlowboardCard].
  *
  * @param modifier modifier applied to the card.
  * @param onClick called when the card is tapped, or null for a static card.
@@ -115,8 +123,8 @@ fun RequestIconCircle(
 fun RequestCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    containerColor: Color = Color.White,
-    border: BorderStroke? = BorderStroke(1.dp, Divider),
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+    border: BorderStroke? = null,
     spacing: Dp = 8.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -161,7 +169,7 @@ fun KeyValueCard(items: List<KeyValue>, modifier: Modifier = Modifier) {
                 )
                 Text(text = item.value, style = MaterialTheme.typography.bodyLarge)
             }
-            if (index < items.lastIndex) HorizontalDivider(color = Divider)
+            if (index < items.lastIndex) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
         }
     }
 }
@@ -269,7 +277,7 @@ fun RequestLoadMoreItem(itemCount: Int, failed: Boolean, onLoadMore: () -> Unit)
     }
 }
 
-/** Empty or error state with an optional icon and action button. */
+/** Empty or error state with an optional icon and action button, drawn with the shared [FlowboardEmptyState]. */
 @Composable
 fun RequestMessageState(
     title: String,
@@ -279,32 +287,15 @@ fun RequestMessageState(
     actionLabel: String? = null,
     onAction: () -> Unit = {}
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(top = Spacing.xxl, start = Spacing.screenHorizontal, end = Spacing.screenHorizontal),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        if (icon != null) {
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .background(MaterialTheme.colorScheme.surfaceContainer, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(30.dp))
-            }
+    FlowboardEmptyState(
+        title = title,
+        message = message,
+        icon = icon,
+        modifier = modifier,
+        action = if (actionLabel != null) {
+            { OutlinedButton(onClick = onAction) { Text(actionLabel) } }
+        } else {
+            null
         }
-        Text(text = title, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
-        if (actionLabel != null) {
-            OutlinedButton(onClick = onAction) { Text(actionLabel) }
-        }
-    }
+    )
 }
