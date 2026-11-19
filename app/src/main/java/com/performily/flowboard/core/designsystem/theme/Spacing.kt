@@ -27,4 +27,13 @@ object Spacing {
 
     /** Bottom space of a list so its last item is not covered by a floating button. */
     val fabClearance = 96.dp
+
+    /** Inner padding of a card. */
+    val cardPadding = 16.dp
+
+    /** Minimum height of a list row with two lines of text. */
+    val listRowMinHeight = 72.dp
+
+    /** Minimum side of anything the user can tap. */
+    val touchTarget = 48.dp
 }
