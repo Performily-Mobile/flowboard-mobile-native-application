@@ -7,7 +7,8 @@ import com.performily.flowboard.features.workspace.domain.entity.Employee
 import com.performily.flowboard.features.workspace.domain.valueobject.EmploymentStatus
 
 /**
- * Row of the employee list with avatar, name and job.
+ * Row of the employee list with avatar, name, position and area, each on its own line so every
+ * row keeps the same height whatever the length of the position.
  *
  * Almost every employee is active, so the status badge is shown only for suspended or terminated
  * employees, where it tells something the list does not already say.
@@ -24,8 +25,8 @@ fun EmployeeListItem(
 ) {
     FlowboardListRow(
         headline = employee.name.sortableName,
-        supporting = employee.jobDescription,
-        supportingMaxLines = 2,
+        supporting = employee.positionTitle,
+        meta = employee.areaName,
         modifier = modifier,
         onClick = onClick,
         leading = { EmployeeAvatar(initials = employee.name.initials) },

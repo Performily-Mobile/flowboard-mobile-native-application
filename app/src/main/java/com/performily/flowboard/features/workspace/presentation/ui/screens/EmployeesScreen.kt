@@ -17,8 +17,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,19 +36,20 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.CollapsingHeaderLayout
+import com.performily.flowboard.core.designsystem.component.FlowboardMenuChip
 import com.performily.flowboard.core.designsystem.component.FlowboardSearchField
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 import com.performily.flowboard.core.designsystem.component.rememberCollapsingHeaderState
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.workspace.domain.entity.Area
 import com.performily.flowboard.features.workspace.domain.entity.Position
+import com.performily.flowboard.features.workspace.domain.valueobject.EmploymentStatus
 import com.performily.flowboard.features.workspace.presentation.state.EmployeesUiState
 import com.performily.flowboard.features.workspace.presentation.ui.components.EmployeeListItem
 import com.performily.flowboard.features.workspace.presentation.ui.components.label
 import com.performily.flowboard.features.workspace.presentation.viewmodel.EmployeesViewModel
-import com.performily.flowboard.features.workspace.domain.valueobject.EmploymentStatus
-import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
-import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 /**
  * List of employees with a search box and filters that slide away while scrolling down.
@@ -219,7 +218,7 @@ private fun EmployeeFilters(
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
     ) {
-        FilterMenuChip(
+        FlowboardMenuChip(
             name = "Área",
             selectedLabel = state.selectedArea?.name,
             options = state.areas,
@@ -227,7 +226,7 @@ private fun EmployeeFilters(
             onSelect = { onAreaSelected(it) },
             onClear = { onAreaSelected(null) }
         )
-        FilterMenuChip(
+        FlowboardMenuChip(
             name = "Estado",
             selectedLabel = state.selectedStatus?.label(),
             options = EmploymentStatus.entries,
@@ -235,7 +234,7 @@ private fun EmployeeFilters(
             onSelect = { onStatusSelected(it) },
             onClear = { onStatusSelected(null) }
         )
-        FilterMenuChip(
+        FlowboardMenuChip(
             name = "Puesto",
             selectedLabel = state.selectedPosition?.title,
             options = state.positionsForFilter,
@@ -243,56 +242,6 @@ private fun EmployeeFilters(
             onSelect = { onPositionSelected(it) },
             onClear = { onPositionSelected(null) }
         )
-    }
-}
-
-/**
- * Filter chip that opens a menu of options; when a value is selected, tapping it clears the filter.
- */
-@Composable
-private fun <T> FilterMenuChip(
-    name: String,
-    selectedLabel: String?,
-    options: List<T>,
-    optionLabel: (T) -> String,
-    onSelect: (T) -> Unit,
-    onClear: () -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    val selected = selectedLabel != null
-    Box {
-        FilterChip(
-            selected = selected,
-            onClick = { if (selected) onClear() else expanded = true },
-            label = { Text(if (selected) "$name: $selectedLabel" else name) },
-            leadingIcon = if (selected) {
-                { Icon(FlowboardIcons.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
-            } else {
-                null
-            },
-            trailingIcon = {
-                Icon(
-                    imageVector = if (selected) FlowboardIcons.Close else FlowboardIcons.ArrowDropDown,
-                    contentDescription = if (selected) "Quitar filtro" else null,
-                    modifier = Modifier.size(18.dp)
-                )
-            },
-            colors = FilterChipDefaults.filterChipColors(
-                selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                selectedLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
-            )
-        )
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            options.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(optionLabel(option)) },
-                    onClick = {
-                        expanded = false
-                        onSelect(option)
-                    }
-                )
-            }
-        }
     }
 }
 
