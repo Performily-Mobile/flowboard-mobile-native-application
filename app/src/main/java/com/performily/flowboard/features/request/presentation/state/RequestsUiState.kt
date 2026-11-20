@@ -42,6 +42,17 @@ enum class ApprovalSort(val label: String, val order: RequestSortOrder) {
     NEWEST_FIRST("Más recientes primero", RequestSortOrder.NEWEST_FIRST)
 }
 
+/**
+ * Approval waiting a few seconds before it is sent, so the user can undo it from the snackbar.
+ *
+ * @property request request that will be approved.
+ * @property position place the request had in the list, used to put it back when undone.
+ */
+data class QueuedApproval(
+    val request: Request,
+    val position: Int
+)
+
 data class RejectForm(
     val request: Request,
     val reason: String = "",
@@ -69,6 +80,7 @@ data class RequestsUiState(
     val typeFilter: RequestType? = null,
     val sort: ApprovalSort = ApprovalSort.OLDEST_FIRST,
     val processingRequestId: Long? = null,
+    val queuedApproval: QueuedApproval? = null,
     val rejectForm: RejectForm? = null,
 
     val isLoadingAll: Boolean = false,

@@ -16,12 +16,18 @@ import com.performily.flowboard.features.request.presentation.state.AllRequestsF
 import com.performily.flowboard.features.request.presentation.state.ApprovalSort
 import com.performily.flowboard.features.request.presentation.state.MyRequestsFilter
 import com.performily.flowboard.features.request.presentation.state.PagingState
+import com.performily.flowboard.features.request.presentation.state.QueuedApproval
 import com.performily.flowboard.features.request.presentation.state.RejectForm
 import com.performily.flowboard.features.request.presentation.state.RequestsTab
 import com.performily.flowboard.features.request.presentation.state.RequestsUiState
 import com.performily.flowboard.features.request.presentation.ui.components.RequestFormatters
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,6 +56,8 @@ class RequestsViewModel @Inject constructor(
         )
     )
     val state: StateFlow<RequestsUiState> = _state.asStateFlow()
+
+    private var approvalJob: Job? = null
 
 
     fun load() {
@@ -202,30 +210,75 @@ class RequestsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Approves a request with a short undo window.
+     *
+     * The request leaves the list at once and the snackbar offers "Deshacer"; the approval is sent
+     * only when [UNDO_WINDOW_MILLIS] pass without an undo. A second approval sends the first one
+     * right away, so only one approval waits at a time.
+     *
+     * @param request request to approve.
+     */
     fun approve(request: Request) {
-        if (_state.value.processingRequestId != null || !_state.value.canResolve(request)) return
-        _state.update { it.copy(processingRequestId = request.id) }
+        val current = _state.value
+        if (current.processingRequestId != null || !current.canResolve(request)) return
+        current.queuedApproval?.let { commitQueuedApproval() }
+        val position = _state.value.pending.indexOfFirst { it.id == request.id }.coerceAtLeast(0)
+        _state.update { state ->
+            state.copy(
+                pending = state.pending.filterNot { it.id == request.id },
+                pendingTotal = (state.pendingTotal - 1).coerceAtLeast(0),
+                queuedApproval = QueuedApproval(request, position)
+            )
+        }
+        approvalJob = viewModelScope.launch {
+            delay(UNDO_WINDOW_MILLIS)
+            commitQueuedApproval()
+        }
+    }
+
+    /** Puts the queued request back in its place and cancels its approval. */
+    fun undoApproval() {
+        approvalJob?.cancel()
+        val queued = _state.value.queuedApproval ?: return
+        _state.update { state ->
+            val list = state.pending.toMutableList()
+            list.add(queued.position.coerceAtMost(list.size), queued.request)
+            state.copy(pending = list, pendingTotal = state.pendingTotal + 1, queuedApproval = null)
+        }
+    }
+
+    /** Sends the queued approval to the backend; a failure puts the request back with a message. */
+    private fun commitQueuedApproval() {
+        approvalJob?.cancel()
+        val queued = _state.value.queuedApproval ?: return
+        _state.update { it.copy(queuedApproval = null, processingRequestId = queued.request.id) }
         viewModelScope.launch {
-            approveRequest(request)
-                .onSuccess { approved ->
+            approveRequest(queued.request)
+                .onSuccess { _state.update { it.copy(processingRequestId = null) } }
+                .onFailure { exception ->
                     _state.update { state ->
+                        val list = state.pending.toMutableList()
+                        list.add(queued.position.coerceAtMost(list.size), queued.request)
                         state.copy(
                             processingRequestId = null,
-                            pending = state.pending.filterNot { it.id == approved.id },
-                            pendingTotal = (state.pendingTotal - 1).coerceAtLeast(0),
-                            snackbarMessage = "Solicitud de ${RequestFormatters.shortName(request.requesterName)} aprobada."
-                        )
-                    }
-                }
-                .onFailure { exception ->
-                    _state.update {
-                        it.copy(
-                            processingRequestId = null,
+                            pending = list,
+                            pendingTotal = state.pendingTotal + 1,
                             snackbarMessage = exception.requestMessage(RequestAction.RESOLVE, "No se pudo aprobar la solicitud.")
                         )
                     }
                 }
         }
+    }
+
+    /** Sends a waiting approval when the screen goes away for good, so no decision is lost. */
+    override fun onCleared() {
+        val queued = _state.value.queuedApproval
+        if (queued != null) {
+            approvalJob?.cancel()
+            CoroutineScope(SupervisorJob() + Dispatchers.IO).launch { approveRequest(queued.request) }
+        }
+        super.onCleared()
     }
 
     fun showRejectDialog(request: Request) {
@@ -324,4 +377,9 @@ class RequestsViewModel @Inject constructor(
     }
 
     fun onSnackbarShown() = _state.update { it.copy(snackbarMessage = null) }
+
+    private companion object {
+        /** Time the user has to undo an approval before it is sent. */
+        const val UNDO_WINDOW_MILLIS = 4_000L
+    }
 }

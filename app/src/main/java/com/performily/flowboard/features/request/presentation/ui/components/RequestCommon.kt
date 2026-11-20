@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.sp
 import com.performily.flowboard.core.designsystem.component.FlowboardEmptyState
 import com.performily.flowboard.core.designsystem.component.FlowboardStatusBadge
 import com.performily.flowboard.core.designsystem.component.SkeletonList
-import com.performily.flowboard.core.designsystem.theme.OnAvatarContainer
 import com.performily.flowboard.core.designsystem.theme.OnSurface
 import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.core.designsystem.theme.StatusTone
@@ -84,7 +83,7 @@ fun RequestAvatar(name: String, modifier: Modifier = Modifier, size: Dp = 40.dp)
             text = RequestFormatters.initials(name),
             fontSize = if (size > 40.dp) 17.sp else 14.sp,
             fontWeight = FontWeight.SemiBold,
-            color = OnAvatarContainer
+            color = MaterialTheme.colorScheme.primary
         )
     }
 }

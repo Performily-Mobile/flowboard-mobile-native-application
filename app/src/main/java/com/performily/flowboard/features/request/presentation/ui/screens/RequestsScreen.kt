@@ -1,5 +1,6 @@
 package com.performily.flowboard.features.request.presentation.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,24 +22,36 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.CollapsingHeaderLayout
+import com.performily.flowboard.core.designsystem.component.FlowboardRefreshBox
+import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 import com.performily.flowboard.core.designsystem.component.rememberCollapsingHeaderState
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Spacing
+import com.performily.flowboard.core.designsystem.theme.StatusTone
+import com.performily.flowboard.core.designsystem.theme.statusColors
 import com.performily.flowboard.features.request.domain.entity.Request
 import com.performily.flowboard.features.request.domain.entity.RequestType
 import com.performily.flowboard.features.request.presentation.state.AllRequestsFilter
@@ -49,8 +62,6 @@ import com.performily.flowboard.features.request.presentation.state.RequestsUiSt
 import com.performily.flowboard.features.request.presentation.ui.components.ApprovalCard
 import com.performily.flowboard.features.request.presentation.ui.components.MyRequestCard
 import com.performily.flowboard.features.request.presentation.ui.components.RejectRequestDialog
-import com.performily.flowboard.features.request.presentation.ui.components.RequestBanner
-import com.performily.flowboard.features.request.presentation.ui.components.RequestColors
 import com.performily.flowboard.features.request.presentation.ui.components.RequestFormatters
 import com.performily.flowboard.features.request.presentation.ui.components.RequestListRow
 import com.performily.flowboard.features.request.presentation.ui.components.RequestLoadMoreItem
@@ -58,7 +69,6 @@ import com.performily.flowboard.features.request.presentation.ui.components.Requ
 import com.performily.flowboard.features.request.presentation.ui.components.RequestMessageState
 import com.performily.flowboard.features.request.presentation.ui.components.RequestSegmented
 import com.performily.flowboard.features.request.presentation.viewmodel.RequestsViewModel
-import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 
 
 /**
@@ -106,6 +116,16 @@ fun RequestsScreen(
         }
     }
 
+    LaunchedEffect(state.queuedApproval?.request?.id) {
+        val queued = state.queuedApproval ?: return@LaunchedEffect
+        val result = snackbarHostState.showSnackbar(
+            message = "Solicitud de ${RequestFormatters.shortName(queued.request.requesterName)} aprobada",
+            actionLabel = "Deshacer",
+            duration = SnackbarDuration.Short
+        )
+        if (result == SnackbarResult.ActionPerformed) viewModel.undoApproval()
+    }
+
     Scaffold(
         topBar = {
             FlowboardTopBar(
@@ -126,97 +146,102 @@ fun RequestsScreen(
             }
         }
     ) { paddingValues ->
-        CollapsingHeaderLayout(
-            modifier = Modifier.padding(paddingValues),
-            state = headerState,
-            showHeaderKey = listOf(
-                state.selectedTab,
-                state.myRequests.size,
-                state.pending.size,
-                state.allRequests.size,
-                state.isLoadingMine || state.isLoadingPending || state.isLoadingAll,
-                state.mineError != null || state.pendingError != null || state.allError != null
-            ),
-            header = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp, bottom = Spacing.m),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.m)
-                ) {
-                    RequestSegmented(
-                        options = state.tabs,
-                        selected = state.selectedTab,
-                        optionLabel = state::tabLabel,
-                        onSelect = viewModel::onTabSelected,
-                        modifier = Modifier.padding(horizontal = Spacing.screenHorizontal, vertical = 4.dp)
-                    )
-                    when (state.selectedTab) {
-                        RequestsTab.MINE -> ChipRow {
-                            MyRequestsFilter.entries.forEach { filter ->
-                                SelectableChip(
-                                    label = filter.label,
-                                    selected = state.myFilter == filter,
-                                    onClick = { viewModel.onMyFilterSelected(filter) }
+        FlowboardRefreshBox(
+            isLoading = state.isLoadingMine || state.isLoadingPending || state.isLoadingAll,
+            onRefresh = viewModel::load,
+            modifier = Modifier.padding(paddingValues)
+        ) {
+            CollapsingHeaderLayout(
+                state = headerState,
+                showHeaderKey = listOf(
+                    state.selectedTab,
+                    state.myRequests.size,
+                    state.pending.size,
+                    state.allRequests.size,
+                    state.isLoadingMine || state.isLoadingPending || state.isLoadingAll,
+                    state.mineError != null || state.pendingError != null || state.allError != null
+                ),
+                header = {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp, bottom = Spacing.m),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.m)
+                    ) {
+                        RequestSegmented(
+                            options = state.tabs,
+                            selected = state.selectedTab,
+                            optionLabel = state::tabLabel,
+                            onSelect = viewModel::onTabSelected,
+                            modifier = Modifier.padding(horizontal = Spacing.screenHorizontal, vertical = 4.dp)
+                        )
+                        when (state.selectedTab) {
+                            RequestsTab.MINE -> ChipRow {
+                                MyRequestsFilter.entries.forEach { filter ->
+                                    SelectableChip(
+                                        label = filter.label,
+                                        selected = state.myFilter == filter,
+                                        onClick = { viewModel.onMyFilterSelected(filter) }
+                                    )
+                                }
+                            }
+                            RequestsTab.TO_APPROVE -> ChipRow {
+                                DropdownChip(
+                                    label = "Tipo: ${state.typeFilter?.name ?: "todos"}",
+                                    selected = state.typeFilter != null,
+                                    options = listOf<RequestType?>(null) + state.requestTypes,
+                                    optionLabel = { it?.name ?: "Todos" },
+                                    onSelect = viewModel::onTypeFilterSelected
+                                )
+                                DropdownChip(
+                                    label = state.sort.label,
+                                    selected = state.pending.isNotEmpty(),
+                                    options = ApprovalSort.entries,
+                                    optionLabel = { it.label },
+                                    onSelect = viewModel::onSortSelected
                                 )
                             }
-                        }
-                        RequestsTab.TO_APPROVE -> ChipRow {
-                            DropdownChip(
-                                label = "Tipo: ${state.typeFilter?.name ?: "todos"}",
-                                selected = state.typeFilter != null,
-                                options = listOf<RequestType?>(null) + state.requestTypes,
-                                optionLabel = { it?.name ?: "Todos" },
-                                onSelect = viewModel::onTypeFilterSelected
-                            )
-                            DropdownChip(
-                                label = state.sort.label,
-                                selected = state.pending.isNotEmpty(),
-                                options = ApprovalSort.entries,
-                                optionLabel = { it.label },
-                                onSelect = viewModel::onSortSelected
-                            )
-                        }
-                        RequestsTab.HR_INBOX -> Unit
-                        RequestsTab.ALL -> ChipRow {
-                            AllRequestsFilter.entries.forEach { filter ->
-                                SelectableChip(
-                                    label = filter.label,
-                                    selected = state.allFilter == filter,
-                                    onClick = { viewModel.onAllFilterSelected(filter) }
-                                )
+                            RequestsTab.HR_INBOX -> Unit
+                            RequestsTab.ALL -> ChipRow {
+                                AllRequestsFilter.entries.forEach { filter ->
+                                    SelectableChip(
+                                        label = filter.label,
+                                        selected = state.allFilter == filter,
+                                        onClick = { viewModel.onAllFilterSelected(filter) }
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
-        ) { contentPadding ->
-            when (state.selectedTab) {
-                RequestsTab.MINE -> MyRequestsList(
-                    state = state,
-                    contentPadding = contentPadding,
-                    onRequestClick = onMyRequestClick,
-                    onLoadMore = viewModel::loadMoreMine,
-                    onRetry = viewModel::load
-                )
-                RequestsTab.TO_APPROVE, RequestsTab.HR_INBOX -> PendingList(
-                    state = state,
-                    isHrInbox = state.selectedTab == RequestsTab.HR_INBOX,
-                    contentPadding = contentPadding,
-                    onRequestClick = onReviewClick,
-                    onApprove = viewModel::approve,
-                    onReject = viewModel::showRejectDialog,
-                    onResolvedClick = onResolvedClick,
-                    onLoadMore = viewModel::loadMorePending,
-                    onRetry = viewModel::load
-                )
-                RequestsTab.ALL -> AllRequestsList(
-                    state = state,
-                    contentPadding = contentPadding,
-                    onRequestClick = onReviewClick,
-                    onLoadMore = viewModel::loadMoreAll,
-                    onRetry = viewModel::load
-                )
+            ) { contentPadding ->
+                when (state.selectedTab) {
+                    RequestsTab.MINE -> MyRequestsList(
+                        state = state,
+                        contentPadding = contentPadding,
+                        onRequestClick = onMyRequestClick,
+                        onLoadMore = viewModel::loadMoreMine,
+                        onRetry = viewModel::load
+                    )
+                    RequestsTab.TO_APPROVE, RequestsTab.HR_INBOX -> PendingList(
+                        state = state,
+                        isHrInbox = state.selectedTab == RequestsTab.HR_INBOX,
+                        contentPadding = contentPadding,
+                        onRequestClick = onReviewClick,
+                        onApprove = viewModel::approve,
+                        onReject = viewModel::showRejectDialog,
+                        onResolvedClick = onResolvedClick,
+                        onLoadMore = viewModel::loadMorePending,
+                        onRetry = viewModel::load
+                    )
+                    RequestsTab.ALL -> AllRequestsList(
+                        state = state,
+                        contentPadding = contentPadding,
+                        onRequestClick = onReviewClick,
+                        onLoadMore = viewModel::loadMoreAll,
+                        onRetry = viewModel::load
+                    )
+                }
             }
         }
     }
@@ -346,14 +371,22 @@ private fun PendingList(
             verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
         ) {
             items(state.pending, key = { it.id }) { request ->
-                ApprovalCard(
-                    request = request,
-                    isProcessing = state.processingRequestId == request.id,
-                    canResolve = state.canResolve(request),
-                    onClick = { onRequestClick(request.id) },
+                val canResolve = state.canResolve(request)
+                SwipeToResolve(
+                    enabled = canResolve && state.processingRequestId == null,
+                    onApprove = { onApprove(request) },
                     onReject = { onReject(request) },
-                    onApprove = { onApprove(request) }
-                )
+                    modifier = Modifier.animateItem()
+                ) {
+                    ApprovalCard(
+                        request = request,
+                        isProcessing = state.processingRequestId == request.id,
+                        canResolve = canResolve,
+                        onClick = { onRequestClick(request.id) },
+                        onReject = { onReject(request) },
+                        onApprove = { onApprove(request) }
+                    )
+                }
             }
             if (state.pendingPaging.hasMore) {
                 item(key = LOAD_MORE_KEY) {
@@ -515,3 +548,79 @@ private fun <T> DropdownChip(
         }
     }
 }
+
+/**
+ * Lets the user resolve a request card by swiping it: to the right approves (with "Deshacer" in the
+ * snackbar) and to the left opens the rejection dialog, which needs a reason. The colored layer
+ * behind the card tells which action will happen before the finger is lifted.
+ *
+ * @param enabled false when the request cannot be resolved by the viewer, so the card does not move.
+ * @param onApprove called when the card is swiped to the right.
+ * @param onReject called when the card is swiped to the left.
+ * @param modifier modifier applied to the swipeable area.
+ * @param content card that is swiped.
+ */
+@Composable
+private fun SwipeToResolve(
+    enabled: Boolean,
+    onApprove: () -> Unit,
+    onReject: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            when (value) {
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    onApprove()
+                    true
+                }
+                SwipeToDismissBoxValue.EndToStart -> {
+                    onReject()
+                    false
+                }
+                SwipeToDismissBoxValue.Settled -> false
+            }
+        },
+        positionalThreshold = { distance -> distance * SWIPE_THRESHOLD }
+    )
+    SwipeToDismissBox(
+        state = dismissState,
+        modifier = modifier,
+        enableDismissFromStartToEnd = enabled,
+        enableDismissFromEndToStart = enabled,
+        backgroundContent = {
+            val direction = dismissState.dismissDirection
+            val approving = direction == SwipeToDismissBoxValue.StartToEnd
+            val tone = if (approving) StatusTone.SUCCESS else StatusTone.DANGER
+            val colors = MaterialTheme.statusColors
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(if (direction == SwipeToDismissBoxValue.Settled) Color.Transparent else colors.container(tone))
+                    .padding(horizontal = Spacing.xl),
+                horizontalArrangement = if (approving) Arrangement.Start else Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (direction != SwipeToDismissBoxValue.Settled) {
+                    Icon(
+                        imageVector = if (approving) FlowboardIcons.Check else FlowboardIcons.Close,
+                        contentDescription = null,
+                        tint = colors.content(tone)
+                    )
+                    Text(
+                        text = if (approving) "Aprobar" else "Rechazar",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = colors.content(tone),
+                        modifier = Modifier.padding(start = Spacing.s)
+                    )
+                }
+            }
+        },
+        content = { content() }
+    )
+}
+
+/** Share of the card width the finger must travel before the swipe counts. */
+private const val SWIPE_THRESHOLD = 0.4f
