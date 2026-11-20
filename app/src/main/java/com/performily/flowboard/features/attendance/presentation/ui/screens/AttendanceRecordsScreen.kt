@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.CollapsingHeaderLayout
+import com.performily.flowboard.core.designsystem.component.FlowboardRefreshBox
 import com.performily.flowboard.core.designsystem.component.FlowboardChipRow
 import com.performily.flowboard.core.designsystem.component.FlowboardChoiceChip
 import com.performily.flowboard.core.designsystem.component.FlowboardDateRangeChip
@@ -56,96 +57,101 @@ fun AttendanceRecordsScreen(
     Scaffold(
         topBar = { FlowboardTopBar(title = "Asistencia") }
     ) { paddingValues ->
-        CollapsingHeaderLayout(
-            modifier = Modifier.padding(paddingValues),
-            state = headerState,
-            showHeaderKey = listOf(state.isLoading, state.errorMessage != null, filteredRecords.size),
-            header = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp, bottom = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.s)
-                ) {
-                    AttendanceSectionTabs(
-                        selectedIndex = 0,
-                        onSelected = { index ->
-                            when (index) {
-                                1 -> onAreaReport()
-                                2 -> onHoursReport()
-                            }
-                        },
-                        modifier = Modifier.padding(horizontal = Spacing.screenHorizontal, vertical = 4.dp)
-                    )
-                    FlowboardChipRow {
-                        FlowboardDateRangeChip(
-                            from = state.period.from,
-                            to = state.period.to,
-                            onRangeChange = viewModel::setPeriod
+        FlowboardRefreshBox(
+            isLoading = state.isLoading,
+            onRefresh = viewModel::load,
+            modifier = Modifier.padding(paddingValues)
+        ) {
+            CollapsingHeaderLayout(
+                state = headerState,
+                showHeaderKey = listOf(state.isLoading, state.errorMessage != null, filteredRecords.size),
+                header = {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp, bottom = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.s)
+                    ) {
+                        AttendanceSectionTabs(
+                            selectedIndex = 0,
+                            onSelected = { index ->
+                                when (index) {
+                                    1 -> onAreaReport()
+                                    2 -> onHoursReport()
+                                }
+                            },
+                            modifier = Modifier.padding(horizontal = Spacing.screenHorizontal, vertical = 4.dp)
                         )
-                    }
-                    FlowboardChipRow {
-                        FlowboardChoiceChip(
-                            label = "Todos",
-                            selected = state.statusFilter == "TODOS",
-                            onClick = { viewModel.setStatusFilter("TODOS") }
-                        )
-                        AttendanceStatus.entries.forEach { status ->
-                            FlowboardChoiceChip(
-                                label = status.label(),
-                                selected = state.statusFilter == status.name,
-                                onClick = { viewModel.setStatusFilter(status.name) }
+                        FlowboardChipRow {
+                            FlowboardDateRangeChip(
+                                from = state.period.from,
+                                to = state.period.to,
+                                onRangeChange = viewModel::setPeriod
                             )
+                        }
+                        FlowboardChipRow {
+                            FlowboardChoiceChip(
+                                label = "Todos",
+                                selected = state.statusFilter == "TODOS",
+                                onClick = { viewModel.setStatusFilter("TODOS") }
+                            )
+                            AttendanceStatus.entries.forEach { status ->
+                                FlowboardChoiceChip(
+                                    label = status.label(),
+                                    selected = state.statusFilter == status.name,
+                                    onClick = { viewModel.setStatusFilter(status.name) }
+                                )
+                            }
                         }
                     }
                 }
-            }
-        ) { contentPadding ->
-            val stateModifier = Modifier
-                .fillMaxSize()
-                .padding(top = contentPadding.calculateTopPadding())
-            when {
-                state.isLoading && state.records.isEmpty() -> SkeletonList(modifier = stateModifier)
-                state.errorMessage != null && state.records.isEmpty() -> Column(
-                    modifier = stateModifier.padding(top = Spacing.xl),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(Spacing.m)
-                ) {
-                    Text(state.errorMessage.orEmpty(), color = MaterialTheme.colorScheme.error)
-                    OutlinedButton(onClick = viewModel::load) { Text("Reintentar") }
-                }
-                filteredRecords.isEmpty() -> AttendanceEmptyState(
-                    title = "No hay registros",
-                    message = "No se encontraron registros para los filtros seleccionados.",
-                    modifier = stateModifier.padding(top = Spacing.xxl)
-                )
-                else -> LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        top = contentPadding.calculateTopPadding() + 8.dp,
-                        bottom = Spacing.xl,
-                        start = Spacing.screenHorizontal,
-                        end = Spacing.screenHorizontal
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
-                ) {
-                    item {
-                        Text(
-                            "${filteredRecords.size} de ${state.total} registros",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+            ) { contentPadding ->
+                val stateModifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = contentPadding.calculateTopPadding())
+                when {
+                    state.isLoading && state.records.isEmpty() -> SkeletonList(modifier = stateModifier)
+                    state.errorMessage != null && state.records.isEmpty() -> Column(
+                        modifier = stateModifier.padding(top = Spacing.xl),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(Spacing.m)
+                    ) {
+                        Text(state.errorMessage.orEmpty(), color = MaterialTheme.colorScheme.error)
+                        OutlinedButton(onClick = viewModel::load) { Text("Reintentar") }
                     }
-                    items(
-                        filteredRecords,
-                        key = { it.id ?: "${it.employeeId}-${it.workDate}" }
-                    ) { record ->
-                        AttendanceRecordItem(record = record, showEmployee = true)
-                    }
-                    if (state.hasMore || state.isLoading) {
+                    filteredRecords.isEmpty() -> AttendanceEmptyState(
+                        title = "No hay registros",
+                        message = "No se encontraron registros para los filtros seleccionados.",
+                        modifier = stateModifier.padding(top = Spacing.xxl)
+                    )
+                    else -> LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            top = contentPadding.calculateTopPadding() + 8.dp,
+                            bottom = Spacing.xl,
+                            start = Spacing.screenHorizontal,
+                            end = Spacing.screenHorizontal
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
+                    ) {
                         item {
-                            OutlinedButton(onClick = viewModel::loadMore, enabled = !state.isLoading) {
-                                Text(if (state.isLoading) "Cargando…" else "Cargar más registros")
+                            Text(
+                                "${filteredRecords.size} de ${state.total} registros",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        items(
+                            filteredRecords,
+                            key = { it.id ?: "${it.employeeId}-${it.workDate}" }
+                        ) { record ->
+                            AttendanceRecordItem(record = record, showEmployee = true)
+                        }
+                        if (state.hasMore || state.isLoading) {
+                            item {
+                                OutlinedButton(onClick = viewModel::loadMore, enabled = !state.isLoading) {
+                                    Text(if (state.isLoading) "Cargando…" else "Cargar más registros")
+                                }
                             }
                         }
                     }

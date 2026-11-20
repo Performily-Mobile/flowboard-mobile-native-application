@@ -5,7 +5,8 @@ import androidx.compose.ui.Modifier
 import com.performily.flowboard.core.designsystem.component.FlowboardListRow
 import com.performily.flowboard.core.text.AppLocale
 import com.performily.flowboard.features.attendance.domain.entity.AttendanceRecord
-import java.time.format.DateTimeFormatter
+import java.time.LocalDate
+import java.time.format.TextStyle
 
 /**
  * Row with the date, punches and status of one attendance record.
@@ -25,7 +26,7 @@ fun AttendanceRecordItem(
     showEmployee: Boolean = false,
     onClick: (() -> Unit)? = null
 ) {
-    val date = record.workDate.format(DayFormatter).replace(".", "").replaceFirstChar { it.uppercase(AppLocale) }
+    val date = formatWorkDate(record.workDate)
     val punches = when {
         record.checkInTime != null && record.checkOutTime != null ->
             "${record.checkInTime} – ${record.checkOutTime} · ${formatHours(record.effectiveHours)}${formatOvertime(record.overtimeHours)}"
@@ -48,8 +49,18 @@ fun AttendanceRecordItem(
     )
 }
 
-/** Short weekday, day and month in Spanish, for example "Mié 18 nov". */
-private val DayFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE d MMM", AppLocale)
+/**
+ * Short weekday, day and month in Spanish, written the same on every device.
+ *
+ * @param date day to format.
+ * @return text such as "Mié 18 nov".
+ */
+private fun formatWorkDate(date: LocalDate): String {
+    val weekday = date.dayOfWeek.getDisplayName(TextStyle.SHORT, AppLocale).replace(".", "")
+        .lowercase(AppLocale).replaceFirstChar { it.uppercase(AppLocale) }
+    val month = date.month.getDisplayName(TextStyle.SHORT, AppLocale).replace(".", "").lowercase(AppLocale)
+    return "$weekday ${date.dayOfMonth} $month"
+}
 
 private fun formatHours(hours: Double?): String = hours?.let { String.format(AppLocale, "%.1f h", it) } ?: "—"
 private fun formatOvertime(hours: Double?): String =

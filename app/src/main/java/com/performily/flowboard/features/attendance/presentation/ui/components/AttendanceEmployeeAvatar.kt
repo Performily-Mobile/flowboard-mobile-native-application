@@ -10,8 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.performily.flowboard.core.designsystem.theme.AvatarContainer
-import com.performily.flowboard.core.designsystem.theme.OnAvatarContainer
 
 @Composable
 fun AttendanceEmployeeAvatar(
@@ -22,9 +20,9 @@ fun AttendanceEmployeeAvatar(
     Box(
         modifier = modifier
             .size(40.dp)
-            .background(AvatarContainer, CircleShape),
+            .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
         contentAlignment = Alignment.Center
     ) {
-        Text(initials.ifBlank { "?" }, color = OnAvatarContainer, style = MaterialTheme.typography.labelLarge)
+        Text(initials.ifBlank { "?" }, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
     }
 }

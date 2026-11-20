@@ -1,10 +1,8 @@
 package com.performily.flowboard.features.attendance.presentation.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,30 +11,34 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.CollapsingHeaderLayout
 import com.performily.flowboard.core.designsystem.component.FlowboardChipRow
 import com.performily.flowboard.core.designsystem.component.FlowboardDateRangeChip
+import com.performily.flowboard.core.designsystem.component.FlowboardListRow
 import com.performily.flowboard.core.designsystem.component.FlowboardMenuChip
+import com.performily.flowboard.core.designsystem.component.FlowboardSectionTitle
+import com.performily.flowboard.core.designsystem.component.FlowboardStatusBadge
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 import com.performily.flowboard.core.designsystem.component.SkeletonList
 import com.performily.flowboard.core.designsystem.component.rememberCollapsingHeaderState
+import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Spacing
+import com.performily.flowboard.core.designsystem.theme.StatusTone
+import com.performily.flowboard.core.text.AppLocale
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceEmployeeAvatar
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceEmptyState
-import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceMetricCard
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceSectionTabs
 import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceStatusChip
+import com.performily.flowboard.features.attendance.presentation.ui.components.AttendanceSummaryCard
+import com.performily.flowboard.features.attendance.presentation.ui.components.SummaryStat
 import com.performily.flowboard.features.attendance.presentation.viewmodel.AttendanceAreaViewModel
 
 /**
@@ -90,7 +92,9 @@ fun AttendanceAreaScreen(
                             selectedLabel = state.selectedArea?.name,
                             options = state.areas,
                             optionLabel = { it.name },
-                            onSelect = viewModel::selectArea
+                            onSelect = viewModel::selectArea,
+                            icon = FlowboardIcons.AccountTree,
+                            showNameWithValue = false
                         )
                         FlowboardDateRangeChip(
                             from = state.period.from,
@@ -130,65 +134,45 @@ fun AttendanceAreaScreen(
                     verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
                 ) {
                     item {
-                        Column(verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), modifier = Modifier.fillMaxWidth()) {
-                                AttendanceMetricCard("Puntualidad", "${report.punctualityPercentage}%", Modifier.weight(1f))
-                                AttendanceMetricCard("Tardanzas", report.lateCount.toString(), Modifier.weight(1f))
-                                AttendanceMetricCard("Inasistencias", report.absenceCount.toString(), Modifier.weight(1f))
-                            }
-                            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s), modifier = Modifier.fillMaxWidth()) {
-                                AttendanceMetricCard("Horas efectivas", formatHours(report.totalEffectiveHours), Modifier.weight(1f))
-                                AttendanceMetricCard("Sobretiempo", formatHours(report.totalOvertimeHours), Modifier.weight(1f))
-                            }
-                        }
+                        AttendanceSummaryCard(
+                            title = "Puntualidad del período",
+                            value = "${report.punctualityPercentage}%",
+                            caption = "de las marcaciones",
+                            progress = report.punctualityPercentage / 100f,
+                            stats = listOf(
+                                SummaryStat("Tardanzas", report.lateCount.toString()),
+                                SummaryStat("Inasistencias", report.absenceCount.toString()),
+                                SummaryStat("Horas", formatHours(report.totalEffectiveHours)),
+                                SummaryStat("Extra", formatHours(report.totalOvertimeHours))
+                            )
+                        )
                     }
                     item {
-                        Text(
-                            "Por colaborador (${report.employees.size})",
-                            style = MaterialTheme.typography.titleMedium,
+                        FlowboardSectionTitle(
+                            title = "Equipo de ${report.areaName}",
+                            subtitle = teamSubtitle(report.employees.size),
                             modifier = Modifier.padding(top = Spacing.m)
                         )
                     }
                     items(report.employees, key = { it.employeeId }) { employee ->
-                        val shape = MaterialTheme.shapes.medium
-                        Surface(
-                            shape = shape,
-                            color = MaterialTheme.colorScheme.surfaceContainerLow,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(shape)
-                                .clickable(enabled = employee.hasRecords) { onEmployeeClick(employee.employeeId, employee.employeeName) }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                                horizontalArrangement = Arrangement.spacedBy(Spacing.m),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                AttendanceEmployeeAvatar(employee.employeeName)
-                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    Text(
-                                        employee.employeeName,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    Text(
-                                        "${formatHours(employee.effectiveHours)} · ${formatHours(employee.overtimeHours)} extra" +
-                                                if (employee.lateCount > 0 || employee.absenceCount > 0) {
-                                                    " · ${employee.lateCount} tard. · ${employee.absenceCount} inas."
-                                                } else "",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
+                        FlowboardListRow(
+                            headline = employee.employeeName,
+                            supporting = "${formatHours(employee.effectiveHours)} trabajadas y ${formatHours(employee.overtimeHours)} extra",
+                            meta = incidentsLine(employee.lateCount, employee.absenceCount),
+                            leading = { AttendanceEmployeeAvatar(employee.employeeName) },
+                            trailing = {
+                                if (employee.hasRecords) {
+                                    AttendanceStatusChip(employee.status)
+                                } else {
+                                    FlowboardStatusBadge(text = "Sin registros", tone = StatusTone.NEUTRAL)
                                 }
-                                if (employee.hasRecords) AttendanceStatusChip(employee.status)
-                                else Text("Sin registros", style = MaterialTheme.typography.labelSmall)
+                            },
+                            onClick = if (employee.hasRecords) {
+                                { onEmployeeClick(employee.employeeId, employee.employeeName) }
+                            } else {
+                                null
                             }
-                        }
+                        )
                     }
                 }
             }
@@ -196,4 +180,27 @@ fun AttendanceAreaScreen(
     }
 }
 
-private fun formatHours(value: Double): String = String.format("%.1f h", value)
+private fun formatHours(value: Double): String = String.format(AppLocale, "%.1f h", value)
+
+/**
+ * Subtitle of the team section.
+ *
+ * @param count number of employees of the area.
+ * @return text such as "8 colaboradores, toca uno para ver su detalle".
+ */
+private fun teamSubtitle(count: Int): String =
+    "${if (count == 1) "1 colaborador" else "$count colaboradores"}, toca uno para ver su detalle"
+
+/**
+ * Line with the late arrivals and absences of an employee, written in full words.
+ *
+ * @param late number of late arrivals.
+ * @param absences number of absences.
+ * @return text such as "2 tardanzas y 1 inasistencia", or "Sin incidencias" when both are zero.
+ */
+private fun incidentsLine(late: Int, absences: Int): String {
+    if (late == 0 && absences == 0) return "Sin incidencias"
+    val lateText = if (late == 1) "1 tardanza" else "$late tardanzas"
+    val absenceText = if (absences == 1) "1 inasistencia" else "$absences inasistencias"
+    return "$lateText y $absenceText"
+}
