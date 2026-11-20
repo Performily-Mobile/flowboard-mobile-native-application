@@ -52,7 +52,11 @@ fun AppNavHost(
     NavHost(
         navController = navController,
         startDestination = startDestination,
-        modifier = modifier
+        modifier = modifier,
+        enterTransition = NavigationMotion.enter,
+        exitTransition = NavigationMotion.exit,
+        popEnterTransition = NavigationMotion.popEnter,
+        popExitTransition = NavigationMotion.popExit
     ) {
         workspaceNavGraph(navController)
         payrollNavGraph(navController)
