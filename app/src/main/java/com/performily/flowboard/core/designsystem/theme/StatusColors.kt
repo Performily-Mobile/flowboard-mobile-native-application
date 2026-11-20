@@ -85,14 +85,17 @@ val LightStatusColors = StatusColors(
     onNeutralContainer = OnSurfaceVariant
 )
 
-/** Status colors of the dark theme. */
+/**
+ * Status colors of the dark theme. The containers are deep and less saturated than the light ones,
+ * so a long list of badges (for example many absences) does not glare on a dark background.
+ */
 val DarkStatusColors = StatusColors(
     successContainer = Color(0xFF1F4D1A),
     onSuccessContainer = Color(0xFFCDEBC5),
     warningContainer = Color(0xFF5C3B00),
     onWarningContainer = Color(0xFFFFE2BC),
-    dangerContainer = ErrorContainerDark,
-    onDangerContainer = OnErrorContainerDark,
+    dangerContainer = Color(0xFF5C1D19),
+    onDangerContainer = Color(0xFFFFDAD6),
     infoContainer = PrimaryContainerDark,
     onInfoContainer = OnPrimaryContainerDark,
     neutralContainer = SurfaceContainerHighestDark,

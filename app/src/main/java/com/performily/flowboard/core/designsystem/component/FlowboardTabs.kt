@@ -142,7 +142,12 @@ internal fun tabWidths(naturalWidths: List<Int>, space: Int): List<Int> {
     return widths.mapIndexed { index, width -> if (index == count - 1) width + leftover else width }
 }
 
-/** One option of the selector: a pill that turns into a raised chip when selected. */
+/**
+ * One option of the selector: a pill that turns into a raised chip when selected.
+ *
+ * The selected pill uses surfaceBright, which is lighter than the track in both themes, so the
+ * selection stands out in dark mode too instead of looking like a hole in the track.
+ */
 @Composable
 private fun TabPill(
     text: String,
@@ -151,7 +156,7 @@ private fun TabPill(
     onClick: () -> Unit
 ) {
     val background by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceContainerHigh,
+        targetValue = if (selected) MaterialTheme.colorScheme.surfaceBright else MaterialTheme.colorScheme.surfaceContainerHigh,
         label = "tabBackground"
     )
     val content by animateColorAsState(

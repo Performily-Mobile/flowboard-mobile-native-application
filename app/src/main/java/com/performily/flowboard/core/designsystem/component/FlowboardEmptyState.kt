@@ -1,5 +1,6 @@
 package com.performily.flowboard.core.designsystem.component
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -49,20 +51,8 @@ fun FlowboardEmptyState(
         verticalArrangement = Arrangement.spacedBy(Spacing.s)
     ) {
         if (icon != null) {
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-            Spacer(Modifier.height(Spacing.xs))
+            EmptyStateIllustration(icon = icon)
+            Spacer(Modifier.height(Spacing.s))
         }
         Text(
             text = title,
@@ -84,3 +74,43 @@ fun FlowboardEmptyState(
         }
     }
 }
+
+/**
+ * Small illustration drawn with shapes of the theme: the icon on a tonal circle, two soft rings
+ * around it and a few floating dots, so an empty screen looks intentional instead of blank while
+ * keeping the colors of the light and dark themes.
+ *
+ * @param icon icon in the center of the illustration.
+ */
+@Composable
+private fun EmptyStateIllustration(icon: ImageVector) {
+    val ring = MaterialTheme.colorScheme.secondaryContainer
+    val accent = MaterialTheme.colorScheme.primary
+    val tertiary = MaterialTheme.colorScheme.tertiary
+    Box(modifier = Modifier.size(ILLUSTRATION_SIZE), contentAlignment = Alignment.Center) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            val center = Offset(size.width / 2f, size.height / 2f)
+            drawCircle(color = ring.copy(alpha = 0.35f), radius = size.minDimension / 2f, center = center)
+            drawCircle(color = ring.copy(alpha = 0.6f), radius = size.minDimension * 0.36f, center = center)
+            drawCircle(color = accent.copy(alpha = 0.5f), radius = 5.dp.toPx(), center = Offset(size.width * 0.16f, size.height * 0.30f))
+            drawCircle(color = tertiary.copy(alpha = 0.45f), radius = 4.dp.toPx(), center = Offset(size.width * 0.86f, size.height * 0.22f))
+            drawCircle(color = accent.copy(alpha = 0.3f), radius = 3.dp.toPx(), center = Offset(size.width * 0.80f, size.height * 0.84f))
+        }
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .background(MaterialTheme.colorScheme.surfaceContainerLowest, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(30.dp)
+            )
+        }
+    }
+}
+
+/** Side of the empty-state illustration. */
+private val ILLUSTRATION_SIZE = 132.dp

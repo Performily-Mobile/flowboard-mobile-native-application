@@ -235,7 +235,7 @@ fun SkeletonForm(modifier: Modifier = Modifier, fieldCount: Int = 6) {
 }
 
 /**
- * Placeholder of a dashboard: four indicator cards and two section cards.
+ * Placeholder of a dashboard: the highlighted card, four indicator cards and two section cards.
  *
  * @param modifier modifier applied to the placeholder.
  */
@@ -251,6 +251,7 @@ fun SkeletonDashboard(modifier: Modifier = Modifier) {
             ),
             verticalArrangement = Arrangement.spacedBy(Spacing.sectionGap)
         ) {
+            SkeletonBox(height = 148.dp, radius = 28.dp)
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.m)) {
                 repeat(2) {
                     Row(horizontalArrangement = Arrangement.spacedBy(Spacing.m)) {

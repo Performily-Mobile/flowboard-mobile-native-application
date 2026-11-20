@@ -77,7 +77,7 @@ fun FlowboardTopBar(
                     onClick = onClose
                 )
             }
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
