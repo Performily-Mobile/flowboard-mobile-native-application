@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -23,6 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.performily.flowboard.core.designsystem.component.FlowboardLogo
 import com.performily.flowboard.core.designsystem.theme.Spacing
+import com.performily.flowboard.features.iam.presentation.ui.components.canUseStrongBiometric
+import com.performily.flowboard.features.iam.presentation.ui.components.findFragmentActivity
+import com.performily.flowboard.features.iam.presentation.ui.components.showBiometricPrompt
 import com.performily.flowboard.features.iam.presentation.viewmodel.IamViewModel
 
 @Composable
@@ -33,6 +37,45 @@ fun LoginScreen(vm: IamViewModel = hiltViewModel()) {
     var showLegal by remember { mutableStateOf(false) }
     val error by vm.error.collectAsState()
     val loading by vm.loading.collectAsState()
+    val context = LocalContext.current
+    val activity = remember(context) { context.findFragmentActivity() }
+    val biometricReady = remember(context) { context.canUseStrongBiometric() }
+    var hasBiometricLogin by remember { mutableStateOf(vm.hasBiometricLogin()) }
+    var enableBiometric by remember { mutableStateOf(false) }
+
+    fun submitPassword() {
+        val cipher = if (enableBiometric) vm.biometricEnrollCipher() else null
+        if (enableBiometric && cipher != null && activity != null) {
+            activity.showBiometricPrompt(
+                title = "Activar ingreso con huella",
+                subtitle = "Confirma tu huella para usarla en tus próximos ingresos",
+                cipher = cipher,
+                onSuccess = { authorized -> vm.loginAndEnableBiometric(username, password, authorized) },
+                onError = vm::showError
+            )
+        } else {
+            vm.login(username, password)
+        }
+    }
+
+    fun submitBiometric() {
+        val cipher = vm.biometricLoginCipher()
+        if (cipher == null || activity == null) {
+            hasBiometricLogin = vm.hasBiometricLogin()
+            return
+        }
+        activity.showBiometricPrompt(
+            title = "Ingresar con huella",
+            subtitle = "Usa tu huella para entrar a Flowboard",
+            cipher = cipher,
+            onSuccess = vm::loginWithBiometric,
+            onError = vm::showError
+        )
+    }
+
+    LaunchedEffect(error) {
+        hasBiometricLogin = vm.hasBiometricLogin()
+    }
 
     if (showLegal) {
         LegalScreen(onBack = { showLegal = false })
@@ -147,20 +190,39 @@ fun LoginScreen(vm: IamViewModel = hiltViewModel()) {
                 ) {
                     Text("Olvidé mi contraseña", color = brand)
                 }
+                if (biometricReady && !hasBiometricLogin) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { enableBiometric = !enableBiometric }
+                            .padding(vertical = Spacing.xs),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Fingerprint, contentDescription = null, tint = brand)
+                        Text(
+                            text = "Activar ingreso con huella",
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(start = Spacing.m)
+                        )
+                        Switch(checked = enableBiometric, onCheckedChange = { enableBiometric = it })
+                    }
+                }
                 Spacer(Modifier.height(12.dp))
                 Button(
-                    onClick = { vm.login(username, password) },
+                    onClick = { submitPassword() },
                     enabled = username.isNotBlank() && password.isNotBlank() && !loading,
                     modifier = Modifier.fillMaxWidth().height(56.dp)
                 ) {
                     Text(if (loading) "Ingresando…" else "Ingresar")
                 }
-                Spacer(Modifier.height(22.dp))
-
-                LoginDivider()
-
-                Spacer(Modifier.height(16.dp))
-                BiometricPlaceholderButton()
+                if (biometricReady && hasBiometricLogin) {
+                    Spacer(Modifier.height(22.dp))
+                    LoginDivider()
+                    Spacer(Modifier.height(16.dp))
+                    BiometricLoginButton(enabled = !loading, onClick = { submitBiometric() })
+                }
 
             }
         }
@@ -203,11 +265,18 @@ private fun LoginDivider() {
 }
 
 
+/**
+ * Button that signs in with the fingerprint. It only appears when the device has a fingerprint
+ * enrolled and the user activated the fingerprint sign-in, so it is never shown disabled.
+ *
+ * @param enabled false while a sign-in is in progress.
+ * @param onClick called when the button is tapped.
+ */
 @Composable
-private fun BiometricPlaceholderButton() {
+private fun BiometricLoginButton(enabled: Boolean, onClick: () -> Unit) {
     OutlinedButton(
-        onClick = {},
-        enabled = false,
+        onClick = onClick,
+        enabled = enabled,
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)

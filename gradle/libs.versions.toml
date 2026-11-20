@@ -2,6 +2,8 @@
 agp = "9.4.1"
 coilCompose = "3.6.3"
 coreKtx = "1.19.0"
+biometric = "1.1.0"
+fragmentKtx = "1.8.9"
 datastorePreferences = "1.2.1"
 datastorePreferencesCore = "1.2.1"
 junit = "4.13.2"
@@ -25,6 +27,8 @@ okhttp = "4.12.0"
 [libraries]
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
+androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
 androidx-datastore-preferences-core = { module = "androidx.datastore:datastore-preferences-core", version.ref = "datastorePreferencesCore" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
