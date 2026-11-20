@@ -5,37 +5,32 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.performily.flowboard.core.designsystem.component.FlowboardCard
+import com.performily.flowboard.core.designsystem.component.FlowboardLeadingIcon
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
+import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.payroll.presentation.state.SelectedPayslipFile
 
 /**
- * Dashed card used to pick the payslip files exported by the payroll system (MA-67).
+ * Tonal card used to pick the payslip files exported by the payroll system (MA-67).
  *
- * Opens the system document picker and allows selecting several files at once. Any file type
- * can be picked: the PDF-only validation is done by the domain and shown in the error banner.
+ * It reads as a list row with a clear action instead of a dashed web drop zone, which has no
+ * meaning on a phone. Opens the system document picker and allows selecting several files at once.
+ * Any file type can be picked: the PDF-only validation is done by the domain and shown in the
+ * error banner.
  *
  * @param enabled whether the card can be tapped
  * @param supportingText helper text shown under the title, for example the upload progress
@@ -54,59 +49,45 @@ fun PayslipUploadZone(
         val files = uris.map { context.describeFile(it) }
         if (files.isNotEmpty()) onFilesSelected(files)
     }
-    val outline = MaterialTheme.colorScheme.outline
-    val shape = RoundedCornerShape(ZONE_CORNER_RADIUS)
-
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .drawBehind {
-                val strokeWidth = 1.dp.toPx()
-                drawRoundRect(
-                    color = outline,
-                    style = Stroke(
-                        width = strokeWidth,
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 4.dp.toPx()))
-                    ),
-                    cornerRadius = CornerRadius(ZONE_CORNER_RADIUS.toPx() - strokeWidth / 2)
+    FlowboardCard(
+        modifier = modifier.alpha(if (enabled) 1f else 0.6f),
+        onClick = if (enabled) {
+            { picker.launch(arrayOf("*/*")) }
+        } else {
+            null
+        },
+        containerColor = MaterialTheme.colorScheme.secondaryContainer
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Spacing.m),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FlowboardLeadingIcon(
+                icon = FlowboardIcons.Upload,
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                contentColor = MaterialTheme.colorScheme.primary
+            )
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = "Subir boletas en PDF",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Text(
+                    text = supportingText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
-            .clickable(enabled = enabled) { picker.launch(arrayOf("*/*")) }
-            .padding(horizontal = 20.dp, vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Icon(
-            imageVector = FlowboardIcons.Upload,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(28.dp)
-        )
-        Text(
-            text = "Seleccionar archivos del sistema de planilla",
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Text(
-            text = supportingText,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
+            Icon(
+                imageVector = FlowboardIcons.Add,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+        }
     }
 }
-
-/**
- * Corner radius of the upload card; it matches the medium shape of the theme and is also used to
- * draw the dashed outline.
- */
-private val ZONE_CORNER_RADIUS = 20.dp
 
 /**
  * Describes a file picked in the system document picker.

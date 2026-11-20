@@ -1,17 +1,12 @@
 package com.performily.flowboard.features.payroll.presentation.ui.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import com.performily.flowboard.core.designsystem.theme.Spacing
+import com.performily.flowboard.core.designsystem.component.FlowboardEmptyState
+import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 
 /**
  * Centered message for an empty list or a failed load, with an optional action.
@@ -30,24 +25,15 @@ fun PayrollMessageState(
     actionLabel: String? = null,
     onAction: () -> Unit = {}
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = Spacing.xl),
-        verticalArrangement = Arrangement.spacedBy(Spacing.s, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(text = title, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
-        if (actionLabel != null) {
-            Button(onClick = onAction, modifier = Modifier.padding(top = Spacing.s)) {
-                Text(actionLabel)
-            }
+    FlowboardEmptyState(
+        title = title,
+        message = message,
+        icon = if (actionLabel == "Reintentar") FlowboardIcons.Warning else FlowboardIcons.CreditCard,
+        modifier = modifier.fillMaxSize(),
+        action = if (actionLabel != null) {
+            { OutlinedButton(onClick = onAction) { Text(actionLabel) } }
+        } else {
+            null
         }
-    }
+    )
 }

@@ -22,8 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
-import com.performily.flowboard.core.designsystem.theme.AvatarContainer
-import com.performily.flowboard.core.designsystem.theme.OnAvatarContainer
 import com.performily.flowboard.features.payroll.domain.entity.Payslip
 
 /**
@@ -59,13 +57,13 @@ fun MyPayslipCard(
             Box(
                 modifier = Modifier
                     .size(44.dp)
-                    .background(AvatarContainer, CircleShape),
+                    .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = FlowboardIcons.Article,
                     contentDescription = null,
-                    tint = OnAvatarContainer,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(22.dp)
                 )
             }

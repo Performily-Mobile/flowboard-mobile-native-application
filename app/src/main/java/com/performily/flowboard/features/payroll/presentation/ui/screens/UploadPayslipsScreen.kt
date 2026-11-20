@@ -1,11 +1,8 @@
 package com.performily.flowboard.features.payroll.presentation.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -20,19 +17,21 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.FlowboardBottomActionBar
+import com.performily.flowboard.core.designsystem.component.FlowboardChipRow
+import com.performily.flowboard.core.designsystem.component.FlowboardEmptyState
+import com.performily.flowboard.core.designsystem.component.FlowboardLeadingIcon
+import com.performily.flowboard.core.designsystem.component.FlowboardListRow
+import com.performily.flowboard.core.designsystem.component.FlowboardMenuChip
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.payroll.presentation.state.UploadPayslipsUiState
@@ -41,7 +40,6 @@ import com.performily.flowboard.features.payroll.presentation.ui.components.Payr
 import com.performily.flowboard.features.payroll.presentation.ui.components.PayrollTopAppBar
 import com.performily.flowboard.features.payroll.presentation.ui.components.PayslipListItem
 import com.performily.flowboard.features.payroll.presentation.ui.components.PayslipUploadZone
-import com.performily.flowboard.features.payroll.presentation.ui.components.PeriodSelectField
 import com.performily.flowboard.features.payroll.presentation.ui.components.PublicationStatusChip
 import com.performily.flowboard.features.payroll.presentation.ui.components.initials
 import com.performily.flowboard.features.payroll.presentation.ui.components.listName
@@ -50,7 +48,6 @@ import com.performily.flowboard.features.payroll.presentation.ui.components.toDi
 import com.performily.flowboard.features.payroll.presentation.ui.components.toMaskedDisplay
 import com.performily.flowboard.features.payroll.presentation.ui.components.uploadedPayslipsLabel
 import com.performily.flowboard.features.payroll.presentation.viewmodel.UploadPayslipsViewModel
-import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 /**
  * Payslip upload screen for HR (MA-67), including the duplicate payslip prompt (MA-68).
@@ -85,9 +82,15 @@ fun UploadPayslipsScreen(
                     enabled = state.canPublish,
                     modifier = Modifier
                         .weight(1f)
-                        .height(52.dp)
+                        .height(56.dp)
                 ) {
-                    Text(if (state.isPublishing) "Publicando..." else publishPayslipsLabel(state.underReviewCount))
+                    Text(
+                        when {
+                            state.isPublishing -> "Publicando..."
+                            state.underReviewCount == 0 -> "Sin boletas por publicar"
+                            else -> publishPayslipsLabel(state.underReviewCount)
+                        }
+                    )
                 }
             }
         }
@@ -105,28 +108,17 @@ fun UploadPayslipsScreen(
             verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
         ) {
             item {
-                PeriodSelectField(
-                    periods = state.periods,
-                    selected = state.selectedPeriod,
-                    onSelect = viewModel::onPeriodSelected,
-                    enabled = !state.isUploading,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-            item {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                    TextButton(
-                        onClick = { onViewPaymentStatus(state.selectedPeriod?.id) },
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-                    ) {
-                        Icon(FlowboardIcons.ArrowForward, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Text(
-                            text = "Ver estado de pagos",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
+                FlowboardChipRow(contentPadding = PaddingValues(0.dp)) {
+                    FlowboardMenuChip(
+                        name = "Período",
+                        selectedLabel = state.selectedPeriod?.period?.label,
+                        options = state.periods,
+                        optionLabel = { it.period.label },
+                        onSelect = viewModel::onPeriodSelected,
+                        icon = FlowboardIcons.Calendar,
+                        showNameWithValue = false,
+                        enabled = !state.isUploading && state.periods.isNotEmpty()
+                    )
                 }
             }
             item {
@@ -135,8 +127,23 @@ fun UploadPayslipsScreen(
                         !state.isLoadingPeriods && !state.isLoadingPayslips && state.errorMessage == null,
                     supportingText = state.upload
                         ?.let { "Cargando ${it.current} de ${it.total}..." }
-                        ?: "Solo PDF · una boleta por colaborador",
+                        ?: "Solo PDF, una boleta por colaborador",
                     onFilesSelected = viewModel::onFilesSelected
+                )
+            }
+            item {
+                FlowboardListRow(
+                    headline = "Estado de pagos",
+                    supporting = "Pagadas, pendientes y observadas",
+                    leading = { FlowboardLeadingIcon(icon = FlowboardIcons.CreditCard) },
+                    trailing = {
+                        Icon(
+                            imageVector = FlowboardIcons.ChevronRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    onClick = { onViewPaymentStatus(state.selectedPeriod?.id) }
                 )
             }
             state.bannerMessage?.let { message ->
@@ -231,22 +238,15 @@ internal fun MessageState(
     actionLabel: String?,
     onAction: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = Spacing.xxl, start = Spacing.screenHorizontal, end = Spacing.screenHorizontal),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Spacing.m)
-    ) {
-        Text(text = title, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
-        if (actionLabel != null) {
-            OutlinedButton(onClick = onAction) { Text(actionLabel) }
+    FlowboardEmptyState(
+        title = title,
+        message = message,
+        icon = if (actionLabel == "Reintentar") FlowboardIcons.Warning else FlowboardIcons.CreditCard,
+        modifier = Modifier,
+        action = if (actionLabel != null) {
+            { OutlinedButton(onClick = onAction) { Text(actionLabel) } }
+        } else {
+            null
         }
-    }
+    )
 }

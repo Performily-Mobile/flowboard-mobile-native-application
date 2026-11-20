@@ -8,7 +8,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.style.TextAlign
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
-import com.performily.flowboard.core.designsystem.theme.DialogContainer
 
 /**
  * Dialog shown when the employee already has a payslip in the period (MA-68): replace it or cancel.
@@ -38,7 +37,7 @@ fun DuplicatePayslipDialog(
         },
         confirmButton = { TextButton(onClick = onReplace) { Text("Reemplazar") } },
         dismissButton = { TextButton(onClick = onCancel) { Text("Cancelar") } },
-        containerColor = DialogContainer,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         iconContentColor = MaterialTheme.colorScheme.primary,
         titleContentColor = MaterialTheme.colorScheme.onSurface,
         textContentColor = MaterialTheme.colorScheme.onSurfaceVariant

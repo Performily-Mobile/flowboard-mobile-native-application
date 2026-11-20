@@ -19,8 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.performily.flowboard.core.designsystem.theme.AvatarContainer
-import com.performily.flowboard.core.designsystem.theme.OnAvatarContainer
 
 /**
  * Tonal card of a payslip in the HR lists (MA-67, MA-68, MA-69): avatar with initials,
@@ -61,10 +59,10 @@ fun PayslipListItem(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .background(AvatarContainer, CircleShape),
+                    .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = initials, color = OnAvatarContainer, style = MaterialTheme.typography.labelLarge)
+                Text(text = initials, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge)
             }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(

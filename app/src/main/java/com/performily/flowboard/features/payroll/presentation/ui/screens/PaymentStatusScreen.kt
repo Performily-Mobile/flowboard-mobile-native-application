@@ -2,11 +2,8 @@ package com.performily.flowboard.features.payroll.presentation.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,14 +21,18 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.CollapsingHeaderLayout
+import com.performily.flowboard.core.designsystem.component.FlowboardRefreshBox
+import com.performily.flowboard.core.designsystem.component.FlowboardChipRow
+import com.performily.flowboard.core.designsystem.component.FlowboardMenuChip
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 import com.performily.flowboard.core.designsystem.component.rememberCollapsingHeaderState
+import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.payroll.domain.entity.PayrollArea
 import com.performily.flowboard.features.payroll.domain.entity.PayrollPeriod
 import com.performily.flowboard.features.payroll.domain.valueobject.PaymentStatus
 import com.performily.flowboard.features.payroll.presentation.state.PaymentStatusUiState
 import com.performily.flowboard.features.payroll.presentation.ui.components.PaymentStatusChip
-import com.performily.flowboard.features.payroll.presentation.ui.components.PayrollFilterChip
 import com.performily.flowboard.features.payroll.presentation.ui.components.PayrollTopAppBar
 import com.performily.flowboard.features.payroll.presentation.ui.components.PayslipListItem
 import com.performily.flowboard.features.payroll.presentation.ui.components.UpdatePaymentStatusSheet
@@ -41,7 +42,6 @@ import com.performily.flowboard.features.payroll.presentation.ui.components.list
 import com.performily.flowboard.features.payroll.presentation.ui.components.paymentReportCountLabel
 import com.performily.flowboard.features.payroll.presentation.ui.components.toDisplay
 import com.performily.flowboard.features.payroll.presentation.viewmodel.PaymentStatusViewModel
-import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 /**
  * Payment status screen for HR (MA-69).
@@ -77,71 +77,74 @@ fun PaymentStatusScreen(
         topBar = { PayrollTopAppBar(title = "Estado de pagos", onBack = onBack) },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
-        CollapsingHeaderLayout(
-            modifier = Modifier.padding(paddingValues),
-            state = headerState,
-            showHeaderKey = listOf(state.isLoading, state.errorMessage != null, state.selectedPeriod == null, state.entries.size),
-            header = {
-                PaymentFilters(
-                    state = state,
-                    onPeriodSelected = viewModel::onPeriodSelected,
-                    onAreaSelected = viewModel::onAreaSelected,
-                    onStatusSelected = viewModel::onStatusSelected,
-                    modifier = Modifier
-                        .padding(horizontal = Spacing.screenHorizontal)
-                        .padding(top = 4.dp, bottom = 12.dp)
-                )
-            }
-        ) { contentPadding ->
-            val stateModifier = Modifier
-                .fillMaxSize()
-                .padding(top = contentPadding.calculateTopPadding())
-            when {
-                state.isLoading && state.entries.isEmpty() -> SkeletonList(modifier = stateModifier)
-
-                state.errorMessage != null -> Box(stateModifier) {
-                    MessageState(
-                        title = "No se pudo cargar el estado de pagos",
-                        message = state.errorMessage.orEmpty(),
-                        actionLabel = "Reintentar",
-                        onAction = { viewModel.loadPeriods() }
+        FlowboardRefreshBox(
+            isLoading = state.isLoading,
+            onRefresh = viewModel::loadReport,
+            modifier = Modifier.padding(paddingValues)
+        ) {
+            CollapsingHeaderLayout(
+                state = headerState,
+                showHeaderKey = listOf(state.isLoading, state.errorMessage != null, state.selectedPeriod == null, state.entries.size),
+                header = {
+                    PaymentFilters(
+                        state = state,
+                        onPeriodSelected = viewModel::onPeriodSelected,
+                        onAreaSelected = viewModel::onAreaSelected,
+                        onStatusSelected = viewModel::onStatusSelected,
+                        modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
                     )
                 }
+            ) { contentPadding ->
+                val stateModifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = contentPadding.calculateTopPadding())
+                when {
+                    state.isLoading && state.entries.isEmpty() -> SkeletonList(modifier = stateModifier)
 
-                state.selectedPeriod == null -> Box(stateModifier) {
-                    MessageState(
-                        title = "No hay períodos de planilla",
-                        message = "Todavía no se registró ningún período de planilla.",
-                        actionLabel = null,
-                        onAction = {}
-                    )
-                }
-
-                else -> LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        top = contentPadding.calculateTopPadding() + 4.dp,
-                        bottom = Spacing.xl,
-                        start = Spacing.screenHorizontal,
-                        end = Spacing.screenHorizontal
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
-                ) {
-                    item {
-                        Text(
-                            text = paymentReportCountLabel(state.entries.size, state.selectedStatus),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    state.errorMessage != null -> Box(stateModifier) {
+                        MessageState(
+                            title = "No se pudo cargar el estado de pagos",
+                            message = state.errorMessage.orEmpty(),
+                            actionLabel = "Reintentar",
+                            onAction = { viewModel.loadPeriods() }
                         )
                     }
-                    items(state.entries, key = { it.payslip.id }) { entry ->
-                        PayslipListItem(
-                            name = entry.listName,
-                            initials = entry.initials,
-                            amount = entry.payslip.netAmount.toDisplay(),
-                            status = { PaymentStatusChip(entry.payslip.payment.status) },
-                            onClick = { viewModel.onEntryClick(entry) }
+
+                    state.selectedPeriod == null -> Box(stateModifier) {
+                        MessageState(
+                            title = "No hay períodos de planilla",
+                            message = "Todavía no se registró ningún período de planilla.",
+                            actionLabel = null,
+                            onAction = {}
                         )
+                    }
+
+                    else -> LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            top = contentPadding.calculateTopPadding() + 4.dp,
+                            bottom = Spacing.xl,
+                            start = Spacing.screenHorizontal,
+                            end = Spacing.screenHorizontal
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
+                    ) {
+                        item {
+                            Text(
+                                text = paymentReportCountLabel(state.entries.size, state.selectedStatus),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        items(state.entries, key = { it.payslip.id }) { entry ->
+                            PayslipListItem(
+                                name = entry.listName,
+                                initials = entry.initials,
+                                amount = entry.payslip.netAmount.toDisplay(),
+                                status = { PaymentStatusChip(entry.payslip.payment.status) },
+                                onClick = { viewModel.onEntryClick(entry) }
+                            )
+                        }
                     }
                 }
             }
@@ -163,8 +166,8 @@ fun PaymentStatusScreen(
 /**
  * Filters of MA-69: payroll period, area and payment status.
  *
- * The area menu starts with "Todas las áreas", which removes the area filter while keeping the
- * arrow of the design.
+ * The chips stay on one line that scrolls sideways, so applying a filter never pushes the list
+ * down. Area and status are optional filters with an "x" to remove them; the period is required.
  *
  * @param state current screen state.
  * @param onPeriodSelected called with the period the user picks.
@@ -172,7 +175,6 @@ fun PaymentStatusScreen(
  * @param onStatusSelected called with the status the user picks, or null to remove the filter.
  * @param modifier modifier applied to the filter row.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PaymentFilters(
     state: PaymentStatusUiState,
@@ -181,31 +183,30 @@ private fun PaymentFilters(
     onStatusSelected: (PaymentStatus?) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(Spacing.s),
-        modifier = modifier.fillMaxWidth()
-    ) {
-        PayrollFilterChip(
-            label = state.selectedPeriod?.period?.label ?: "Período",
-            selected = state.selectedPeriod != null,
+    FlowboardChipRow(modifier = modifier) {
+        FlowboardMenuChip(
+            name = "Período",
+            selectedLabel = state.selectedPeriod?.period?.label,
             options = state.periods,
             optionLabel = { it.period.label },
-            onSelect = onPeriodSelected
+            onSelect = onPeriodSelected,
+            icon = FlowboardIcons.Calendar,
+            showNameWithValue = false
         )
-        PayrollFilterChip(
-            label = state.selectedArea?.let { "Área: ${it.name}" } ?: "Área",
-            selected = state.selectedArea != null,
-            options = listOf<PayrollArea?>(null) + state.areas,
-            optionLabel = { it?.name ?: "Todas las áreas" },
-            onSelect = onAreaSelected
+        FlowboardMenuChip(
+            name = "Área",
+            selectedLabel = state.selectedArea?.name,
+            options = state.areas,
+            optionLabel = { it.name },
+            onSelect = { onAreaSelected(it) },
+            onClear = { onAreaSelected(null) }
         )
-        PayrollFilterChip(
-            label = state.selectedStatus?.label() ?: "Estado",
-            selected = state.selectedStatus != null,
+        FlowboardMenuChip(
+            name = "Estado",
+            selectedLabel = state.selectedStatus?.label(),
             options = PaymentStatus.entries,
             optionLabel = { it.label() },
             onSelect = { onStatusSelected(it) },
-            clearable = true,
             onClear = { onStatusSelected(null) }
         )
     }
