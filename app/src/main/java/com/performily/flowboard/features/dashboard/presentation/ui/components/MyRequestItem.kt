@@ -6,22 +6,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.performily.flowboard.core.designsystem.theme.ActiveContainer
-import com.performily.flowboard.core.designsystem.theme.AwaitingContainer
-import com.performily.flowboard.core.designsystem.theme.ErrorContainer
+import com.performily.flowboard.core.designsystem.component.FlowboardStatusBadge
 import com.performily.flowboard.core.designsystem.theme.Spacing
-import com.performily.flowboard.core.designsystem.theme.SuspendedContainer
+import com.performily.flowboard.core.designsystem.theme.StatusTone
 import com.performily.flowboard.features.dashboard.domain.entity.MyRequest
 import com.performily.flowboard.features.dashboard.domain.entity.MyRequestStatus
 
@@ -65,23 +60,15 @@ internal fun MyRequestItem(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        Surface(shape = CircleShape, color = statusColor(request.status)) {
-            Text(
-                text = request.status.label,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-            )
-        }
+        FlowboardStatusBadge(text = request.status.label, tone = statusTone(request.status))
     }
 }
 
-/** Returns the background of the status chip of a request. */
-@Composable
-private fun statusColor(status: MyRequestStatus): Color = when (status) {
-    MyRequestStatus.PENDING -> AwaitingContainer
-    MyRequestStatus.UNDER_REVIEW -> SuspendedContainer
-    MyRequestStatus.APPROVED -> ActiveContainer
-    MyRequestStatus.REJECTED -> ErrorContainer
-    MyRequestStatus.CANCELLED -> MaterialTheme.colorScheme.surfaceContainerHigh
+/** Meaning of each request status, so the badge follows the light and dark themes. */
+private fun statusTone(status: MyRequestStatus): StatusTone = when (status) {
+    MyRequestStatus.PENDING -> StatusTone.WARNING
+    MyRequestStatus.UNDER_REVIEW -> StatusTone.INFO
+    MyRequestStatus.APPROVED -> StatusTone.SUCCESS
+    MyRequestStatus.REJECTED -> StatusTone.DANGER
+    MyRequestStatus.CANCELLED -> StatusTone.NEUTRAL
 }

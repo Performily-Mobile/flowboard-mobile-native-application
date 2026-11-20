@@ -16,7 +16,9 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -28,22 +30,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 import com.performily.flowboard.core.designsystem.component.SkeletonDashboard
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
-import com.performily.flowboard.core.designsystem.theme.Divider
 import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.dashboard.domain.entity.HrDashboard
 import com.performily.flowboard.features.dashboard.presentation.ui.components.AreaAttendanceRow
 import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardAccent
-import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardAlertBanner
 import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardErrorBanner
 import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardFormatters
+import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardHeader
 import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardIcons
 import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardMetricCard
 import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardSectionCard
 import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardSectionMessage
+import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardUpdatedFooter
 import com.performily.flowboard.features.dashboard.presentation.ui.components.RequestToAttendItem
+import com.performily.flowboard.features.dashboard.presentation.ui.components.TodayAttendanceHero
 import com.performily.flowboard.features.dashboard.presentation.viewmodel.HrDashboardViewModel
 import java.time.LocalDateTime
 import kotlinx.coroutines.delay
@@ -73,6 +75,7 @@ fun HrDashboardScreen(
     viewModel: HrDashboardViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val unreadNotifications by viewModel.unreadNotifications.collectAsStateWithLifecycle()
     val dashboard = state.dashboard
     var now by remember { mutableStateOf(LocalDateTime.now()) }
 
@@ -89,14 +92,13 @@ fun HrDashboardScreen(
 
     Scaffold(
         topBar = {
-            FlowboardTopBar(
-                title = "Panel",
-                subtitle = DashboardFormatters.subtitle(dashboard?.userFirstName, dashboard?.loadedAt, now),
+            DashboardHeader(
+                greeting = DashboardFormatters.greetingTitle(dashboard?.userFirstName, now),
                 actions = {
                     IconButton(onClick = onNotificationsClick) {
                         BadgedBox(
                             badge = {
-                                if ((dashboard?.pendingRequests ?: 0) > 0) Badge()
+                                if (unreadNotifications > 0) Badge { Text(if (unreadNotifications > 9) "9+" else unreadNotifications.toString()) }
                             }
                         ) {
                             Icon(DashboardIcons.Notifications, contentDescription = "Notificaciones")
@@ -129,14 +131,11 @@ fun HrDashboardScreen(
                     state.errorMessage?.let { message ->
                         item { DashboardErrorBanner(message = message, onRetry = viewModel::refresh) }
                     }
-                    val pending = dashboard?.pendingRequests ?: 0
-                    if (pending > 0) {
-                        item {
-                            DashboardAlertBanner(
-                                text = if (pending == 1) "Tienes 1 solicitud por atender" else "Tienes $pending solicitudes por atender",
-                                onClick = onPendingRequestsClick
-                            )
-                        }
+                    item {
+                        TodayAttendanceHero(
+                            attendance = dashboard?.todayAttendance,
+                            onClick = onAttendanceByAreaClick
+                        )
                     }
                     item {
                         MetricsGrid(
@@ -147,8 +146,13 @@ fun HrDashboardScreen(
                             onExpiringVacationsClick = onExpiringVacationsClick
                         )
                     }
-                    item { AttendanceSection(dashboard, onAttendanceByAreaClick) }
+                    if (dashboard?.todayAttendance?.any { it.percentage > 0 } == true) {
+                        item { AttendanceSection(dashboard, onAttendanceByAreaClick) }
+                    }
                     item { RequestsSection(dashboard, onPendingRequestsClick, onRequestClick) }
+                    dashboard?.loadedAt?.let { loadedAt ->
+                        item { DashboardUpdatedFooter(DashboardFormatters.updatedLine(loadedAt, now)) }
+                    }
                 }
             }
         }
@@ -176,16 +180,19 @@ private fun MetricsGrid(
                 value = DashboardFormatters.count(dashboard?.activeEmployees),
                 icon = FlowboardIcons.Group,
                 accent = DashboardAccent.PRIMARY,
+                supportingText = dashboard?.todayAttendance?.size?.let { if (it == 1) "en 1 área" else "en $it áreas" },
                 onClick = onActiveEmployeesClick,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
             )
             DashboardMetricCard(
-                label = "Solicitudes pendientes",
+                label = "Solicitudes por atender",
                 value = DashboardFormatters.count(dashboard?.pendingRequests),
                 icon = FlowboardIcons.Article,
                 accent = DashboardAccent.AMBER,
+                supportingText = if ((dashboard?.pendingRequests ?: 0) > 0) "Requieren tu revisión" else "Bandeja al día",
+                highlighted = (dashboard?.pendingRequests ?: 0) > 0,
                 onClick = onPendingRequestsClick,
                 modifier = Modifier
                     .weight(1f)
@@ -205,6 +212,7 @@ private fun MetricsGrid(
                 icon = FlowboardIcons.Schedule,
                 accent = DashboardAccent.RED,
                 supportingText = lateness?.let { DashboardFormatters.lateness(it.percentage) },
+                progress = lateness?.let { (it.percentage / 100).toFloat() },
                 onClick = onLatenessClick,
                 modifier = Modifier
                     .weight(1f)
@@ -256,7 +264,7 @@ private fun RequestsSection(
             requests == null -> DashboardSectionMessage("No se pudieron cargar las solicitudes.")
             requests.isEmpty() -> DashboardSectionMessage("No hay solicitudes por atender.")
             else -> requests.forEachIndexed { index, request ->
-                if (index > 0) HorizontalDivider(color = Divider)
+                if (index > 0) HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
                 RequestToAttendItem(request = request, onClick = { onRequestClick(request.requestId) })
             }
         }

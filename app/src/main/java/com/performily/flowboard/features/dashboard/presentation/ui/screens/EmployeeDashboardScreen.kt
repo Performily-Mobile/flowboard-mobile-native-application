@@ -34,7 +34,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 import com.performily.flowboard.core.designsystem.component.SkeletonDashboard
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Divider
@@ -51,10 +50,12 @@ import com.performily.flowboard.features.dashboard.presentation.ui.components.Da
 import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardColors
 import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardErrorBanner
 import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardFormatters
+import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardHeader
 import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardIcons
 import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardMetricCard
 import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardSectionCard
 import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardSectionMessage
+import com.performily.flowboard.features.dashboard.presentation.ui.components.DashboardUpdatedFooter
 import com.performily.flowboard.features.dashboard.presentation.ui.components.EmployeeDashboardFormatters
 import com.performily.flowboard.features.dashboard.presentation.ui.components.EmployeeTodayCard
 import com.performily.flowboard.features.dashboard.presentation.ui.components.MonthStatRow
@@ -87,6 +88,7 @@ fun EmployeeDashboardScreen(
     viewModel: EmployeeDashboardViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val unreadNotifications by viewModel.unreadNotifications.collectAsStateWithLifecycle()
     val dashboard = state.dashboard
     var now by remember { mutableStateOf(LocalDateTime.now()) }
 
@@ -102,14 +104,13 @@ fun EmployeeDashboardScreen(
 
     Scaffold(
         topBar = {
-            FlowboardTopBar(
-                title = "Inicio",
-                subtitle = DashboardFormatters.subtitle(dashboard?.firstName, dashboard?.loadedAt, now),
+            DashboardHeader(
+                greeting = DashboardFormatters.greetingTitle(dashboard?.firstName, now),
                 actions = {
                     IconButton(onClick = onNotificationsClick) {
                         BadgedBox(
                             badge = {
-                                if ((dashboard?.requests?.underReview ?: 0) > 0) Badge()
+                                if (unreadNotifications > 0) Badge { Text(if (unreadNotifications > 9) "9+" else unreadNotifications.toString()) }
                             }
                         ) {
                             Icon(DashboardIcons.Notifications, contentDescription = "Notificaciones")
@@ -173,6 +174,9 @@ fun EmployeeDashboardScreen(
                             onSeeAll = onRequestsClick,
                             onRequestClick = onRequestClick
                         )
+                    }
+                    dashboard?.loadedAt?.let { loadedAt ->
+                        item { DashboardUpdatedFooter(DashboardFormatters.updatedLine(loadedAt, now)) }
                     }
                 }
             }

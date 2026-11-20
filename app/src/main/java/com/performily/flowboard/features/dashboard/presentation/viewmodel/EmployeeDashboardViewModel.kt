@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.performily.flowboard.features.dashboard.application.usecase.GetEmployeeDashboardUseCase
 import com.performily.flowboard.features.dashboard.presentation.state.EmployeeDashboardUiState
+import com.performily.flowboard.features.notifications.application.service.UnreadNotificationsTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Job
@@ -16,11 +17,15 @@ import kotlinx.coroutines.launch
 /** Holds the state of the employee dashboard and reloads it on demand. */
 @HiltViewModel
 class EmployeeDashboardViewModel @Inject constructor(
-    private val getEmployeeDashboard: GetEmployeeDashboardUseCase
+    private val getEmployeeDashboard: GetEmployeeDashboardUseCase,
+    private val unreadTracker: UnreadNotificationsTracker
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(EmployeeDashboardUiState())
     val state: StateFlow<EmployeeDashboardUiState> = _state.asStateFlow()
+
+    /** Number of unread notices, shown as a badge on the bell. */
+    val unreadNotifications: StateFlow<Int> = unreadTracker.count
 
     private var loadJob: Job? = null
 
@@ -41,6 +46,7 @@ class EmployeeDashboardViewModel @Inject constructor(
      */
     private fun fetch(isRefresh: Boolean) {
         if (loadJob?.isActive == true) return
+        viewModelScope.launch { unreadTracker.refresh() }
         loadJob = viewModelScope.launch {
             _state.update {
                 it.copy(

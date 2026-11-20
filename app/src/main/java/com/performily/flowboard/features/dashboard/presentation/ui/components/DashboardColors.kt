@@ -1,26 +1,48 @@
 package com.performily.flowboard.features.dashboard.presentation.ui.components
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
-import com.performily.flowboard.core.designsystem.theme.ActiveContainer
 import com.performily.flowboard.core.designsystem.theme.Error
-import com.performily.flowboard.core.designsystem.theme.ErrorContainer
-import com.performily.flowboard.core.designsystem.theme.OnErrorContainer
-import com.performily.flowboard.core.designsystem.theme.OnPrimaryContainer
-import com.performily.flowboard.core.designsystem.theme.PendingContainer
-import com.performily.flowboard.core.designsystem.theme.PrimaryContainer
+import com.performily.flowboard.core.designsystem.theme.statusColors
 
 /**
- * Semantic color pairs used to tint the dashboard indicators.
+ * Color families used to tint the dashboard indicators.
  *
- * @property container background of the icon chip.
- * @property content color of the icon drawn on the chip.
+ * The colors come from the theme (Material roles and the status palette), so the icon chips keep
+ * their contrast in both the light and the dark theme.
  */
-internal enum class DashboardAccent(val container: Color, val content: Color) {
-    PRIMARY(PrimaryContainer, OnPrimaryContainer),
-    AMBER(PendingContainer, Color(0xFF7A4B00)),
-    RED(ErrorContainer, OnErrorContainer),
-    GREEN(ActiveContainer, Color(0xFF1B4D1B)),
-    PURPLE(Color(0xFFE9DDFF), Color(0xFF3F2D6B))
+internal enum class DashboardAccent {
+    PRIMARY,
+    AMBER,
+    RED,
+    GREEN,
+    PURPLE;
+
+    /** Background of the icon chip. */
+    val container: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = when (this) {
+            PRIMARY -> MaterialTheme.colorScheme.primaryContainer
+            AMBER -> MaterialTheme.statusColors.warningContainer
+            RED -> MaterialTheme.statusColors.dangerContainer
+            GREEN -> MaterialTheme.statusColors.successContainer
+            PURPLE -> MaterialTheme.colorScheme.tertiaryContainer
+        }
+
+    /** Color of the icon drawn on the chip. */
+    val content: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = when (this) {
+            PRIMARY -> MaterialTheme.colorScheme.onPrimaryContainer
+            AMBER -> MaterialTheme.statusColors.onWarningContainer
+            RED -> MaterialTheme.statusColors.onDangerContainer
+            GREEN -> MaterialTheme.statusColors.onSuccessContainer
+            PURPLE -> MaterialTheme.colorScheme.onTertiaryContainer
+        }
 }
 
 /** Bar colors of the attendance rows, from healthy to worrying. */

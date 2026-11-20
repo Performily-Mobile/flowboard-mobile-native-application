@@ -1,5 +1,6 @@
 package com.performily.flowboard.features.dashboard.presentation.ui.components
 
+import com.performily.flowboard.core.text.AppLocale
 import com.performily.flowboard.features.dashboard.domain.entity.RequestToAttend
 import java.time.Duration
 import java.time.LocalDateTime
@@ -13,16 +14,24 @@ internal object DashboardFormatters {
     private val shortDate = DateTimeFormatter.ofPattern("dd/MM")
 
     /**
-     * Builds the subtitle of the top bar, for example "Buenos días, Ana · actualizado hace 4 min".
+     * Builds the greeting used as the dashboard title, for example "Buenas noches, Patricia".
      *
      * @param firstName first name of the user, if known.
-     * @param loadedAt moment the dashboard was loaded, if it was.
-     * @param now current moment, used for the greeting and the elapsed time.
+     * @param now current moment, used to pick the greeting.
+     * @return the greeting with the name when it is known.
      */
-    fun subtitle(firstName: String?, loadedAt: LocalDateTime?, now: LocalDateTime): String {
-        val greeting = greeting(now.toLocalTime()) + (firstName?.let { ", $it" } ?: "")
-        return loadedAt?.let { "$greeting · ${updatedAgo(it, now)}" } ?: greeting
-    }
+    fun greetingTitle(firstName: String?, now: LocalDateTime): String =
+        greeting(now.toLocalTime()) + (firstName?.let { ", $it" } ?: "")
+
+    /**
+     * Builds the footer line of the dashboard, for example "Actualizado hace 6 min".
+     *
+     * @param loadedAt moment the dashboard was loaded.
+     * @param now current moment.
+     * @return how long ago the data was loaded, starting with a capital letter.
+     */
+    fun updatedLine(loadedAt: LocalDateTime, now: LocalDateTime): String =
+        updatedAgo(loadedAt, now).replaceFirstChar { it.uppercase(AppLocale) }
 
     /** Formats a counter, or a dash when the section could not be loaded. */
     fun count(value: Number?): String = value?.toString() ?: "—"
