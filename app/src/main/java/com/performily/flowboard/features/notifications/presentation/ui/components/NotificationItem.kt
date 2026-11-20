@@ -18,24 +18,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
-import com.performily.flowboard.core.designsystem.theme.ActiveContainer
-import com.performily.flowboard.core.designsystem.theme.AvatarContainer
-import com.performily.flowboard.core.designsystem.theme.OnSurface
-import com.performily.flowboard.core.designsystem.theme.PendingContainer
 import com.performily.flowboard.core.designsystem.theme.Spacing
-import com.performily.flowboard.core.designsystem.theme.SuspendedContainer
+import com.performily.flowboard.core.designsystem.theme.StatusTone
+import com.performily.flowboard.core.designsystem.theme.statusColors
 import com.performily.flowboard.features.notifications.domain.entity.AppNotification
 import com.performily.flowboard.features.notifications.domain.valueobject.NotificationCategory
 
 /**
- * One notice: colored icon of its source, title, detail and time. An unread notice has a tinted
- * background, a bold title and a dot.
+ * One notice: colored icon of its source, title, detail and time. Every notice uses the same tonal
+ * card as the rest of the app; an unread one is marked by a bold title, a primary-colored time and a dot.
  *
  * @param notification notice to display.
  * @param time already formatted moment of the notice.
@@ -53,11 +49,7 @@ fun NotificationItem(
     val unread = !notification.isRead
     Surface(
         shape = shape,
-        color = if (unread) {
-            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = UNREAD_ALPHA)
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerLow
-        },
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
@@ -73,13 +65,13 @@ fun NotificationItem(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .background(notification.category.container(), CircleShape),
+                    .background(MaterialTheme.statusColors.container(notification.category.tone()), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = notification.category.icon(),
                     contentDescription = null,
-                    tint = OnSurface,
+                    tint = MaterialTheme.statusColors.content(notification.category.tone()),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -99,7 +91,7 @@ fun NotificationItem(
                     Text(
                         text = time,
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (unread) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 Text(
@@ -122,12 +114,12 @@ fun NotificationItem(
     }
 }
 
-/** Background of the icon of each source. */
-private fun NotificationCategory.container(): Color = when (this) {
-    NotificationCategory.REQUEST -> AvatarContainer
-    NotificationCategory.APPROVAL -> PendingContainer
-    NotificationCategory.PAYSLIP -> ActiveContainer
-    NotificationCategory.BENEFIT -> SuspendedContainer
+/** Tone of the icon of each source, taken from the theme so it also works in dark mode. */
+private fun NotificationCategory.tone(): StatusTone = when (this) {
+    NotificationCategory.REQUEST -> StatusTone.INFO
+    NotificationCategory.APPROVAL -> StatusTone.WARNING
+    NotificationCategory.PAYSLIP -> StatusTone.SUCCESS
+    NotificationCategory.BENEFIT -> StatusTone.NEUTRAL
 }
 
 /** Icon of each source. */
@@ -137,6 +129,3 @@ private fun NotificationCategory.icon(): ImageVector = when (this) {
     NotificationCategory.PAYSLIP -> FlowboardIcons.CreditCard
     NotificationCategory.BENEFIT -> FlowboardIcons.Gift
 }
-
-/** Opacity of the tint of an unread notice. */
-private const val UNREAD_ALPHA = 0.45f

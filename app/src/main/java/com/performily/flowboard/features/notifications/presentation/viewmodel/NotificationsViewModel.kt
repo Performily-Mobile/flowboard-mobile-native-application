@@ -2,6 +2,7 @@ package com.performily.flowboard.features.notifications.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.performily.flowboard.features.notifications.application.service.UnreadNotificationsTracker
 import com.performily.flowboard.features.notifications.application.usecase.GetNotificationsUseCase
 import com.performily.flowboard.features.notifications.application.usecase.MarkNotificationsAsReadUseCase
 import com.performily.flowboard.features.notifications.domain.entity.AppNotification
@@ -20,7 +21,8 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class NotificationsViewModel @Inject constructor(
     private val getNotifications: GetNotificationsUseCase,
-    private val markAsRead: MarkNotificationsAsReadUseCase
+    private val markAsRead: MarkNotificationsAsReadUseCase,
+    private val unreadTracker: UnreadNotificationsTracker
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(NotificationsUiState())
@@ -73,6 +75,7 @@ class NotificationsViewModel @Inject constructor(
                 }
             )
         }
+        unreadTracker.update(_state.value.unreadCount)
     }
 
     /**
@@ -92,6 +95,7 @@ class NotificationsViewModel @Inject constructor(
             }
             getNotifications().fold(
                 onSuccess = { feed ->
+                    unreadTracker.update(feed.unreadCount)
                     _state.update {
                         it.copy(
                             notifications = feed.notifications,

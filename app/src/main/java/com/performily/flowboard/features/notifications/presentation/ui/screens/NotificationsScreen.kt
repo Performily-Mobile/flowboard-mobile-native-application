@@ -1,16 +1,15 @@
 package com.performily.flowboard.features.notifications.presentation.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -20,16 +19,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.CollapsingHeaderLayout
+import com.performily.flowboard.core.designsystem.component.FlowboardEmptyState
 import com.performily.flowboard.core.designsystem.component.FlowboardTabs
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
+import com.performily.flowboard.core.designsystem.component.SkeletonList
 import com.performily.flowboard.core.designsystem.component.rememberCollapsingHeaderState
+import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 import com.performily.flowboard.core.designsystem.theme.Spacing
 import com.performily.flowboard.features.notifications.domain.entity.AppNotification
 import com.performily.flowboard.features.notifications.domain.valueobject.NotificationTarget
@@ -38,7 +38,6 @@ import com.performily.flowboard.features.notifications.presentation.ui.component
 import com.performily.flowboard.features.notifications.presentation.ui.components.NotificationItem
 import com.performily.flowboard.features.notifications.presentation.viewmodel.NotificationsViewModel
 import java.time.LocalDateTime
-import com.performily.flowboard.core.designsystem.component.SkeletonList
 
 /**
  * Notices of the signed-in user, grouped by day: changes in their requests, requests to approve,
@@ -218,22 +217,15 @@ private fun MessageState(
     actionLabel: String? = null,
     onAction: () -> Unit = {}
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = Spacing.xl),
-        verticalArrangement = Arrangement.spacedBy(Spacing.s, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(text = title, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
-        if (actionLabel != null) {
-            Button(onClick = onAction, modifier = Modifier.padding(top = Spacing.s)) { Text(actionLabel) }
+    FlowboardEmptyState(
+        title = title,
+        message = message,
+        icon = if (actionLabel == "Reintentar") FlowboardIcons.Warning else FlowboardIcons.Notifications,
+        modifier = modifier.fillMaxSize(),
+        action = if (actionLabel != null) {
+            { OutlinedButton(onClick = onAction) { Text(actionLabel) } }
+        } else {
+            null
         }
-    }
+    )
 }
