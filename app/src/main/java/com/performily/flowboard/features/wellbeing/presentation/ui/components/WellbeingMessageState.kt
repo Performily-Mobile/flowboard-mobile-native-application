@@ -1,20 +1,13 @@
 package com.performily.flowboard.features.wellbeing.presentation.ui.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import com.performily.flowboard.core.designsystem.theme.Spacing
+import com.performily.flowboard.core.designsystem.component.FlowboardEmptyState
 import com.performily.flowboard.core.designsystem.component.SkeletonList
+import com.performily.flowboard.core.designsystem.icon.FlowboardIcons
 
 /** Placeholder of a list shown while a screen loads. */
 @Composable
@@ -31,22 +24,15 @@ fun WellbeingMessageState(
     actionLabel: String? = null,
     onAction: () -> Unit = {}
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(top = 56.dp, start = Spacing.screenHorizontal, end = Spacing.screenHorizontal),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(text = title, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
-        if (actionLabel != null) {
-            OutlinedButton(onClick = onAction) { Text(actionLabel) }
+    FlowboardEmptyState(
+        title = title,
+        message = message,
+        icon = if (actionLabel == "Reintentar") FlowboardIcons.Warning else FlowboardIcons.Favorite,
+        modifier = modifier,
+        action = if (actionLabel != null) {
+            { OutlinedButton(onClick = onAction) { Text(actionLabel) } }
+        } else {
+            null
         }
-    }
+    )
 }
