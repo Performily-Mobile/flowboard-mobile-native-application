@@ -2,6 +2,7 @@ package com.performily.flowboard.features.workspace.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.performily.flowboard.core.network.ResponseCache
 import com.performily.flowboard.features.workspace.application.usecase.GetAreasUseCase
 import com.performily.flowboard.features.workspace.application.usecase.GetEmployeesUseCase
 import com.performily.flowboard.features.workspace.application.usecase.GetPositionsUseCase
@@ -23,7 +24,8 @@ import javax.inject.Inject
 class EmployeesViewModel @Inject constructor(
     private val getEmployees: GetEmployeesUseCase,
     private val getAreas: GetAreasUseCase,
-    private val getPositions: GetPositionsUseCase
+    private val getPositions: GetPositionsUseCase,
+    private val responseCache: ResponseCache
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(EmployeesUiState())
@@ -38,6 +40,13 @@ class EmployeesViewModel @Inject constructor(
     fun loadEmployees() {
         searchJob?.cancel()
         searchJob = viewModelScope.launch { fetchEmployees() }
+    }
+
+    /** Reloads the list from the backend after a pull-to-refresh, skipping the short-lived cache. */
+    fun refresh() {
+        responseCache.invalidateAll()
+        loadFilterOptions()
+        loadEmployees()
     }
 
     fun onQueryChange(query: String) {

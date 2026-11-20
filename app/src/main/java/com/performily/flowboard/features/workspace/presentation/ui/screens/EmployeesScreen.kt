@@ -29,14 +29,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.performily.flowboard.core.designsystem.component.CollapsingHeaderLayout
+import com.performily.flowboard.core.designsystem.component.FlowboardEmptyState
 import com.performily.flowboard.core.designsystem.component.FlowboardMenuChip
+import com.performily.flowboard.core.designsystem.component.FlowboardRefreshBox
 import com.performily.flowboard.core.designsystem.component.FlowboardSearchField
 import com.performily.flowboard.core.designsystem.component.FlowboardTopBar
 import com.performily.flowboard.core.designsystem.component.SkeletonList
@@ -117,85 +117,90 @@ fun EmployeesScreen(
             )
         }
     ) { paddingValues ->
-        CollapsingHeaderLayout(
-            modifier = Modifier.padding(paddingValues),
-            state = headerState,
-            showHeaderKey = listOf(state.employees.size, state.errorMessage != null),
-            header = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Spacing.screenHorizontal)
-                        .padding(top = 4.dp, bottom = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.m)
-                ) {
-                    FlowboardSearchField(
-                        query = state.query,
-                        onQueryChange = viewModel::onQueryChange,
-                        placeholder = "Buscar por nombre, apellido o DNI"
-                    )
-                    EmployeeFilters(
-                        state = state,
-                        onAreaSelected = viewModel::onAreaSelected,
-                        onStatusSelected = viewModel::onStatusSelected,
-                        onPositionSelected = viewModel::onPositionSelected
-                    )
-                }
-            }
-        ) { contentPadding ->
-            when {
-                state.isLoading && state.employees.isEmpty() -> {
-                    SkeletonList(
+        FlowboardRefreshBox(
+            isLoading = state.isLoading,
+            onRefresh = viewModel::refresh,
+            modifier = Modifier.padding(paddingValues)
+        ) {
+            CollapsingHeaderLayout(
+                state = headerState,
+                showHeaderKey = listOf(state.employees.size, state.errorMessage != null),
+                header = {
+                    Column(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(top = contentPadding.calculateTopPadding())
-                    )
-                }
-
-                state.errorMessage != null -> {
-                    MessageState(
-                        title = "No se pudo cargar la lista",
-                        message = state.errorMessage.orEmpty(),
-                        actionLabel = "Reintentar",
-                        onAction = viewModel::loadEmployees,
-                        modifier = Modifier.padding(top = contentPadding.calculateTopPadding())
-                    )
-                }
-
-                state.employees.isEmpty() -> {
-                    MessageState(
-                        title = "No encontramos colaboradores",
-                        message = emptyMessage(state),
-                        actionLabel = if (state.hasFilters) "Limpiar filtros" else null,
-                        onAction = viewModel::clearFilters,
-                        modifier = Modifier.padding(top = contentPadding.calculateTopPadding())
-                    )
-                }
-
-                else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(
-                            top = contentPadding.calculateTopPadding() + 4.dp,
-                            bottom = Spacing.fabClearance,
-                            start = Spacing.screenHorizontal,
-                            end = Spacing.screenHorizontal
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
+                            .fillMaxWidth()
+                            .padding(horizontal = Spacing.screenHorizontal)
+                            .padding(top = 4.dp, bottom = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.m)
                     ) {
-                        item(key = "count") {
-                            Text(
-                                text = "${state.employees.size} colaboradores",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 4.dp)
-                            )
-                        }
-                        items(state.employees, key = { it.id.value }) { employee ->
-                            EmployeeListItem(
-                                employee = employee,
-                                onClick = { onEmployeeClick(employee.id.value) }
-                            )
+                        FlowboardSearchField(
+                            query = state.query,
+                            onQueryChange = viewModel::onQueryChange,
+                            placeholder = "Buscar por nombre, apellido o DNI"
+                        )
+                        EmployeeFilters(
+                            state = state,
+                            onAreaSelected = viewModel::onAreaSelected,
+                            onStatusSelected = viewModel::onStatusSelected,
+                            onPositionSelected = viewModel::onPositionSelected
+                        )
+                    }
+                }
+            ) { contentPadding ->
+                when {
+                    state.isLoading && state.employees.isEmpty() -> {
+                        SkeletonList(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(top = contentPadding.calculateTopPadding())
+                        )
+                    }
+
+                    state.errorMessage != null -> {
+                        MessageState(
+                            title = "No se pudo cargar la lista",
+                            message = state.errorMessage.orEmpty(),
+                            actionLabel = "Reintentar",
+                            onAction = viewModel::loadEmployees,
+                            modifier = Modifier.padding(top = contentPadding.calculateTopPadding())
+                        )
+                    }
+
+                    state.employees.isEmpty() -> {
+                        MessageState(
+                            title = "No encontramos colaboradores",
+                            message = emptyMessage(state),
+                            actionLabel = if (state.hasFilters) "Limpiar filtros" else null,
+                            onAction = viewModel::clearFilters,
+                            modifier = Modifier.padding(top = contentPadding.calculateTopPadding())
+                        )
+                    }
+
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(
+                                top = contentPadding.calculateTopPadding() + 4.dp,
+                                bottom = Spacing.fabClearance,
+                                start = Spacing.screenHorizontal,
+                                end = Spacing.screenHorizontal
+                            ),
+                            verticalArrangement = Arrangement.spacedBy(Spacing.itemGap)
+                        ) {
+                            item(key = "count") {
+                                Text(
+                                    text = "${state.employees.size} colaboradores",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 4.dp)
+                                )
+                            }
+                            items(state.employees, key = { it.id.value }) { employee ->
+                                EmployeeListItem(
+                                    employee = employee,
+                                    onClick = { onEmployeeClick(employee.id.value) }
+                                )
+                            }
                         }
                     }
                 }
@@ -254,24 +259,17 @@ private fun MessageState(
     onAction: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(top = 48.dp, start = Spacing.screenHorizontal, end = Spacing.screenHorizontal),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Spacing.s)
-    ) {
-        Text(text = title, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
-        if (actionLabel != null) {
-            OutlinedButton(onClick = onAction) { Text(actionLabel) }
+    FlowboardEmptyState(
+        title = title,
+        message = message,
+        icon = if (actionLabel == "Reintentar") FlowboardIcons.Warning else FlowboardIcons.Group,
+        modifier = modifier,
+        action = if (actionLabel != null) {
+            { OutlinedButton(onClick = onAction) { Text(actionLabel) } }
+        } else {
+            null
         }
-    }
+    )
 }
 
 /** Builds the empty-state message from the active search and filters. */
