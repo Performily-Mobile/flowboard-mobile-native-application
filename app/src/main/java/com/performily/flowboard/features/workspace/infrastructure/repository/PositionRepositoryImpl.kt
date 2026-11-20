@@ -1,6 +1,7 @@
 package com.performily.flowboard.features.workspace.infrastructure.repository
 
 import com.performily.flowboard.core.domain.Money
+import com.performily.flowboard.core.network.ResponseCache
 import com.performily.flowboard.core.network.apiCall
 import com.performily.flowboard.features.workspace.domain.entity.Position
 import com.performily.flowboard.features.workspace.domain.repository.PositionRepository
@@ -9,17 +10,21 @@ import com.performily.flowboard.features.workspace.infrastructure.remote.Positio
 import javax.inject.Inject
 
 class PositionRepositoryImpl @Inject constructor(
-    private val service: PositionService
+    private val service: PositionService,
+    private val cache: ResponseCache
 ) : PositionRepository {
 
     override suspend fun getPositions(areaId: Long?): Result<List<Position>> {
-        return apiCall { service.getPositions(areaId) }
-            .mapCatching { dtos -> dtos.map { PositionMapper.toDomain(it) } }
+        return cache.getOrLoad("positions:$areaId") {
+            apiCall { service.getPositions(areaId) }
+                .mapCatching { dtos -> dtos.map { PositionMapper.toDomain(it) } }
+        }
     }
 
     override suspend fun createPosition(title: String, areaId: Long, referenceSalary: Money): Result<Position> {
         val request = PositionMapper.toCreateRequest(title, areaId, referenceSalary)
         return apiCall { service.createPosition(request) }
             .mapCatching { dto -> PositionMapper.toDomain(dto) }
+            .onSuccess { cache.invalidateAll() }
     }
 }

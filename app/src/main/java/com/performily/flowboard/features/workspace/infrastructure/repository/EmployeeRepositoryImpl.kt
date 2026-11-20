@@ -3,6 +3,7 @@ package com.performily.flowboard.features.workspace.infrastructure.repository
 import com.performily.flowboard.core.domain.EmailAddress
 import com.performily.flowboard.core.domain.EmployeeId
 import com.performily.flowboard.core.domain.FileReference
+import com.performily.flowboard.core.network.ResponseCache
 import com.performily.flowboard.core.network.apiCall
 import com.performily.flowboard.features.workspace.domain.entity.Employee
 import com.performily.flowboard.features.workspace.domain.entity.EmployeeDocument
@@ -33,7 +34,8 @@ import javax.inject.Inject
 class EmployeeRepositoryImpl @Inject constructor(
     private val employeeService: EmployeeService,
     private val jobAssignmentService: EmployeeJobAssignmentService,
-    private val documentService: EmployeeDocumentService
+    private val documentService: EmployeeDocumentService,
+    private val cache: ResponseCache
 ) : EmployeeRepository {
 
     override suspend fun getEmployees(
@@ -42,13 +44,18 @@ class EmployeeRepositoryImpl @Inject constructor(
         status: EmploymentStatus?,
         positionId: Long?
     ): Result<List<Employee>> {
-        return apiCall { employeeService.getEmployees(search, areaId, status?.name, positionId) }
-            .mapCatching { dtos -> dtos.map { EmployeeMapper.toDomain(it) } }
+        val load: suspend () -> Result<List<Employee>> = {
+            apiCall { employeeService.getEmployees(search, areaId, status?.name, positionId) }
+                .mapCatching { dtos -> dtos.map { EmployeeMapper.toDomain(it) } }
+        }
+        return if (search == null) cache.getOrLoad("employees:$areaId:$status:$positionId", load) else load()
     }
 
     override suspend fun getEmployeeById(id: EmployeeId): Result<Employee> {
-        return apiCall { employeeService.getEmployeeById(id.value) }
-            .mapCatching { dto -> EmployeeMapper.toDomain(dto) }
+        return cache.getOrLoad("employee:${id.value}") {
+            apiCall { employeeService.getEmployeeById(id.value) }
+                .mapCatching { dto -> EmployeeMapper.toDomain(dto) }
+        }
     }
 
     override suspend fun registerEmployee(
@@ -70,6 +77,7 @@ class EmployeeRepositoryImpl @Inject constructor(
         )
         return apiCall { employeeService.registerEmployee(request) }
             .mapCatching { dto -> EmployeeMapper.toDomain(dto) }
+            .onSuccess { cache.invalidateAll() }
     }
 
     override suspend fun updatePersonalData(
@@ -83,6 +91,7 @@ class EmployeeRepositoryImpl @Inject constructor(
         val request = EmployeeMapper.toUpdatePersonalDataRequest(name, birthDate, email, phoneNumber, address)
         return apiCall { employeeService.updatePersonalData(id.value, request) }
             .mapCatching { dto -> EmployeeMapper.toDomain(dto) }
+            .onSuccess { cache.invalidateAll() }
     }
 
     override suspend fun assignJob(
@@ -94,17 +103,20 @@ class EmployeeRepositoryImpl @Inject constructor(
         val request = JobAssignmentMapper.toAssignRequest(areaId, positionId, effectiveDate)
         return apiCall { jobAssignmentService.assignJob(id.value, request) }
             .mapCatching { dto -> JobAssignmentMapper.toDomain(dto) }
+            .onSuccess { cache.invalidateAll() }
     }
 
     override suspend fun assignDirectManager(id: EmployeeId, managerId: EmployeeId): Result<Employee> {
         val request = AssignDirectManagerRequestDto(managerId = managerId.value)
         return apiCall { employeeService.assignDirectManager(id.value, request) }
             .mapCatching { dto -> EmployeeMapper.toDomain(dto) }
+            .onSuccess { cache.invalidateAll() }
     }
 
     override suspend fun removeDirectManager(id: EmployeeId): Result<Employee> {
         return apiCall { employeeService.removeDirectManager(id.value) }
             .mapCatching { dto -> EmployeeMapper.toDomain(dto) }
+            .onSuccess { cache.invalidateAll() }
     }
 
     override suspend fun getSubordinates(id: EmployeeId): Result<List<Employee>> {
@@ -116,6 +128,7 @@ class EmployeeRepositoryImpl @Inject constructor(
         val request = EmployeeMapper.toTerminateRequest(termination)
         return apiCall { employeeService.terminate(id.value, request) }
             .mapCatching { dto -> EmployeeMapper.toDomain(dto) }
+            .onSuccess { cache.invalidateAll() }
     }
 
     override suspend fun reinstate(
@@ -127,6 +140,7 @@ class EmployeeRepositoryImpl @Inject constructor(
         val request = EmployeeMapper.toReinstateRequest(areaId, positionId, reinstatementDate)
         return apiCall { employeeService.reinstate(id.value, request) }
             .mapCatching { dto -> EmployeeMapper.toDomain(dto) }
+            .onSuccess { cache.invalidateAll() }
     }
 
     override suspend fun getJobAssignments(employeeId: EmployeeId): Result<List<JobAssignment>> {

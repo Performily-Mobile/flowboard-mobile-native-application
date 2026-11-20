@@ -8,12 +8,14 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import java.util.concurrent.TimeUnit
+import javax.inject.Singleton
+import okhttp3.ConnectionPool
+import okhttp3.Dispatcher
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
-import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -29,7 +31,14 @@ object NetworkModule {
             level = HttpLoggingInterceptor.Level.BASIC
         }
 
+        val dispatcher = Dispatcher().apply {
+            maxRequests = MAX_PARALLEL_REQUESTS
+            maxRequestsPerHost = MAX_PARALLEL_REQUESTS
+        }
+
         return OkHttpClient.Builder()
+            .dispatcher(dispatcher)
+            .connectionPool(ConnectionPool(MAX_IDLE_CONNECTIONS, KEEP_ALIVE_MINUTES, TimeUnit.MINUTES))
             .addInterceptor { chain ->
                 // Token of the session kept in memory.
                 val token = iamRepository.get().session.value?.token
@@ -52,8 +61,8 @@ object NetworkModule {
                 response
             }
             .addInterceptor(logging)
-            .connectTimeout(60, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(45, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
             .build()
     }
@@ -71,4 +80,16 @@ object NetworkModule {
             )
             .build()
     }
+
+    /**
+     * Requests that may run at the same time against the backend. OkHttp allows only 5 per host by
+     * default, so the dashboard (one summary per area plus the other sections) waited in queues.
+     */
+    private const val MAX_PARALLEL_REQUESTS = 16
+
+    /** Open connections kept for reuse, so new requests skip the TLS handshake. */
+    private const val MAX_IDLE_CONNECTIONS = 8
+
+    /** Minutes an idle connection stays open. */
+    private const val KEEP_ALIVE_MINUTES = 5L
 }
